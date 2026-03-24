@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>PikaTrip Portal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Kiwi+Maru:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #fff9f5;
+            --nav-bg: #ffe4e1;
+            --accent-pink: #ffb7b2;
+            --text-color: #6d5d6e;
+            --white: #ffffff;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Kiwi Maru', serif; }
+
+        body, html { height: 100dvh; overflow: hidden; background-color: var(--bg-color); }
+
+        /* 登入介面 */
+        #login-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: var(--bg-color); display: flex;
+            justify-content: center; align-items: center; z-index: 9999;
+        }
+
+        .login-box {
+            background: var(--white); padding: 30px; border-radius: 25px;
+            box-shadow: 0 10px 25px rgba(255, 183, 178, 0.2);
+            text-align: center; width: 85%; max-width: 320px;
+        }
+
+        .login-box h2 { color: var(--accent-pink); margin-bottom: 20px; font-size: 1.4rem; }
+
+        .login-box input {
+            width: 100%; padding: 12px; margin: 10px 0;
+            border: 1.5px solid var(--nav-bg); border-radius: 12px;
+            outline: none; color: var(--text-color);
+        }
+
+        .login-box button {
+            width: 100%; padding: 12px; background-color: var(--accent-pink);
+            border: none; color: white; border-radius: 12px;
+            margin-top: 15px; font-weight: bold; cursor: pointer;
+        }
+
+        /* 主畫面 */
+        .main-wrapper { display: none; height: 100%; flex-direction: column; }
+
+        .top-nav {
+            display: flex; justify-content: space-around; align-items: center;
+            height: 60px; background-color: var(--nav-bg); z-index: 100;
+        }
+
+        .tab-btn {
+            background: rgba(255, 255, 255, 0.5); border: none;
+            padding: 8px 12px; border-radius: 12px; color: var(--text-color);
+            font-size: 0.85rem;
+        }
+
+        .tab-btn.active { background: var(--white); color: var(--accent-pink); font-weight: bold; }
+
+        .content-area { flex: 1; width: 100%; padding-bottom: env(safe-area-inset-bottom); }
+
+        iframe { width: 100%; height: 100%; border: none; display: none; }
+        iframe.active { display: block; }
+
+        /* 登出按鈕 */
+        .logout-btn { font-size: 0.7rem; opacity: 0.6; margin-top: 10px; cursor: pointer; text-decoration: underline; }
+    </style>
+</head>
+<body>
+
+    <div id="login-overlay">
+        <div class="login-box">
+            <h2>PikaTrip</h2>
+            <input type="text" id="username" value="molly5133" placeholder="帳號">
+            <input type="password" id="password" value="1" placeholder="密碼">
+            <button onclick="handleLogin()">進入系統</button>
+            <p id="error-msg" style="color: #ff8b94; font-size: 0.8rem; margin-top: 10px; display: none;"></p>
+        </div>
+    </div>
+
+    <div id="main-content" class="main-wrapper">
+        <div class="top-nav">
+            <button class="tab-btn active" onclick="showApp(1, this)">交通行程</button>
+            <button class="tab-btn" onclick="showApp(2, this)">地圖導航</button>
+            <button class="tab-btn" onclick="showApp(3, this)">購物清單</button>
+            <button class="tab-btn" onclick="showApp(4, this)">隨手筆記</button>
+            <div class="logout-btn" onclick="logout()">登出</div>
+        </div>
+
+        <div class="content-area">
+            <iframe id="app1" src="" class="active"></iframe>
+            <iframe id="app2" src=""></iframe>
+            <iframe id="app3" src=""></iframe>
+            <iframe id="app4" src=""></iframe>
+        </div>
+    </div>
+
+    <script>
+        const apps = {
+            1: "transportation.html",
+            2: "map.html",
+            3: "shoppinglist.html",
+            4: "pikanote.html"
+        };
+
+        function handleLogin() {
+            const u = document.getElementById('username').value.trim();
+            const p = document.getElementById('password').value.trim();
+            const error = document.getElementById('error-msg');
+
+            if (!u || !p) {
+                error.innerText = "請填寫帳號密碼";
+                error.style.display = 'block';
+                return;
+            }
+
+            let users = JSON.parse(localStorage.getItem('pika_users') || '{}');
+            
+            if (!users[u]) {
+                users[u] = p;
+                localStorage.setItem('pika_users', JSON.stringify(users));
+            } else if (users[u] !== p) {
+                error.innerText = "密碼錯誤！此帳號已被註冊過。";
+                error.style.display = 'block';
+                return;
+            }
+
+            localStorage.setItem('pika_current_user', u);
+            initApp(u);
+        }
+
+        function initApp(username) {
+            document.getElementById('login-overlay').style.display = 'none';
+            document.getElementById('main-content').style.display = 'flex';
+            
+            for (let i = 1; i <= 4; i++) {
+                const frame = document.getElementById('app' + i);
+                // 傳遞 user 參數
+                frame.src = `${apps[i]}?user=${encodeURIComponent(username)}`;
+            }
+        }
+
+        function showApp(index, btn) {
+            document.querySelectorAll('iframe').forEach(f => f.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById('app' + index).classList.add('active');
+            btn.classList.add('active');
+        }
+
+        function logout() {
+            localStorage.removeItem('pika_current_user');
+            location.reload();
+        }
+
+        window.onload = function() {
+            const loggedInUser = localStorage.getItem('pika_current_user');
+            if (loggedInUser) {
+                initApp(loggedInUser);
+            }
+        };
+    </script>
+</body>
+</html>

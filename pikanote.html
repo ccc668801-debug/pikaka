@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+    <title>日系手帳 - PikaNote v3</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;700&family=Kiwi+Maru:wght@400;500&family=Varela+Round&family=Kosugi+Maru&family=Sawarabi+Gothic&family=M+PLUS+Rounded+1c:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root{--jp-white:#FAF9F6;--jp-gray:#4A4A4A;--jp-accent:#8EACCD}
+        .font-style-0{font-family:'Zen Maru Gothic',sans-serif}
+        .font-style-1{font-family:'M PLUS Rounded 1c',sans-serif}
+        .font-style-2{font-family:'Kiwi Maru',serif}
+        .font-style-3{font-family:'Kosugi Maru',sans-serif}
+        .font-style-4{font-family:'Varela Round','Zen Maru Gothic',sans-serif}
+
+        body{background-color:var(--jp-white);color:var(--jp-gray);transition:all .3s;-webkit-tap-highlight-color:transparent}
+        .nav-btn{padding:12px 15px;font-size:.9rem;color:#A0A0A0;position:relative;transition:.3s}
+        .nav-btn.active{color:#2D3436;font-weight:700}
+        .nav-btn.active::after{content:'';position:absolute;bottom:4px;left:50%;transform:translateX(-50%);width:12px;height:3px;background:var(--jp-accent);border-radius:10px}
+        .page{display:none;animation:fadeIn .3s ease}
+        .page.active{display:block}
+        @keyframes fadeIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+        
+        .note-card{transition: opacity 0.4s ease, transform 0.2s ease; cursor: pointer;}
+        .note-card.dimmed{opacity: 0.4; filter: grayscale(30%);}
+
+        .todo-card{background:#fff;border-radius:30px;padding:25px;box-shadow:0 4px 15px rgba(0,0,0,.02)}
+        .todo-category-header{display:flex;align-items:center;gap:10px;margin-bottom:20px;font-weight:700;color:#333}
+        .todo-category-line{width:4px;height:18px;background:#8EACCD;border-radius:10px}
+        .todo-item{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid #f8f8f8}
+        .todo-checkbox{width:22px;height:22px;border:2px solid #E0E0E0;border-radius:50%;cursor:pointer;position:relative}
+        .todo-checkbox.checked{background:#8EACCD;border-color:#8EACCD}
+        .todo-checkbox.checked::after{content:'✓';color:#fff;position:absolute;font-size:12px;top:50%;left:50%;transform:translate(-50%,-50%)}
+        .todo-text{flex:1;margin-left:15px;font-size:16px;color:#4A4A4A}
+        .todo-text.done{text-decoration:line-through;color:#C0C0C0}
+        
+        .select-card{background:#fff;border-radius:24px;padding:25px;text-align:center;border:1px solid #F0F0F0;cursor:pointer}
+        .color-dot{width:32px;height:32px;border-radius:50%;cursor:pointer;border:2px solid transparent}
+        .color-dot.active{border-color:#4A4A4A;transform:scale(1.1)}
+        
+        .list-item-row{width:100%;display:flex;justify-content:space-between;align-items:center;padding:18px 20px;margin-bottom:12px;background:#fff;border-radius:18px;border:1px solid #F0F0F0;cursor:pointer}
+        .bg-color-1{background-color:#FFECF1!important}.bg-color-2{background-color:#E0F2FE!important}.bg-color-3{background-color:#F0FDF4!important}.bg-color-4{background-color:#FFFBEB!important}.bg-color-5{background-color:#F5F3FF!important}.bg-white-card{background-color:#FFF!important;border:1px solid #F0F0F0!important}
+        
+        .editable-content:focus{outline:2px solid #8EACCD;border-radius:8px;background:rgba(255,255,255,.5)}
+        .move-btn{font-size:14px;color:#A0A0A0;padding:4px 8px;transition:0.2s}
+        
+        /* 圖片相關樣式 */
+        .img-grid{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+        .thumb-img{width:60px;height:60px;object-fit:cover;border-radius:8px;cursor:zoom-in;border:1px solid rgba(0,0,0,0.05)}
+        .lightbox{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.9);z-index:1000;justify-content:center;align-items:center;cursor:zoom-out}
+        .lightbox img{max-width:95%;max-height:95%;border-radius:4px;box-shadow:0 0 20px rgba(0,0,0,0.5)}
+        .delete-img-btn{position:absolute;top:-5px;right:-5px;background:#ff4757;color:white;width:18px;height:18px;border-radius:50%;font-size:12px;display:flex;justify-content:center;align-items:center;box-shadow:0 2px 4px rgba(0,0,0,0.2)}
+    </style>
+</head>
+<body class="min-h-screen pb-24 font-style-0" id="main-body">
+    <div id="lightbox" class="lightbox" onclick="this.style.display='none'">
+        <img id="lightbox-img" src="" alt="Zoomed">
+    </div>
+
+    <nav class="fixed top-0 w-full bg-white/90 backdrop-blur-md z-50 border-b border-stone-100 px-4">
+        <div class="max-w-4xl mx-auto flex justify-around items-center h-14">
+            <button onclick="showPage('create-page')" class="nav-btn active" id="btn-create-page">新增</button>
+            <button onclick="showPage('todo-page')" class="nav-btn" id="btn-todo-page">待辦</button>
+            <button onclick="showPage('note-page')" class="nav-btn" id="btn-note-page">便條</button>
+        </div>
+    </nav>
+
+    <div class="fixed bottom-6 left-6 z-50">
+        <button onclick="cycleFont()" class="w-12 h-12 bg-white text-stone-700 rounded-full shadow-lg border border-stone-100 flex items-center justify-center text-[10px] font-bold">字體</button>
+    </div>
+
+    <div class="fixed bottom-6 right-6 flex flex-col gap-3 z-50">
+        <button onclick="exportData()" class="w-12 h-12 bg-stone-800 text-white rounded-full shadow-lg flex items-center justify-center text-xs">匯出</button>
+        <label class="w-12 h-12 bg-stone-400 text-white rounded-full shadow-lg flex items-center justify-center text-xs cursor-pointer">匯入<input type="file" class="hidden" onchange="importData(event)"></label>
+    </div>
+
+    <main class="max-w-2xl mx-auto pt-20 px-6">
+        <section id="create-page" class="page active">
+            <div class="mb-6 px-1"><h1 class="text-2xl font-black text-stone-800 tracking-tighter">PIKANOTE</h1><div id="quote-display" class="text-xs text-stone-400 italic mt-1">...</div></div>
+            <div class="grid grid-cols-1 gap-4">
+                <div onclick="showSubPage('add-todo-sub')" class="select-card shadow-sm"><div class="text-3xl mb-2">📋</div><div class="font-bold text-stone-700">新增待辦事項</div></div>
+                <div onclick="showSubPage('add-note-sub')" class="select-card shadow-sm"><div class="text-3xl mb-2">✍️</div><div class="font-bold text-stone-700">新增便條卡片</div></div>
+            </div>
+        </section>
+
+        <section id="add-todo-sub" class="page">
+            <button onclick="showPage('create-page')" class="mb-4 text-stone-400 text-sm font-bold">← 返回選擇</button>
+            <div class="bg-white rounded-[24px] p-6 border border-stone-100 shadow-sm space-y-4">
+                <input type="text" id="todo-cat-input" class="w-full p-3 bg-stone-100 rounded-xl text-sm outline-none" placeholder="分類 (如: 工作)">
+                <textarea id="todo-text-input" class="w-full p-3 bg-stone-50 rounded-xl text-sm outline-none min-h-[120px]" placeholder="輸入要做的事情，換行可一次新增多項"></textarea>
+                <button onclick="addNewTodo()" class="w-full bg-[#8EACCD] text-white py-4 rounded-xl text-sm font-bold">批次加入待辦</button>
+            </div>
+        </section>
+
+        <section id="add-note-sub" class="page">
+            <button onclick="showPage('create-page')" class="mb-4 text-stone-400 text-sm font-bold">← 返回選擇</button>
+            <div class="bg-white rounded-[24px] p-6 border border-stone-100 shadow-sm space-y-6">
+                <div class="flex gap-3 justify-center">
+                    <div onclick="selectColor('bg-color-1',this)" class="color-dot bg-color-1 active"></div>
+                    <div onclick="selectColor('bg-color-2',this)" class="color-dot bg-color-2"></div>
+                    <div onclick="selectColor('bg-color-3',this)" class="color-dot bg-color-3"></div>
+                    <div onclick="selectColor('bg-color-4',this)" class="color-dot bg-color-4"></div>
+                    <div onclick="selectColor('bg-color-5',this)" class="color-dot bg-color-5"></div>
+                    <div onclick="selectColor('bg-white-card',this)" class="color-dot bg-white border border-stone-200"></div>
+                </div>
+                <div class="flex gap-2">
+                    <input type="text" id="group-title" class="flex-1 p-3 bg-stone-100 rounded-xl text-sm font-bold outline-none" placeholder="大標題 (日期)">
+                    <button onclick="setToday()" class="px-4 bg-stone-200 text-stone-600 rounded-xl text-xs font-bold">今天</button>
+                </div>
+                <div class="flex gap-2 items-center">
+                    <input type="text" id="item-title" class="flex-1 p-3 bg-stone-50 rounded-xl text-sm outline-none text-stone-400" placeholder="小項標題">
+                    <label class="bg-stone-100 p-3 rounded-xl cursor-pointer text-xl">🖼️<input type="file" accept="image/*" multiple class="hidden" onchange="handleImageUpload(event, 'new')"></label>
+                </div>
+                <div id="new-note-image-grid" class="img-grid"></div>
+                <div id="note-editor" contenteditable="true" class="text-sm leading-relaxed min-h-[180px] p-5 border border-stone-100 rounded-xl bg-color-1 outline-none"></div>
+                <button onclick="saveNoteItem()" class="w-full bg-stone-700 text-white py-4 rounded-xl text-sm font-bold">儲存便條</button>
+            </div>
+        </section>
+
+        <section id="todo-page" class="page"><h2 class="text-xl font-bold mb-6 px-2">待辦清單</h2><div id="todo-container" class="space-y-6"></div></section>
+        <section id="note-page" class="page"><div id="group-list" class="flex flex-col"></div></section>
+        
+        <section id="detail-page" class="page">
+            <div class="flex items-center justify-between mb-4 px-2">
+                <button onclick="showPage('note-page')" class="text-stone-400 text-sm font-bold">← 返回目錄</button>
+                <h2 id="detail-title" contenteditable="true" onblur="updateGroupTitle(this.innerText)" class="font-bold text-lg editable-content px-2 text-center flex-1"></h2>
+            </div>
+            <div id="detail-grid" class="space-y-4"></div>
+        </section>
+    </main>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const currentUser = urlParams.get('user') || 'guest'; 
+        const STORAGE_KEY = `pika_v19_db_${currentUser}`;
+
+        let db = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {todos:[],groups:{},fontIdx:0};
+        let selectedColorClass='bg-color-1',currentGroupKey='',tempImages=[],fontClasses=['font-style-0', 'font-style-1', 'font-style-2', 'font-style-3', 'font-style-4'];
+        
+        const quotes = ["今日という日は、残りの人生の最初の一日である。","一期一会","日日是好日。","初心忘るべからず。","明日は明日の風が吹く。","自分を信じて。","あきらめたらそこで試合終了ですよ。","生活の断片を記録する。","ゆっくり歩めば、遠くまで行ける。","雨の日には雨の中を、風の日には風の中を。"];
+        
+        function init(){applyFont();renderData();refreshQuote()}
+        function showPage(pId){
+            document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+            document.getElementById(pId).classList.add('active');
+            if(document.getElementById('btn-'+pId))document.getElementById('btn-'+pId).classList.add('active');
+            if(pId==='create-page')refreshQuote();
+            renderData();
+        }
+        function showSubPage(subId){document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.getElementById(subId).classList.add('active')}
+        function refreshQuote(){document.getElementById('quote-display').innerText=quotes[Math.floor(Math.random()*quotes.length)]}
+        function cycleFont(){db.fontIdx=(db.fontIdx+1)%fontClasses.length;applyFont();save()}
+        function applyFont(){document.getElementById('main-body').className=`min-h-screen pb-24 ${fontClasses[db.fontIdx]}`}
+
+        // 待辦功能
+        function addNewTodo(){
+            const rawText = document.getElementById('todo-text-input').value;
+            const catInput = document.getElementById('todo-cat-input');
+            const category = catInput.value || '未分類';
+            if(!rawText.trim()) return;
+            rawText.split(/\r?\n/).filter(line => line.trim() !== "").forEach(line => {
+                db.todos.push({text: line.trim(), cat: category, done: false, id: Date.now() + Math.random()});
+            });
+            save();
+            document.getElementById('todo-text-input').value = '';
+            catInput.value = '';
+            showPage('todo-page');
+        }
+        function toggleTodo(id){const i=db.todos.find(t=>t.id===id);i.done=!i.done;save();renderData()}
+        function deleteTodo(id){if(confirm('刪除？')){db.todos=db.todos.filter(t=>t.id!==id);save();renderData()}}
+
+        // 圖片處理核心
+        async function handleImageUpload(e, targetIdx) {
+            const files = Array.from(e.target.files);
+            for (let file of files) {
+                const base64 = await resizeImage(file);
+                if (targetIdx === 'new') {
+                    tempImages.push(base64);
+                    renderTempImages();
+                } else {
+                    if (!db.groups[currentGroupKey][targetIdx].images) db.groups[currentGroupKey][targetIdx].images = [];
+                    db.groups[currentGroupKey][targetIdx].images.push(base64);
+                    save();
+                    renderDetailGrid();
+                }
+            }
+        }
+
+        function resizeImage(file) {
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        let width = img.width, height = img.height, max = 800;
+                        if (width > height && width > max) { height *= max / width; width = max; }
+                        else if (height > max) { width *= max / height; height = max; }
+                        canvas.width = width; canvas.height = height;
+                        canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+                        resolve(canvas.toDataURL('image/jpeg', 0.7));
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function renderTempImages() {
+            document.getElementById('new-note-image-grid').innerHTML = tempImages.map((src, i) => 
+                `<div class="relative"><img src="${src}" class="thumb-img" onclick="zoomImg('${src}')"><button onclick="tempImages.splice(${i},1);renderTempImages()" class="delete-img-btn">×</button></div>`
+            ).join('');
+        }
+
+        function zoomImg(src) {
+            const lb = document.getElementById('lightbox');
+            document.getElementById('lightbox-img').src = src;
+            lb.style.display = 'flex';
+        }
+
+        function removeNoteImg(noteIdx, imgIdx) {
+            db.groups[currentGroupKey][noteIdx].images.splice(imgIdx, 1);
+            save();
+            renderDetailGrid();
+        }
+
+        // 便條功能
+        function selectColor(c,el){
+            selectedColorClass=c;
+            document.querySelectorAll('.color-dot').forEach(d=>d.classList.remove('active'));
+            el.classList.add('active');
+            document.getElementById('note-editor').className=`text-sm leading-relaxed min-h-[180px] p-5 border border-stone-100 rounded-xl outline-none ${c}`;
+        }
+        function setToday(){const d=new Date();document.getElementById('group-title').value=`${d.getMonth()+1}/${d.getDate()}`}
+
+        function saveNoteItem(){
+            const g = document.getElementById('group-title').value.trim();
+            const c = document.getElementById('note-editor').innerText.trim();
+            if(!g || (!c && tempImages.length === 0)) return;
+            if(!db.groups[g]) db.groups[g]=[];
+            db.groups[g].push({
+                id: Date.now(),
+                title: document.getElementById('item-title').value || '無題',
+                content: c,
+                images: [...tempImages],
+                colorClass: selectedColorClass,
+                dimmed: false
+            });
+            save();
+            document.getElementById('group-title').value = '';
+            document.getElementById('item-title').value = '';
+            document.getElementById('note-editor').innerText = '';
+            tempImages = [];
+            document.getElementById('new-note-image-grid').innerHTML = '';
+            showPage('note-page');
+        }
+
+        function openDetail(k){currentGroupKey=k;showPage('detail-page');document.getElementById('detail-title').innerText=k;renderDetailGrid()}
+
+        function renderDetailGrid(){
+            const items=db.groups[currentGroupKey]||[];
+            document.getElementById('detail-grid').innerHTML=items.map((item,nIdx)=>`
+                <div ondblclick="toggleDim(${nIdx})" class="note-card p-6 rounded-[24px] ${item.colorClass} ${item.dimmed ? 'dimmed' : ''} shadow-sm border border-black/5 relative">
+                    <div class="flex justify-between items-center mb-3">
+                        <h4 contenteditable="true" onblur="updateNote(${nIdx},'title',this.innerText)" class="font-bold text-stone-400 editable-content flex-1">${item.title}</h4>
+                        <div class="flex items-center gap-1">
+                            <label class="cursor-pointer text-xs p-1">🖼️<input type="file" multiple class="hidden" onchange="handleImageUpload(event, ${nIdx})"></label>
+                            <button onclick="event.stopPropagation(); deleteNoteItem('${currentGroupKey}',${item.id})" class="text-red-400 ml-2 text-2xl font-light px-2">×</button>
+                        </div>
+                    </div>
+                    <div class="img-grid mb-3">
+                        ${(item.images || []).map((src, iIdx) => `
+                            <div class="relative">
+                                <img src="${src}" class="thumb-img" onclick="event.stopPropagation(); zoomImg('${src}')">
+                                <button onclick="event.stopPropagation(); removeNoteImg(${nIdx}, ${iIdx})" class="delete-img-btn">×</button>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <div contenteditable="true" oninput="updateNote(${nIdx},'content',this.innerText)" class="text-[14px] text-stone-700 whitespace-pre-wrap editable-content">${item.content}</div>
+                </div>`).join('');
+        }
+
+        function toggleDim(idx){db.groups[currentGroupKey][idx].dimmed = !db.groups[currentGroupKey][idx].dimmed;save();renderDetailGrid();}
+        function updateNote(idx, field, val) { if(db.groups[currentGroupKey][idx]){ db.groups[currentGroupKey][idx][field]=val; save(); } }
+        function updateGroupTitle(newK){
+            newK=newK.trim();if(!newK||newK===currentGroupKey)return;
+            db.groups[newK]=db.groups[currentGroupKey];delete db.groups[currentGroupKey];
+            currentGroupKey=newK;save();
+        }
+        function deleteNoteItem(gk,id){
+            if(confirm('刪除？')){
+                db.groups[gk]=db.groups[gk].filter(i=>i.id!==id);
+                if(!db.groups[gk].length) delete db.groups[gk];
+                save(); renderData(); showPage(db.groups[gk] ? 'detail-page' : 'note-page');
+            }
+        }
+
+        function renderData(){
+            const cats=[...new Set(db.todos.map(t=>t.cat))];
+            document.getElementById('todo-container').innerHTML=cats.map(cat=>{
+                const items=db.todos.filter(t=>t.cat===cat);
+                return `<div class="todo-card"><div class="todo-category-header"><div class="todo-category-line"></div><span>${cat}</span></div>
+                <div class="space-y-1">${items.map(t=>`<div class="todo-item"><div class="flex items-center flex-1" onclick="toggleTodo(${t.id})">
+                <div class="todo-checkbox ${t.done?'checked':''}"></div><span class="todo-text ${t.done?'done':''}">${t.text}</span></div>
+                <button onclick="deleteTodo(${t.id})" class="text-stone-300 px-2 text-xl">×</button></div>`).join('')}</div></div>`
+            }).join('')||'<p class="text-center text-stone-300 text-xs py-10">尚無待辦</p>';
+            
+            document.getElementById('group-list').innerHTML=Object.keys(db.groups).map(k=>`
+                <div onclick="openDetail('${k}')" class="list-item-row shadow-sm"><div class="font-bold text-stone-700">${k}</div>
+                <div class="text-[10px] text-stone-300 font-bold">${db.groups[k].length} 項 →</div></div>`).join('')||'<p class="text-center text-stone-300 text-xs py-10">尚無內容</p>';
+        }
+
+        function save(){localStorage.setItem(STORAGE_KEY, JSON.stringify(db))}
+        function exportData(){const blob=new Blob([JSON.stringify(db)],{type:"application/json"}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=`手帳備份.json`;a.click()}
+        function importData(e){const r=new FileReader();r.onload=(e)=>{db=JSON.parse(e.target.result);save();location.reload()};r.readAsText(e.target.files[0])}
+        
+        init();
+    </script>
+</body>
+</html>
