@@ -67,7 +67,7 @@
 
         .panel {
             background: #fff;
-            padding: 20px;
+            padding: 22px;
             border-radius: 30px;
             border: 4px solid var(--pika-yellow);
             margin-bottom: 20px;
@@ -75,22 +75,23 @@
         }
 
         input, select, textarea {
-            padding: 10px;
+            padding: 12px;
             border: 2px solid #F0F0F0;
             border-radius: 12px;
             width: 100%;
-            margin-bottom: 8px;
+            margin-bottom: 12px;
             outline: 0;
-            font-size: 14px;
-            background: #FAFAFA
+            font-size: 16px; 
+            background: #FAFAFA;
+            color: var(--pika-brown);
         }
 
         .step-box {
             background: #FFFDF5;
             border: 2px dashed var(--pika-orange);
-            padding: 15px;
+            padding: 18px;
             border-radius: 22px;
-            margin-bottom: 15px;
+            margin-bottom: 18px;
             position: relative
         }
 
@@ -99,36 +100,39 @@
             background: var(--pika-orange);
             color: #fff;
             border: none;
-            padding: 14px;
+            padding: 16px;
             border-radius: 35px;
             cursor: pointer;
             width: 100%;
             font-weight: 700;
-            box-shadow: 0 4px 0 #D35400
+            font-size: 18px;
+            box-shadow: 0 4px 0 #D35400;
+            margin-top: 10px;
         }
 
         .nav-btn {
             font-family: 'Kosugi Maru';
             background: #fff;
             border: 3px solid var(--pika-brown);
-            padding: 10px;
+            padding: 12px;
             border-radius: 25px;
             width: 100%;
             cursor: pointer;
             margin-bottom: 15px;
-            font-weight: 700
+            font-weight: 700;
+            font-size: 16px;
         }
 
         .color-fav {
             display: flex;
             gap: 8px;
-            margin-bottom: 10px;
+            margin-bottom: 12px;
             align-items: center
         }
 
         .fav-dot {
-            width: 30px;
-            height: 30px;
+            width: 32px;
+            height: 32px;
             border-radius: 8px;
             cursor: pointer;
             border: 2px solid #fff;
@@ -137,23 +141,31 @@
 
         .date-group-header {
             background: #fff;
-            padding: 15px;
+            padding: 18px;
             border-radius: 20px;
             border: 3px solid var(--pika-brown);
-            margin-bottom: 10px;
+            margin-bottom: 12px;
             font-family: 'Mochiy Pop One';
             display: flex;
             justify-content: space-between;
             align-items: center;
             cursor: pointer;
-            box-shadow: 0 3px 0 var(--pika-brown)
+            box-shadow: 0 3px 0 var(--pika-brown);
+            font-size: 16px;
+        }
+
+        /* 橘色金額樣式 - 每日小計 */
+        .total-orange {
+            font-size: 16px;
+            color: var(--pika-orange);
+            font-weight: bold;
         }
 
         .loc-card {
             background: #fff;
             border: 3px solid var(--pika-brown);
             border-radius: 30px;
-            padding: 20px;
+            padding: 22px;
             margin-bottom: 20px;
             position: relative;
             box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.05);
@@ -170,37 +182,38 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 10px;
+            margin-bottom: 12px;
             gap: 10px
         }
 
         .dest-title {
             font-family: 'Mochiy Pop One';
             color: var(--pika-orange);
-            font-size: 1rem;
+            font-size: 1.3rem; 
             flex: 1;
             margin: 0
         }
 
+        /* 橘色金額樣式 - 個別行程票價 */
         .price-label {
-            color: var(--pika-blue);
+            color: var(--pika-orange);
             font-weight: 900;
             font-family: 'Mochiy Pop One';
-            font-size: 0.9rem;
+            font-size: 1.2rem;
             white-space: nowrap
         }
 
         .route-bundle {
             background: #FFFCEB;
             border-radius: 22px;
-            padding: 15px;
-            margin: 12px 0
+            padding: 20px;
+            margin: 15px 0
         }
 
         .route-item {
-            padding: 0 0 15px 15px;
+            padding: 0 0 20px 20px;
             position: relative;
-            border-left: 6px solid #DDD;
+            border-left: 8px solid #DDD;
             margin-bottom: 15px;
             transition: 0.2s
         }
@@ -212,37 +225,60 @@
 
         .badge {
             display: inline-block;
-            padding: 3px 10px;
-            border-radius: 8px;
+            padding: 5px 14px;
+            border-radius: 10px;
             color: #fff;
-            font-size: 11px;
+            font-size: 14px;
             font-weight: bold;
-            margin-bottom: 8px
+            margin-bottom: 10px
+        }
+
+        /* 站名文字大小調回 18px */
+        .station-text {
+            font-weight: 700;
+            font-size: 18px; 
+            line-height: 1.5;
+            display: block;
+            margin: 5px 0;
         }
 
         .time-val {
             color: var(--pika-blue);
-            font-size: 12px;
-            margin-left: 5px;
+            font-size: 15px;
+            margin-left: 8px;
+            font-weight: bold;
         }
 
         .dir-val {
             color: var(--pika-purple);
-            font-size: 11px;
+            font-size: 14px;
             font-weight: 500;
-            margin: 2px 0;
+            margin: 4px 0;
         }
 
         .pay-val {
-            font-size: 11px;
+            font-size: 13px;
             font-weight: 700;
             color: var(--text-gray);
-            margin-top: 2px;
+            margin-top: 4px;
+        }
+
+        .exit-val {
+            font-size: 14px;
+            color: #E67E22;
+            font-weight: bold;
+            margin-top: 4px;
+        }
+
+        .note-val {
+            font-size: 14px;
+            color: #888;
+            margin-top: 10px;
         }
 
         .tool-btn {
-            font-size: 11px;
-            padding: 5px 8px;
+            font-size: 12px;
+            padding: 6px 10px;
             border-radius: 10px;
             border: 2px solid var(--pika-brown);
             background: #fff;
@@ -266,16 +302,16 @@
             border-radius: 20px;
             font-weight: bold;
             cursor: pointer;
-            font-size: 0.85rem;
+            font-size: 0.9rem;
             color: var(--pika-brown)
         }
 
         .trip-selector {
             border: 2px solid var(--pika-orange);
             border-radius: 10px;
-            padding: 4px;
-            font-size: 12px;
-            max-width: 150px;
+            padding: 6px;
+            font-size: 14px;
+            max-width: 160px;
             background: #FFFDF5
         }
     </style>
@@ -298,8 +334,8 @@
                 <input type="date" id="dateInp">
                 <input type="text" id="destInp" placeholder="目的地">
                 <div id="stepContainer"></div>
-                <button class="nav-btn" style="border-style:dashed;font-size:12px" onclick="addStep()">+ 增加轉乘片段</button>
-                <textarea id="noteInp" placeholder="備註..." rows="1"></textarea>
+                <button class="nav-btn" style="border-style:dashed;font-size:14px" onclick="addStep()">+ 增加轉乘片段</button>
+                <textarea id="noteInp" placeholder="備註..." rows="2"></textarea>
                 <input type="hidden" id="editId">
                 <button class="pika-btn" onclick="saveData()">儲存行程</button>
             </div>
@@ -334,11 +370,9 @@
                 favColors: myFavColors,
                 lastTrip: "預設旅程"
             };
-            
             allTrips = db.trips;
             currentTrip = db.lastTrip || Object.keys(allTrips)[0];
             myFavColors = db.favColors;
-
             document.getElementById("dateInp").valueAsDate = new Date();
             updateTripDropdown();
             if (document.getElementById('stepContainer').children.length === 0) addStep();
@@ -402,7 +436,7 @@
                 <div class="color-fav">${myFavColors.map(clr => `<div class="fav-dot" style="background:${clr}" onclick="this.parentElement.nextElementSibling.querySelector('.s-color').value='${clr}'"></div>`).join('')} <button class="tool-btn" onclick="saveColor(this)">存色</button></div>
                 <div style="display:flex;gap:5px">
                     <input type="text" class="s-line" placeholder="路線" value="${v.line || ''}" style="flex:2">
-                    <input type="color" class="s-color" value="${v.color || myFavColors[0]}" style="flex:0.5;height:35px">
+                    <input type="color" class="s-color" value="${v.color || myFavColors[0]}" style="flex:0.5;height:45px">
                 </div>
                 <input type="text" class="s-dir" placeholder="方向" value="${v.dir || ''}" style="margin-bottom:8px">
                 <div style="display:flex;gap:5px">
@@ -457,29 +491,16 @@
                 })
             });
             const id = eid || Date.now().toString(), item = {
-                id,
-                date: document.getElementById("dateInp").value,
-                dest,
-                steps,
-                note: document.getElementById("noteInp").value,
-                visited: false
+                id, date: document.getElementById("dateInp").value, dest, steps,
+                note: document.getElementById("noteInp").value, visited: false
             };
             const idx = allTrips[currentTrip].findIndex(e => e.id === id);
             if (idx > -1) allTrips[currentTrip][idx] = item; else allTrips[currentTrip].push(item);
-            sync();
-            render();
-            alert("已儲存！");
-            clearForm(); 
-            showList();
+            sync(); render(); alert("已儲存！"); clearForm(); showList();
         }
 
         function sync() {
-            let db = {
-                trips: allTrips,
-                favColors: myFavColors,
-                lastTrip: currentTrip
-            };
-            localStorage.setItem(DB_KEY, JSON.stringify(db))
+            localStorage.setItem(DB_KEY, JSON.stringify({trips: allTrips, favColors: myFavColors, lastTrip: currentTrip}))
         }
 
         function clearForm() {
@@ -491,31 +512,23 @@
             document.getElementById("dateInp").valueAsDate = new Date();
         }
 
-        // 新增：計算星期幾的小工具
         function getWeekday(dateString) {
             const days = ['週日', '週一', '週二', '週三', '週四', '週五', '週六'];
-            const d = new Date(dateString);
-            return days[d.getDay()];
+            return days[new Date(dateString).getDay()];
         }
 
         function render() {
             const c = document.getElementById("listItems");
             c.innerHTML = "";
             const d = allTrips[currentTrip] || [], g = {};
-            d.forEach(i => {
-                if (!g[i.date]) g[i.date] = [];
-                g[i.date].push(i)
-            });
+            d.forEach(i => { if (!g[i.date]) g[i.date] = []; g[i.date].push(i) });
             Object.keys(g).sort().forEach(dt => {
                 let total = 0;
                 g[dt].forEach(i => i.steps.forEach(s => total += Number(s.price) || 0));
-                
-                // 這裡加入了星期幾的顯示
                 const weekday = getWeekday(dt);
                 const gd = document.createElement('div'), hd = document.createElement('div');
                 hd.className = 'date-group-header';
-                hd.innerHTML = `<div>📅 ${dt} (${weekday})</div><div style="font-size:14px;color:orange;font-weight:bold">小計：${total}円 <span>▼</span></div>`;
-                
+                hd.innerHTML = `<div>📅 ${dt} (${weekday})</div><div class="total-orange">小計：${total}円 <span>▼</span></div>`;
                 const lt = document.createElement('div');
                 lt.style.display = expandedDates.has(dt) ? 'block' : 'none';
                 hd.onclick = () => {
@@ -529,28 +542,22 @@
                         sh += `
                             <div class="route-item ${s.checked ? 'checked' : ''}" style="border-left-color:${s.color}" ondblclick="event.stopPropagation();toggleStep('${i.id}',${si})">
                                 <div class="badge" style="background:${s.color}">${s.line}</div>
-                                <div style="font-weight:500;font-size:14px">
+                                <div class="station-text">
                                     ${s.start} → ${s.end} 
                                     <span class="time-val">${s.time}</span>
                                 </div>
                                 ${s.dir ? `<div class="dir-val">往 ${s.dir}</div>` : ''}
                                 <div class="pay-val">${s.pay}</div>
-                                ${s.exit ? `<div style="font-size:11px;color:orange;font-weight:bold;margin-top:2px">🚩 出口：${s.exit}</div>` : ''}
+                                ${s.exit ? `<div class="exit-val">🚩 出口：${s.exit}</div>` : ''}
                             </div>`;
                     });
                     const card = document.createElement('div');
                     card.className = 'loc-card' + (i.visited ? ' checked-all' : '');
-                    card.ondblclick = () => {
-                        i.visited = !i.visited;
-                        sync();
-                        render()
-                    };
-                    card.innerHTML = `<div class="card-header-row"><h3 class="dest-title">${i.dest}</h3><div class="price-label">${tp}円</div><div><button class="tool-btn" onclick="event.stopPropagation();moveItem('${i.id}',-1)">↑</button><button class="tool-btn" onclick="event.stopPropagation();moveItem('${i.id}',1)">↓</button></div></div><div class="route-bundle">${sh}</div><div style="font-size:11px;color:#999">備註：${i.note}</div><div style="text-align:right;margin-top:12px"><button class="tool-btn" onclick="event.stopPropagation();editItem('${i.id}')">修改</button><button class="tool-btn" style="color:red;margin-left:8px" onclick="event.stopPropagation();deleteItem('${i.id}')">刪除</button></div>`;
+                    card.ondblclick = () => { i.visited = !i.visited; sync(); render() };
+                    card.innerHTML = `<div class="card-header-row"><h3 class="dest-title">${i.dest}</h3><div class="price-label">${tp}円</div><div><button class="tool-btn" onclick="event.stopPropagation();moveItem('${i.id}',-1)">↑</button><button class="tool-btn" onclick="event.stopPropagation();moveItem('${i.id}',1)">↓</button></div></div><div class="route-bundle">${sh}</div><div class="note-val">備註：${i.note}</div><div style="text-align:right;margin-top:12px"><button class="tool-btn" onclick="event.stopPropagation();editItem('${i.id}')">修改</button><button class="tool-btn" style="color:red;margin-left:8px" onclick="event.stopPropagation();deleteItem('${i.id}')">刪除</button></div>`;
                     lt.appendChild(card)
                 });
-                gd.appendChild(hd);
-                gd.appendChild(lt);
-                c.appendChild(gd)
+                gd.appendChild(hd); gd.appendChild(lt); c.appendChild(gd)
             })
         }
 
@@ -561,17 +568,12 @@
             if (newD < 0 || newD >= sd.length) return;
             const tI = sd[newD], gT = d.findIndex(e => e.id === tI.id);
             [d[idx], d[gT]] = [d[gT], d[idx]];
-            sync();
-            render()
+            sync(); render()
         }
 
         function toggleStep(id, si) {
             const i = allTrips[currentTrip].find(e => e.id === id);
-            if (i && i.steps[si]) {
-                i.steps[si].checked = !i.steps[si].checked;
-                sync();
-                render()
-            }
+            if (i && i.steps[si]) { i.steps[si].checked = !i.steps[si].checked; sync(); render() }
         }
 
         function editItem(id) {
@@ -587,11 +589,7 @@
         }
 
         function deleteItem(id) {
-            if (confirm("確定刪除？")) {
-                allTrips[currentTrip] = allTrips[currentTrip].filter(e => e.id !== id);
-                sync();
-                render()
-            }
+            if (confirm("確定刪除？")) { allTrips[currentTrip] = allTrips[currentTrip].filter(e => e.id !== id); sync(); render() }
         }
 
         function showList() {
@@ -601,9 +599,7 @@
         }
 
         function showAdd() {
-            if (!document.getElementById("editId").value) {
-                clearForm();
-            }
+            if (!document.getElementById("editId").value) { clearForm(); }
             document.getElementById("addView").classList.add("active");
             document.getElementById("listView").classList.remove("active")
         }
@@ -622,17 +618,8 @@
             r.onload = function(e) {
                 try {
                     const d = JSON.parse(e.target.result), n = prompt("請為這份旅程命名：", "匯入的旅程");
-                    if (n) {
-                        allTrips[n] = d;
-                        currentTrip = n;
-                        updateTripDropdown();
-                        sync();
-                        render();
-                        alert("匯入完成！")
-                    }
-                } catch (err) {
-                    alert("匯入失敗")
-                }
+                    if (n) { allTrips[n] = d; currentTrip = n; updateTripDropdown(); sync(); render(); alert("匯入完成！") }
+                } catch (err) { alert("匯入失敗") }
             };
             r.readAsText(f);
             e.target.value = ""
