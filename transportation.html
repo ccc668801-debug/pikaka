@@ -185,13 +185,13 @@
             gap: 10px
         }
 
-        /* 改進目的地標題：換字體並增加字距，避免糊在一起 */
+        /* 目的地標題：微調縮小至 1.25rem，保持清晰 */
         .dest-title {
             font-family: 'Kiwi Maru', serif !important;
             color: var(--pika-orange);
-            font-size: 1.4rem; 
+            font-size: 1.25rem; 
             font-weight: 500;
-            letter-spacing: 1px;
+            letter-spacing: 0.5px;
             flex: 1;
             margin: 0
         }
@@ -358,6 +358,7 @@
     </div>
 
     <script>
+        // ... (Script 部分保持不變，與之前邏輯一致) ...
         const DB_KEY = 'PikaTravel_Stable_v1';
         let currentTrip = "預設旅程", allTrips = {}, myFavColors = ["#FF9500", "#F62E36", "#009BDB", "#99CC00", "#9530B0"], expandedDates = new Set();
 
