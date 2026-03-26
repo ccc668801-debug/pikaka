@@ -1,415 +1,114 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-    <title>PikaMoney - 旅程記帳 (Weekday Fix)</title>
-    <link href="https://fonts.googleapis.com/css2?family=Mochiy+Pop+One&family=Zen+Maru+Gothic:wght@400;500;700&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --maca-yellow: #FFF2CC; --pika-brown: #5C4033; --bg-color: #FEF9EF;
-            --suica-green: #CAE9E0; --cash-pink: #FFC8DD; --twd-blue: #D0E7FF;
-            --btn-active: #F3A05F; --bought-opacity: 0.5;
-        }
-        * { font-family: 'Zen Maru Gothic', sans-serif!important; box-sizing: border-box; }
-        
-        body { 
-            background: var(--bg-color); 
-            color: var(--pika-brown); 
-            margin: 0; 
-            padding-bottom: 90px; 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            min-height: 100vh;
-        }
-        
-        .top-bar { 
-            background: #fff; padding: 10px 15px; display: flex; justify-content: space-between; 
-            align-items: center; border-bottom: 2px solid var(--maca-yellow); 
-            position: sticky; top: 0; z-index: 1000; width: 100%; max-width: 420px; 
-        }
-        .user-info { font-family: 'Mochiy Pop One', sans-serif!important; color: #E67E22; font-size: .95rem; }
-        
-        .trip-selector { position: relative; cursor: pointer; }
-        .trip-dropdown {
-            display: none; position: absolute; top: 100%; left: 0; 
-            background: white; min-width: 180px; border-radius: 15px;
-            border: 3px solid var(--maca-yellow); box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-            z-index: 2000; margin-top: 8px; overflow: hidden;
-        }
-        .trip-dropdown.show { display: block; }
-        .trip-item { 
-            padding: 12px 15px; border-bottom: 1px solid #eee; font-size: 0.9rem;
-            display: flex; justify-content: space-between; align-items: center;
-        }
-        .trip-item:active { background: #fff9f0; }
-        .trip-add-btn { background: var(--suica-green); text-align: center; padding: 10px; font-weight: bold; cursor: pointer; }
-
-        .pika-header { font-family: 'Mochiy Pop One', sans-serif!important; font-size: 1.8rem; color: var(--btn-active); text-align: center; margin: 15px 0; }
-        .view-section { width: 100%; max-width: 420px; display: none; padding: 0 10px; }
-        .active { display: block; }
-        .panel { background: #fff; padding: 15px; border-radius: 25px; border: 3px solid var(--maca-yellow); margin-bottom: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
-        
-        .item-row { display: flex; align-items: center; padding: 12px 10px; border-bottom: 1px solid #eee; transition: all 0.3s; background: #fff; }
-        .item-bought { opacity: var(--bought-opacity); transform: scale(1.02); background: #fdfdfd; }
-        .list-img { width: 80px; height: 80px; border-radius: 12px; object-fit: cover; margin-right: 12px; border: 1px solid #eee; cursor: zoom-in; flex-shrink: 0; }
-        .btn-group { display: flex; gap: 5px; }
-        .btn-sm { border: none; border-radius: 8px; padding: 6px 10px; cursor: pointer; font-size: 1rem; }
-
-        .calc-display { background: #F8F9FA; border: 2.5px solid var(--pika-brown); border-radius: 15px; padding: 8px 15px; margin-bottom: 12px; text-align: right; font-size: 1.5rem; color: var(--btn-active); min-height: 50px; font-family: 'Mochiy Pop One', sans-serif!important; display: flex; align-items: center; justify-content: flex-end;}
-        .calc-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; width: 90%; margin: 0 auto; }
-        .calc-btn { background:#fff; border: 1px solid #ddd; padding: 10px; border-radius: 12px; font-size: 1.1rem; font-weight: 700; cursor: pointer; transition: 0.1s; box-shadow: 0 2px 0 #eee; }
-        .calc-btn:active { transform: translateY(1px); box-shadow: none; background: #f0f0f0; }
-        .btn-ok { background: var(--btn-active)!important; color:#fff; grid-row: span 2; border: none; font-family: 'Mochiy Pop One', sans-serif!important; box-shadow: 0 2px 0 #D35400; font-size: 1rem; }
-
-        .cat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; margin-bottom: 12px; }
-        .cat-item { border: 1px solid #eee; padding: 8px 2px; border-radius: 10px; text-align: center; cursor: pointer; background: #fff; font-size: 0.75rem; font-weight: bold; }
-        .cat-item.active { border: 2px solid var(--btn-active); background: #FFF9F0; }
-
-        .total-banner { background: #fff; padding: 10px; border-radius: 20px; border: 3px solid var(--btn-active); margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.1rem; }
-        .summary-box { flex: 1; padding: 10px 4px; text-align: center; border-radius: 15px; border: 2.5px solid var(--maca-yellow); background: #fff; font-size: .7rem; }
-        .date-group { margin-bottom: 10px; border-radius: 20px; border: 2.5px solid var(--maca-yellow); background: #fff; overflow: hidden; }
-        .date-header { font-family: 'Mochiy Pop One', sans-serif!important; background: var(--maca-yellow); padding: 12px 15px; cursor: pointer; display: flex; justify-content: space-between; font-size: 0.95rem; }
-        .date-content { display: none; padding: 8px; }
-        .open .date-content { display: block; }
-        
-        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 3000; }
-        .modal-content { background: #fff; width: 90%; max-width: 350px; padding: 20px; border-radius: 25px; border: 4px solid var(--maca-yellow); }
-        
-        .bottom-nav { 
-            position: fixed; bottom: 0; width: 100%; max-width: 420px; background: #fff; 
-            display: flex; justify-content: space-around; padding: 10px 10px calc(10px + env(safe-area-inset-bottom)); 
-            border-top: 3px solid var(--maca-yellow); z-index: 1000; 
-        }
-        .nav-item { font-size: .75rem; cursor: pointer; text-align: center; color: #888; flex: 1; }
-        .nav-item.active { color: var(--btn-active); font-weight: 700; }
-        
-        input, select, textarea { width: 100%; padding: 10px; margin: 5px 0; border: 2px solid #eee; border-radius: 12px; font-size: 0.9rem; }
-        .btn-main { width: 100%; padding: 12px; background: var(--btn-active); border-radius: 20px; margin-top: 10px; border: none; color: white; font-weight: bold; cursor: pointer; font-size: 1rem; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>PikaMoney</title>
+<link href="https://fonts.googleapis.com/css2?family=Mochiy+Pop+One&family=Zen+Maru+Gothic:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--maca-yellow:#FFF2CC;--pika-brown:#5C4033;--bg-color:#FEF9EF;--suica-green:#CAE9E0;--cash-pink:#FFC8DD;--twd-blue:#D0E7FF;--btn-active:#F3A05F;--bought-opacity:0.5;}
+*{font-family:'Zen Maru Gothic',sans-serif!important;box-sizing:border-box;}
+body{background:var(--bg-color);color:var(--pika-brown);margin:0;padding-bottom:90px;display:flex;flex-direction:column;align-items:center;min-height:100vh;}
+.top-bar{background:#fff;padding:10px 15px;display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid var(--maca-yellow);position:sticky;top:0;z-index:1000;width:100%;max-width:420px;}
+.user-info{font-family:'Mochiy Pop One',sans-serif!important;color:#E67E22;font-size:.95rem;}
+.trip-selector{position:relative;cursor:pointer;}
+.trip-dropdown{display:none;position:absolute;top:100%;left:0;background:white;min-width:180px;border-radius:15px;border:3px solid var(--maca-yellow);box-shadow:0 10px 25px rgba(0,0,0,0.1);z-index:2000;margin-top:8px;overflow:hidden;}
+.trip-dropdown.show{display:block;}
+.trip-item{padding:12px 15px;border-bottom:1px solid #eee;font-size:0.9rem;display:flex;justify-content:space-between;align-items:center;}
+.trip-item:active{background:#fff9f0;}
+.trip-add-btn{background:var(--suica-green);text-align:center;padding:10px;font-weight:bold;cursor:pointer;}
+.pika-header{font-family:'Mochiy Pop One',sans-serif!important;font-size:1.8rem;color:var(--btn-active);text-align:center;margin:15px 0;}
+.view-section{width:100%;max-width:420px;display:none;padding:0 10px;}
+.active{display:block;}
+.panel{background:#fff;padding:15px;border-radius:25px;border:3px solid var(--maca-yellow);margin-bottom:15px;box-shadow:0 4px 10px rgba(0,0,0,0.05);}
+.item-row{display:flex;align-items:center;padding:12px 10px;border-bottom:1px solid #eee;transition:all 0.3s;background:#fff;}
+.item-bought{opacity:var(--bought-opacity);transform:scale(1.02);background:#fdfdfd;}
+.list-img{width:80px;height:80px;border-radius:12px;object-fit:cover;margin-right:12px;border:1px solid #eee;cursor:zoom-in;flex-shrink:0;}
+.btn-group{display:flex;gap:5px;}
+.btn-sm{border:none;border-radius:8px;padding:6px 10px;cursor:pointer;font-size:1rem;}
+.calc-display{background:#F8F9FA;border:2.5px solid var(--pika-brown);border-radius:15px;padding:8px 15px;margin-bottom:12px;text-align:right;font-size:1.5rem;color:var(--btn-active);min-height:50px;font-family:'Mochiy Pop One',sans-serif!important;display:flex;align-items:center;justify-content:flex-end;}
+.calc-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;width:90%;margin:0 auto;}
+.calc-btn{background:#fff;border:1px solid #ddd;padding:10px;border-radius:12px;font-size:1.1rem;font-weight:700;cursor:pointer;transition:0.1s;box-shadow:0 2px 0 #eee;}
+.calc-btn:active{transform:translateY(1px);box-shadow:none;background:#f0f0f0;}
+.btn-ok{background:var(--btn-active)!important;color:#fff;grid-row:span 2;border:none;font-family:'Mochiy Pop One',sans-serif!important;box-shadow:0 2px 0 #D35400;font-size:1rem;}
+.cat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-bottom:12px;}
+.cat-item{border:1px solid #eee;padding:8px 2px;border-radius:10px;text-align:center;cursor:pointer;background:#fff;font-size:0.75rem;font-weight:bold;}
+.cat-item.active{border:2px solid var(--btn-active);background:#FFF9F0;}
+.total-banner{background:#fff;padding:10px;border-radius:20px;border:3px solid var(--btn-active);margin-bottom:15px;text-align:center;font-weight:bold;font-size:1.1rem;}
+.summary-box{flex:1;padding:10px 4px;text-align:center;border-radius:15px;border:2.5px solid var(--maca-yellow);background:#fff;font-size:.7rem;}
+.date-group{margin-bottom:10px;border-radius:20px;border:2.5px solid var(--maca-yellow);background:#fff;overflow:hidden;}
+.date-header{font-family:'Mochiy Pop One',sans-serif!important;background:var(--maca-yellow);padding:12px 15px;cursor:pointer;display:flex;justify-content:space-between;font-size:0.95rem;}
+.date-content{display:none;padding:8px;}
+.open .date-content{display:block;}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,0.5);display:none;align-items:center;justify-content:center;z-index:3000;}
+.modal-content{background:#fff;width:90%;max-width:350px;padding:20px;border-radius:25px;border:4px solid var(--maca-yellow);max-height:90vh;overflow-y:auto;}
+.bottom-nav{position:fixed;bottom:0;width:100%;max-width:420px;background:#fff;display:flex;justify-content:space-around;padding:10px 10px calc(10px + env(safe-area-inset-bottom));border-top:3px solid var(--maca-yellow);z-index:1000;}
+.nav-item{font-size:.75rem;cursor:pointer;text-align:center;color:#888;flex:1;}
+.nav-item.active{color:var(--btn-active);font-weight:700;}
+input,select,textarea{width:100%;padding:10px;margin:5px 0;border:2px solid #eee;border-radius:12px;font-size:0.9rem;}
+.btn-main{width:100%;padding:12px;background:var(--btn-active);border-radius:20px;margin-top:10px;border:none;color:white;font-weight:bold;cursor:pointer;font-size:1rem;}
+.btn-outline{width:100%;padding:10px;background:#fff;border:2px solid #eee;border-radius:15px;margin-top:5px;cursor:pointer;font-size:0.85rem;color:#666;}
+</style>
 </head>
 <body>
-
 <div id="appInterface" style="width:100%;max-width:420px">
-    <div class="top-bar">
-        <div class="trip-selector">
-            <div class="user-info" id="displayUserName">Hi!</div>
-            <div onclick="toggleTripMenu(event)" style="font-size:.8rem;color:#E67E22">
-                ✈️ <span id="currentTripName">我的日本之旅</span> <span style="font-size:0.6rem">▼</span>
-            </div>
-            <div id="tripDropdown" class="trip-dropdown">
-                <div id="tripListMenu"></div>
-                <div class="trip-add-btn" onclick="createNewTrip()">＋ 開新旅程</div>
-            </div>
-        </div>
-        <span onclick="openSettings()" style="cursor:pointer;font-size:1.6rem">🐾</span>
-    </div>
-    
-    <div id="addView" class="view-section">
-        <h2 class="pika-header">PikaBuy</h2>
-        <div class="panel">
-            <input type="text" id="shopLoc" placeholder="地點">
-            <input type="text" id="itemName" placeholder="品名">
-            <input type="number" id="itemPrice" placeholder="預估單價 (円)">
-            <textarea id="itemNote" placeholder="備註..." rows="2"></textarea>
-            <div class="img-preview-box" onclick="document.getElementById('imgInput').click()" style="width:100%;height:100px;border:2px dashed #ccc;border-radius:12px;display:flex;align-items:center;justify-content:center;margin:10px 0;background:#fafafa;overflow:hidden;">
-                <img id="previewImg" style="display:none;width:100%;height:100%;object-fit:cover;">
-                <span id="imgTip" style="font-size:0.8rem">📸 上傳圖片</span>
-            </div>
-            <input type="file" id="imgInput" accept="image/*" style="display:none" onchange="handleImg(this)">
-            <button class="btn-main" onclick="saveShopping()">新增到清單</button>
-        </div>
-    </div>
-
-    <div id="listView" class="view-section active">
-        <h2 class="pika-header">Pika List</h2>
-        <div id="listItemsGrouped"></div>
-    </div>
-
-    <div id="ledgerView" class="view-section">
-        <div class="panel" style="margin-top:20px; padding: 12px;">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-                <input type="date" id="ledgerDate" style="width:130px;margin:0; padding:5px; font-size:0.8rem;">
-                <span style="font-size: 0.75rem; color: #999;">Quick Pay</span>
-            </div>
-            <div class="calc-display" id="calcDisplay">0</div>
-            <select id="payMethod" style="padding: 8px;">
-                <option value="Cash">💴 現金 (JPY)</option>
-                <option value="Suica">🍉 西瓜卡 (JPY)</option>
-                <option value="Credit">💳 信用卡 (JPY)</option>
-                <option value="TWD">🇹🇼 台幣 (TWD)</option>
-            </select>
-            <input type="text" id="ledgerNote" placeholder="備註..." style="padding: 8px;">
-            <div class="cat-grid" id="catGrid"></div>
-            <div class="calc-grid">
-                <button class="calc-btn" onclick="pressNum('7')">7</button>
-                <button class="calc-btn" onclick="pressNum('8')">8</button>
-                <button class="calc-btn" onclick="pressNum('9')">9</button>
-                <button class="calc-btn" onclick="pressNum('4')">4</button>
-                <button class="calc-btn" onclick="pressNum('5')">5</button>
-                <button class="calc-btn" onclick="pressNum('6')">6</button>
-                <button class="calc-btn" onclick="pressNum('1')">1</button>
-                <button class="calc-btn" onclick="pressNum('2')">2</button>
-                <button class="calc-btn" onclick="pressNum('3')">3</button>
-                <button class="calc-btn" onclick="pressNum('C')" style="color:red">C</button>
-                <button class="calc-btn" onclick="pressNum('0')">0</button>
-                <button class="calc-btn btn-ok" onclick="saveLedger()">OK</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="historyView" class="view-section">
-        <h2 class="pika-header">MoneyByebye</h2>
-        <div class="total-banner" id="grandTotalBanner">總支出: 0 円</div>
-        <div id="walletSummary" style="display:flex;gap:5px;margin-bottom:15px"></div>
-        <div id="ledgerHistoryGroups"></div>
-    </div>
-
-    <div id="analysisView" class="view-section">
-        <h2 class="pika-header">Pika Analysis</h2>
-        <div class="panel" id="analysisContent"></div>
-    </div>
-
-    <nav class="bottom-nav">
-        <div class="nav-item" onclick="switchTab('add',this)"><div>＋</div><span>新增</span></div>
-        <div class="nav-item active" onclick="switchTab('list',this)"><div>📋</div><span>清單</span></div>
-        <div class="nav-item" onclick="switchTab('ledger',this)"><div>👛</div><span>記帳</span></div>
-        <div class="nav-item" onclick="switchTab('history',this)"><div>💰</div><span>明細</span></div>
-        <div class="nav-item" onclick="switchTab('analysis',this)"><div>📊</div><span>分析</span></div>
-    </nav>
+<div class="top-bar">
+<div class="trip-selector">
+<div class="user-info" id="displayUserName">Hi!</div>
+<div onclick="toggleTripMenu(event)" style="font-size:.8rem;color:#E67E22">✈️ <span id="currentTripName">我的日本之旅</span> <span style="font-size:0.6rem">▼</span></div>
+<div id="tripDropdown" class="trip-dropdown"><div id="tripListMenu"></div><div class="trip-add-btn" onclick="createNewTrip()">＋ 開新旅程</div></div>
 </div>
-
-<div id="setModal" class="modal"><div class="modal-content">
-    <h3>設定</h3>
-    <label>匯率 (1 JPY = ? TWD)</label><input type="number" id="setRate" step="0.001">
-    <label>Suica 餘額</label><input type="number" id="setSuica">
-    <label>現金 餘額</label><input type="number" id="setCash">
-    <label>信用卡 累計</label><input type="number" id="setCredit">
-    <label>台幣 餘額</label><input type="number" id="setTwd">
-    <button onclick="saveSettings()" class="btn-main">保存設定</button>
-    <button onclick="closeModal('setModal')" style="width:100%;background:none;border:none;margin-top:10px;color:#999">關閉</button>
-</div></div>
-
-<div id="imgZoomModal" class="modal" onclick="this.style.display='none'" style="background:rgba(0,0,0,0.9);">
-    <img id="zoomedImg" style="max-width: 95%; max-height: 90%; border-radius: 10px; border: 2px solid #fff;">
+<span onclick="openSettings()" style="cursor:pointer;font-size:1.6rem">🐾</span>
 </div>
-
+<div id="addView" class="view-section"><h2 class="pika-header">PikaBuy</h2><div class="panel"><input type="text" id="shopLoc" placeholder="地點"><input type="text" id="itemName" placeholder="品名"><input type="number" id="itemPrice" placeholder="預估單價 (円)"><textarea id="itemNote" placeholder="備註..." rows="2"></textarea><div class="img-preview-box" onclick="document.getElementById('imgInput').click()" style="width:100%;height:100px;border:2px dashed #ccc;border-radius:12px;display:flex;align-items:center;justify-content:center;margin:10px 0;background:#fafafa;overflow:hidden;"><img id="previewImg" style="display:none;width:100%;height:100%;object-fit:cover;"><span id="imgTip" style="font-size:0.8rem">📸 上傳圖片</span></div><input type="file" id="imgInput" accept="image/*" style="display:none" onchange="handleImg(this)"><button class="btn-main" onclick="saveShopping()">新增到清單</button></div></div>
+<div id="listView" class="view-section active"><h2 class="pika-header">Pika List</h2><div id="listItemsGrouped"></div></div>
+<div id="ledgerView" class="view-section"><div class="panel" style="margin-top:20px;padding:12px;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><input type="date" id="ledgerDate" style="width:130px;margin:0;padding:5px;font-size:0.8rem;"><span style="font-size:0.75rem;color:#999;">Quick Pay</span></div><div class="calc-display" id="calcDisplay">0</div><select id="payMethod" style="padding:8px;"><option value="Cash">💴 現金 (JPY)</option><option value="Suica">🍉 西瓜卡 (JPY)</option><option value="Credit">💳 信用卡 (JPY)</option><option value="TWD">🇹🇼 台幣 (TWD)</option></select><input type="text" id="ledgerNote" placeholder="備註..." style="padding:8px;"><div class="cat-grid" id="catGrid"></div><div class="calc-grid"><button class="calc-btn" onclick="pressNum('7')">7</button><button class="calc-btn" onclick="pressNum('8')">8</button><button class="calc-btn" onclick="pressNum('9')">9</button><button class="calc-btn" onclick="pressNum('4')">4</button><button class="calc-btn" onclick="pressNum('5')">5</button><button class="calc-btn" onclick="pressNum('6')">6</button><button class="calc-btn" onclick="pressNum('1')">1</button><button class="calc-btn" onclick="pressNum('2')">2</button><button class="calc-btn" onclick="pressNum('3')">3</button><button class="calc-btn" onclick="pressNum('C')" style="color:red">C</button><button class="calc-btn" onclick="pressNum('0')">0</button><button class="calc-btn btn-ok" onclick="saveLedger()">OK</button></div></div></div>
+<div id="historyView" class="view-section"><h2 class="pika-header">MoneyByebye</h2><div class="total-banner" id="grandTotalBanner">總支出: 0 円</div><div id="walletSummary" style="display:flex;gap:5px;margin-bottom:15px"></div><div id="ledgerHistoryGroups"></div></div>
+<div id="analysisView" class="view-section"><h2 class="pika-header">Pika Analysis</h2><div class="panel" id="analysisContent"></div></div>
+<nav class="bottom-nav"><div class="nav-item" onclick="switchTab('add',this)"><div>＋</div><span>新增</span></div><div class="nav-item active" onclick="switchTab('list',this)"><div>📋</div><span>清單</span></div><div class="nav-item" onclick="switchTab('ledger',this)"><div>👛</div><span>記帳</span></div><div class="nav-item" onclick="switchTab('history',this)"><div>💰</div><span>明細</span></div><div class="nav-item" onclick="switchTab('analysis',this)"><div>📊</div><span>分析</span></div></nav>
+</div>
+<div id="setModal" class="modal"><div class="modal-content"><h3 style="margin-top:0">⚙️ 設定</h3><label>匯率 (1 JPY = ? TWD)</label><input type="number" id="setRate" step="0.001"><label>Suica 餘額</label><input type="number" id="setSuica"><label>現金 餘額</label><input type="number" id="setCash"><label>信用卡 累計</label><input type="number" id="setCredit"><label>台幣 餘額</label><input type="number" id="setTwd"><button onclick="saveSettings()" class="btn-main">保存設定</button><hr style="border:none;border-top:1px solid #eee;margin:20px 0;"><h4 style="margin:0 0 10px 0">💾 資料備份</h4><button onclick="exportData()" class="btn-outline">📤 匯出備份檔 (.json)</button><button onclick="document.getElementById('importInput').click()" class="btn-outline">📥 匯入備份檔</button><input type="file" id="importInput" style="display:none" accept=".json" onchange="importData(this)"><button onclick="closeModal('setModal')" style="width:100%;background:none;border:none;margin-top:20px;color:#999">關閉</button></div></div>
+<div id="imgZoomModal" class="modal" onclick="this.style.display='none'" style="background:rgba(0,0,0,0.9);"><img id="zoomedImg" style="max-width:95%;max-height:90%;border-radius:10px;border:2px solid #fff;"></div>
 <script>
-const getAccount = () => localStorage.getItem('pika_current_user') || 'guest';
-const getDBKey = () => `pika_${getAccount()}_money_v1`; 
-
-let currentTripId="default", wallet={suica:0,cash:0,credit:0,rate:0.203,twd:0}, shoppingItems=[], ledgerItems=[], trips={}, currentCat="🍱 飲食", calcInput="0", tempImgBase64="";
+const getAccount=()=>localStorage.getItem('pika_current_user')||'guest',getDBKey=()=>`pika_${getAccount()}_money_v1`;
+let currentTripId="default",wallet={suica:0,cash:0,credit:0,rate:0.203,twd:0},shoppingItems=[],ledgerItems=[],trips={},currentCat="🍱 飲食",calcInput="0",tempImgBase64="";
 const categories=['🍱 飲食','💊 藥妝','🚌 交通','🛍️ 購物','👕 衣服','🍰 甜點','😎 皮卡丘','🍹 飲料','💰 儲值','🏷️ 其他'];
-let openedShops = new Set(); 
-
-// 取得星期的輔助函數
-function getWeekday(dateStr) {
-    if(!dateStr) return "";
-    const days = ['日', '一', '二', '三', '四', '五', '六'];
-    const date = new Date(dateStr);
-    return isNaN(date.getTime()) ? "" : ` 週${days[date.getDay()]}`;
-}
-
-window.onload = function() {
-    const user = getAccount();
-    document.getElementById('displayUserName').innerText = `Hi! ${user}`;
-    let db = JSON.parse(localStorage.getItem(getDBKey()));
-    if(!db) {
-        db = {
-            trips: {"default":"我的日本之旅"},
-            currentTripId: "default",
-            data: {"default": {wallet:{suica:0,cash:0,credit:0,rate:0.203,twd:0}, shoppingItems:[], ledgerItems:[]}}
-        };
-        localStorage.setItem(getDBKey(), JSON.stringify(db));
-    }
-    loadTripData(db.currentTripId);
-    initCats();
-    document.getElementById('ledgerDate').value = new Date().toISOString().split('T')[0];
-    renderAll();
-};
-
-function toggleTripMenu(e) {
-    e.stopPropagation();
-    const dropdown = document.getElementById('tripDropdown');
-    dropdown.classList.toggle('show');
-    if(dropdown.classList.contains('show')) renderTripListMenu();
-}
-
-function renderTripListMenu() {
-    const menu = document.getElementById('tripListMenu');
-    menu.innerHTML = "";
-    Object.entries(trips).forEach(([id, name]) => {
-        const div = document.createElement('div');
-        div.className = 'trip-item';
-        div.innerHTML = `<span onclick="switchTrip('${id}')" style="flex:1">${id === currentTripId ? '✅ ' : ''}${name}</span>
-                         <span onclick="deleteTrip('${id}')" style="color:#ccc;font-size:0.7rem">✘</span>`;
-        menu.appendChild(div);
-    });
-}
-
-window.onclick = function() { document.getElementById('tripDropdown').classList.remove('show'); };
-
-function switchTrip(id){ loadTripData(id); openedShops.clear(); renderAll(); }
-
-function loadTripData(id){
-    let db = JSON.parse(localStorage.getItem(getDBKey()));
-    currentTripId = id;
-    trips = db.trips;
-    const d = db.data[id] || {wallet:{suica:0,cash:0,credit:0,rate:0.203,twd:0}, shoppingItems:[], ledgerItems:[]};
-    wallet = d.wallet;
-    if(wallet.credit === undefined) wallet.credit = 0;
-    shoppingItems = d.shoppingItems || [];
-    ledgerItems = d.ledgerItems || [];
-    document.getElementById('currentTripName').innerText = trips[id];
-    sync();
-}
-
-function createNewTrip(){
-    const n = prompt("請輸入旅程名稱:");
-    if(!n) return;
-    const id = 't_' + Date.now();
-    trips[id] = n;
-    sync();
-    switchTrip(id);
-}
-
-function deleteTrip(id){
-    if(id === 'default') return alert("預設旅程不能刪除");
-    if(confirm("確定刪除此旅程及其所有資料？")){
-        delete trips[id];
-        sync();
-        if(currentTripId === id) switchTrip('default');
-        else renderTripListMenu();
-    }
-}
-
-function sync(){
-    let db = JSON.parse(localStorage.getItem(getDBKey())) || {data:{}};
-    db.currentTripId = currentTripId;
-    db.trips = trips;
-    db.data[currentTripId] = {wallet, shoppingItems, ledgerItems};
-    localStorage.setItem(getDBKey(), JSON.stringify(db));
-}
-
-function handleImg(input){
-    const file=input.files[0]; if(!file) return;
-    const reader=new FileReader();
-    reader.onload=function(e){
-        const img = new Image();
-        img.onload = function() {
-            const canvas = document.createElement('canvas');
-            let width = img.width, height = img.height, max_size = 500; 
-            if (width > height) { if (width > max_size) { height *= max_size / width; width = max_size; } } 
-            else { if (height > max_size) { width *= max_size / height; height = max_size; } }
-            canvas.width = width; canvas.height = height;
-            const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, width, height);
-            tempImgBase64 = canvas.toDataURL('image/jpeg', 0.6);
-            document.getElementById('previewImg').src = tempImgBase64; 
-            document.getElementById('previewImg').style.display = 'block'; 
-            document.getElementById('imgTip').style.display = 'none';
-        };
-        img.src = e.target.result;
-    };
-    reader.readAsDataURL(file);
-}
-
+let openedShops=new Set();
+function getWeekday(d){if(!d)return "";const days=['日','一','二','三','四','五','六'],dt=new Date(d);return isNaN(dt.getTime())?"":` 週${days[dt.getDay()]}`;}
+window.onload=function(){document.getElementById('displayUserName').innerText=`Hi!`;let db=JSON.parse(localStorage.getItem(getDBKey()));if(!db){db={trips:{"default":"我的日本之旅"},currentTripId:"default",data:{"default":{wallet:{suica:0,cash:0,credit:0,rate:0.203,twd:0},shoppingItems:[],ledgerItems:[]}}};localStorage.setItem(getDBKey(),JSON.stringify(db));}loadTripData(db.currentTripId);initCats();document.getElementById('ledgerDate').value=new Date().toISOString().split('T')[0];renderAll();};
+function toggleTripMenu(e){e.stopPropagation();const d=document.getElementById('tripDropdown');d.classList.toggle('show');if(d.classList.contains('show'))renderTripListMenu();}
+function renderTripListMenu(){const m=document.getElementById('tripListMenu');m.innerHTML="";Object.entries(trips).forEach(([id,n])=>{const v=document.createElement('div');v.className='trip-item';v.innerHTML=`<span onclick="switchTrip('${id}')" style="flex:1">${id===currentTripId?'✅ ':''}${n}</span><span onclick="deleteTrip('${id}')" style="color:#ccc;font-size:0.7rem">✘</span>`;m.appendChild(v);});}
+window.onclick=()=>document.getElementById('tripDropdown').classList.remove('show');
+function switchTrip(id){loadTripData(id);openedShops.clear();renderAll();}
+function loadTripData(id){let db=JSON.parse(localStorage.getItem(getDBKey()));currentTripId=id;trips=db.trips;const d=db.data[id]||{wallet:{suica:0,cash:0,credit:0,rate:0.203,twd:0},shoppingItems:[],ledgerItems:[]};wallet=d.wallet;if(wallet.credit===undefined)wallet.credit=0;shoppingItems=d.shoppingItems||[];ledgerItems=d.ledgerItems||[];document.getElementById('currentTripName').innerText=trips[id];sync();}
+function createNewTrip(){const n=prompt("請輸入旅程名稱:");if(!n)return;const id='t_'+Date.now();trips[id]=n;sync();switchTrip(id);}
+function deleteTrip(id){if(id==='default')return alert("預設旅程不能刪除");if(confirm("確定刪除此旅程及其所有資料？")){delete trips[id];sync();if(currentTripId===id)switchTrip('default');else renderTripListMenu();}}
+function sync(){let db=JSON.parse(localStorage.getItem(getDBKey()))||{data:{}};db.currentTripId=currentTripId;db.trips=trips;db.data[currentTripId]={wallet,shoppingItems,ledgerItems};localStorage.setItem(getDBKey(),JSON.stringify(db));}
+function exportData(){const db=localStorage.getItem(getDBKey());if(!db)return alert("尚無資料可匯出");const b=new Blob([db],{type:"application/json"}),u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download=`PikaMoney_Backup_${new Date().toISOString().split('T')[0]}.json`;a.click();URL.revokeObjectURL(u);}
+function importData(i){const f=i.files[0];if(!f)return;if(!confirm("匯入將會覆蓋目前所有資料，確定嗎？"))return;const r=new FileReader();r.onload=e=>{try{const j=JSON.parse(e.target.result);if(j.trips&&j.data){localStorage.setItem(getDBKey(),e.target.result);location.reload();}else alert("無效格式");}catch(err){alert("失敗："+err);}};r.readAsText(f);}
+function handleImg(i){const f=i.files[0];if(!f)return;const r=new FileReader();r.onload=e=>{const img=new Image();img.onload=()=>{const c=document.createElement('canvas');let w=img.width,h=img.height,m=500;if(w>h){if(w>m){h*=m/w;w=m;}}else{if(h>m){w*=m/h;h=m;}}c.width=w;c.height=h;const ctx=c.getContext('2d');ctx.drawImage(img,0,0,w,h);tempImgBase64=c.toDataURL('image/jpeg',0.6);document.getElementById('previewImg').src=tempImgBase64;document.getElementById('previewImg').style.display='block';document.getElementById('imgTip').style.display='none';};img.src=e.target.result;};r.readAsDataURL(f);}
 function renderAll(){
-    const l=document.getElementById('listItemsGrouped'); l.innerHTML="";
-    const gs={}; shoppingItems.forEach(i=>{if(!gs[i.shop])gs[i.shop]=[];gs[i.shop].push(i)});
-    for(let s in gs){
-        const g=document.createElement('div'); g.className=`date-group ${openedShops.has(s)?'open':''}`;
-        g.innerHTML=`<div class="date-header" onclick="toggleShop('${s}', this.parentElement)"><span>${s}</span><span>▾</span></div><div class="date-content"></div>`;
-        const b=g.querySelector('.date-content');
-        gs[s].forEach(i=>{
-            const row=document.createElement('div'); row.className=`item-row ${i.bought?'item-bought':''}`;
-            row.innerHTML=`${i.img?`<img src="${i.img}" class="list-img" onclick="zoomImg('${i.img}')">`:`<div class="list-img" style="background:#eee;display:flex;align-items:center;justify-content:center">📷</div>`}<div style="flex:1"><b>${i.name}</b><br><small>${i.price}円 ${i.note?`| ${i.note}`:''}</small></div><div class="btn-group"><button class="btn-sm" style="background:var(--suica-green)" onclick="toggleBought(${i.id})">✔</button><button class="btn-sm" style="background:#eee;color:red" onclick="delShopping(${i.id})">✘</button></div>`;
-            b.appendChild(row);
-        });
-        l.appendChild(g);
-    }
-    
-    let grandTotal=0; const h=document.getElementById('ledgerHistoryGroups'); h.innerHTML="";
-    const hG={}; ledgerItems.forEach(i=>{
-        if(!hG[i.date]) hG[i.date]={items:[],total:0}; hG[i.date].items.push(i);
-        if(i.cat!=='💰 儲值'){ 
-            let v = i.method==='TWD' ? Math.round(i.amount / (wallet.rate || 0.203)) : i.amount; 
-            hG[i.date].total += v; grandTotal += v; 
-        }
-    });
-    document.getElementById('grandTotalBanner').innerText=`總支出: ${grandTotal} 円`;
-    document.getElementById('walletSummary').innerHTML=`<div class="summary-box">🍉 Suica<br>${wallet.suica}円</div><div class="summary-box">💴 現金<br>${wallet.cash}円</div><div class="summary-box">💳 刷卡<br>${wallet.credit||0}円</div><div class="summary-box">🇹🇼 台幣<br>${wallet.twd||0}元</div>`;
-    
-    Object.keys(hG).sort((a,b)=>new Date(b)-new Date(a)).forEach(dt=>{
-        const d=document.createElement('div'); d.className="date-group";
-        const dayLabel = getWeekday(dt); // 新增這行
-        d.innerHTML=`<div class="date-header" onclick="this.parentElement.classList.toggle('open')"><span>${dt}${dayLabel}</span><span style="color:#2980B9">${hG[dt].total}円 ▾</span></div><div class="date-content"></div>`;
-        hG[dt].items.forEach(i=>{
-            const r=document.createElement('div'); r.style.padding="10px 0"; r.style.borderBottom="1px solid #eee"; r.style.display="flex"; r.style.justifyContent="space-between";
-            const icon = i.method==='Credit' ? '💳' : (i.method==='Suica' ? '🍉' : (i.method==='Cash' ? '💴' : '🇹🇼'));
-            r.innerHTML=`<span>${i.cat.split(' ')[0]} ${icon}${i.name}</span><div style="display:flex;align-items:center;gap:8px"><b>${i.amount}${i.method==='TWD'?'元':'円'}</b><span onclick="delLedger(${i.id})" style="color:red;cursor:pointer;font-size:0.8rem">✘</span></div>`;
-            d.querySelector('.date-content').appendChild(r);
-        });
-        h.appendChild(d);
-    });
-
-    const ac=document.getElementById('analysisContent'); ac.innerHTML="";
-    const stats={}; let totalAn=0; ledgerItems.forEach(i=>{ if(i.cat==='💰 儲值') return; let v=i.method==='TWD'?Math.round(i.amount/(wallet.rate||0.203)):i.amount; stats[i.cat]=(stats[i.cat]||0)+v; totalAn+=v; });
-    Object.entries(stats).sort((a,b)=>b[1]-a[1]).forEach(([cat,val])=>{
-        const pc=totalAn>0?Math.round((val/totalAn)*100):0;
-        ac.innerHTML+=`<div style="margin-bottom:15px"><div style="display:flex;justify-content:space-between;margin-bottom:5px"><strong>${cat}</strong><span>${val}円 (${pc}%)</span></div><div style="background:#eee;height:12px;border-radius:6px;overflow:hidden"><div style="background:var(--btn-active);height:100%;width:${pc}%"></div></div></div>`;
-    });
+const l=document.getElementById('listItemsGrouped');l.innerHTML="";const gs={};shoppingItems.forEach(i=>{if(!gs[i.shop])gs[i.shop]=[];gs[i.shop].push(i)});
+for(let s in gs){const g=document.createElement('div');g.className=`date-group ${openedShops.has(s)?'open':''}`;g.innerHTML=`<div class="date-header" onclick="toggleShop('${s}',this.parentElement)"><span>${s}</span><span>▾</span></div><div class="date-content"></div>`;const b=g.querySelector('.date-content');gs[s].forEach(i=>{const r=document.createElement('div');r.className=`item-row ${i.bought?'item-bought':''}`;r.innerHTML=`${i.img?`<img src="${i.img}" class="list-img" onclick="zoomImg('${i.img}')">`:`<div class="list-img" style="background:#eee;display:flex;align-items:center;justify-content:center">📷</div>`}<div style="flex:1"><b>${i.name}</b><br><small>${i.price}円 ${i.note?`| ${i.note}`:''}</small></div><div class="btn-group"><button class="btn-sm" style="background:var(--suica-green)" onclick="toggleBought(${i.id})">✔</button><button class="btn-sm" style="background:#eee;color:red" onclick="delShopping(${i.id})">✘</button></div>`;b.appendChild(r);});l.appendChild(g);}
+let gT=0;const h=document.getElementById('ledgerHistoryGroups');h.innerHTML="";const hG={};ledgerItems.forEach(i=>{if(!hG[i.date])hG[i.date]={items:[],total:0};hG[i.date].items.push(i);if(i.cat!=='💰 儲值'){let v=i.method==='TWD'?Math.round(i.amount/(wallet.rate||0.203)):i.amount;hG[i.date].total+=v;gT+=v;}});
+document.getElementById('grandTotalBanner').innerText=`總支出: ${gT} 円`;document.getElementById('walletSummary').innerHTML=`<div class="summary-box">🍉 Suica<br>${wallet.suica}円</div><div class="summary-box">💴 現金<br>${wallet.cash}円</div><div class="summary-box">💳 刷卡<br>${wallet.credit||0}円</div><div class="summary-box">🇹🇼 台幣<br>${wallet.twd||0}元</div>`;
+Object.keys(hG).sort((a,b)=>new Date(b)-new Date(a)).forEach(dt=>{const d=document.createElement('div');d.className="date-group";d.innerHTML=`<div class="date-header" onclick="this.parentElement.classList.toggle('open')"><span>${dt}${getWeekday(dt)}</span><span style="color:#2980B9">${hG[dt].total}円 ▾</span></div><div class="date-content"></div>`;hG[dt].items.forEach(i=>{const r=document.createElement('div');r.style.padding="10px 0";r.style.borderBottom="1px solid #eee";r.style.display="flex";r.style.justifyContent="space-between";const ic=i.method==='Credit'?'💳':(i.method==='Suica'?'🍉':(i.method==='Cash'?'💴':'🇹🇼'));r.innerHTML=`<span>${i.cat.split(' ')[0]} ${ic}${i.name}</span><div style="display:flex;align-items:center;gap:8px"><b>${i.amount}${i.method==='TWD'?'元':'円'}</b><span onclick="delLedger(${i.id})" style="color:red;cursor:pointer;font-size:0.8rem">✘</span></div>`;d.querySelector('.date-content').appendChild(r);});h.appendChild(d);});
+const ac=document.getElementById('analysisContent');ac.innerHTML="";const st={};let tA=0;ledgerItems.forEach(i=>{if(i.cat==='💰 儲值')return;let v=i.method==='TWD'?Math.round(i.amount/(wallet.rate||0.203)):i.amount;st[i.cat]=(st[i.cat]||0)+v;tA+=v;});
+Object.entries(st).sort((a,b)=>b[1]-a[1]).forEach(([c,v])=>{const p=tA>0?Math.round((v/tA)*100):0;ac.innerHTML+=`<div style="margin-bottom:15px"><div style="display:flex;justify-content:space-between;margin-bottom:5px"><strong>${c}</strong><span>${v}円 (${p}%)</span></div><div style="background:#eee;height:12px;border-radius:6px;overflow:hidden"><div style="background:var(--btn-active);height:100%;width:${p}%"></div></div></div>`;});
 }
-
-function toggleShop(s, el) { if(el.classList.contains('open')){ openedShops.delete(s); el.classList.remove('open'); } else { openedShops.add(s); el.classList.add('open'); } }
-function zoomImg(src) { document.getElementById('zoomedImg').src = src; document.getElementById('imgZoomModal').style.display = 'flex'; }
-function toggleBought(id){ const i=shoppingItems.find(x=>x.id===id); if(i) i.bought=!i.bought; sync(); renderAll(); }
-function delShopping(id){ if(confirm("確定刪除？")){ shoppingItems=shoppingItems.filter(x=>x.id!==id); sync(); renderAll(); } }
-function delLedger(id){ if(confirm("刪除帳目？")){ ledgerItems=ledgerItems.filter(x=>x.id!==id); sync(); renderAll(); } }
-function initCats(){ const g=document.getElementById('catGrid'); g.innerHTML=""; categories.forEach(c=>{const d=document.createElement('div'); d.className=`cat-item ${c===currentCat?'active':''}`; d.innerText=c; d.onclick=()=>{document.querySelectorAll('.cat-item').forEach(i=>i.classList.remove('active')); d.classList.add('active'); currentCat=c}; g.appendChild(d); }); }
-function pressNum(n){ if(n==='C') calcInput="0"; else if(calcInput==="0") calcInput=n; else calcInput+=n; document.getElementById('calcDisplay').innerText=calcInput; }
-function closeModal(id) { document.getElementById(id).style.display = 'none'; }
-
-function saveShopping(){ 
-    const n=document.getElementById('itemName').value; if(!n) return alert("請輸入品名"); 
-    shoppingItems.push({id:Date.now(), shop:document.getElementById('shopLoc').value||"未分類", name:n, price:document.getElementById('itemPrice').value||0, note:document.getElementById('itemNote').value||"", img:tempImgBase64, bought:false}); 
-    tempImgBase64=""; document.getElementById('previewImg').style.display='none'; document.getElementById('imgTip').style.display='block'; 
-    document.getElementById('itemName').value=""; document.getElementById('itemPrice').value=""; document.getElementById('itemNote').value=""; document.getElementById('shopLoc').value=""; 
-    sync(); renderAll(); switchTab('list',document.querySelectorAll('.nav-item')[1]); 
-}
-
-function saveLedger(){ 
-    const amt=parseInt(calcInput); if(amt<=0) return; 
-    const method=document.getElementById('payMethod').value, note=document.getElementById('ledgerNote').value||currentCat, date=document.getElementById('ledgerDate').value; 
-    if(currentCat==='💰 儲值'){ wallet.cash-=amt; wallet.suica+=amt; } 
-    else { 
-        if(method==='Suica') wallet.suica-=amt; 
-        else if(method==='Cash') wallet.cash-=amt; 
-        else if(method==='TWD') wallet.twd-=amt;
-        else if(method==='Credit') wallet.credit = (wallet.credit || 0) + amt;
-    } 
-    ledgerItems.unshift({id:Date.now(),name:note,amount:amt,method,date,cat:currentCat}); 
-    calcInput="0"; document.getElementById('calcDisplay').innerText="0"; document.getElementById('ledgerNote').value=""; 
-    sync(); renderAll(); 
-}
-
-function switchTab(t,el){ document.querySelectorAll('.view-section').forEach(v=>v.classList.remove('active')); document.getElementById(t+'View').classList.add('active'); document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active')); el.classList.add('active'); }
-function openSettings(){ 
-    document.getElementById('setRate').value=wallet.rate; 
-    document.getElementById('setSuica').value=wallet.suica; 
-    document.getElementById('setCash').value=wallet.cash; 
-    document.getElementById('setCredit').value=wallet.credit||0;
-    document.getElementById('setTwd').value=wallet.twd||0; 
-    document.getElementById('setModal').style.display='flex'; 
-}
-function saveSettings(){ 
-    wallet.rate=parseFloat(document.getElementById('setRate').value)||0.203; 
-    wallet.suica=parseInt(document.getElementById('setSuica').value)||0; 
-    wallet.cash=parseInt(document.getElementById('setCash').value)||0; 
-    wallet.credit=parseInt(document.getElementById('setCredit').value)||0;
-    wallet.twd=parseInt(document.getElementById('setTwd').value)||0; 
-    sync(); renderAll(); closeModal('setModal'); 
-}
+function toggleShop(s,e){if(e.classList.contains('open')){openedShops.delete(s);e.classList.remove('open');}else{openedShops.add(s);e.classList.add('open');}}
+function zoomImg(s){document.getElementById('zoomedImg').src=s;document.getElementById('imgZoomModal').style.display='flex';}
+function toggleBought(id){const i=shoppingItems.find(x=>x.id===id);if(i)i.bought=!i.bought;sync();renderAll();}
+function delShopping(id){if(confirm("確定刪除？")){shoppingItems=shoppingItems.filter(x=>x.id!==id);sync();renderAll();}}
+function delLedger(id){if(confirm("刪除帳目？")){ledgerItems=ledgerItems.filter(x=>x.id!==id);sync();renderAll();}}
+function initCats(){const g=document.getElementById('catGrid');g.innerHTML="";categories.forEach(c=>{const d=document.createElement('div');d.className=`cat-item ${c===currentCat?'active':''}`;d.innerText=c;d.onclick=()=>{document.querySelectorAll('.cat-item').forEach(i=>i.classList.remove('active'));d.classList.add('active');currentCat=c};g.appendChild(d);});}
+function pressNum(n){if(n==='C')calcInput="0";else if(calcInput==="0")calcInput=n;else calcInput+=n;document.getElementById('calcDisplay').innerText=calcInput;}
+function closeModal(id){document.getElementById(id).style.display='none';}
+function saveShopping(){const n=document.getElementById('itemName').value;if(!n)return alert("品名?");shoppingItems.push({id:Date.now(),shop:document.getElementById('shopLoc').value||"未分類",name:n,price:document.getElementById('itemPrice').value||0,note:document.getElementById('itemNote').value||"",img:tempImgBase64,bought:false});tempImgBase64="";document.getElementById('previewImg').style.display='none';document.getElementById('imgTip').style.display='block';document.getElementById('itemName').value="";document.getElementById('itemPrice').value="";document.getElementById('itemNote').value="";document.getElementById('shopLoc').value="";sync();renderAll();switchTab('list',document.querySelectorAll('.nav-item')[1]);}
+function saveLedger(){const a=parseInt(calcInput);if(a<=0)return;const m=document.getElementById('payMethod').value,n=document.getElementById('ledgerNote').value||currentCat,d=document.getElementById('ledgerDate').value;if(currentCat==='💰 儲值'){wallet.cash-=a;wallet.suica+=a;}else{if(m==='Suica')wallet.suica-=a;else if(m==='Cash')wallet.cash-=a;else if(m==='TWD')wallet.twd-=a;else if(m==='Credit')wallet.credit=(wallet.credit||0)+a;}ledgerItems.unshift({id:Date.now(),name:n,amount:a,method:m,date:d,cat:currentCat});calcInput="0";document.getElementById('calcDisplay').innerText="0";document.getElementById('ledgerNote').value="";sync();renderAll();}
+function switchTab(t,e){document.querySelectorAll('.view-section').forEach(v=>v.classList.remove('active'));document.getElementById(t+'View').classList.add('active');document.querySelectorAll('.nav-item').forEach(i=>i.classList.remove('active'));e.classList.add('active');}
+function openSettings(){document.getElementById('setRate').value=wallet.rate;document.getElementById('setSuica').value=wallet.suica;document.getElementById('setCash').value=wallet.cash;document.getElementById('setCredit').value=wallet.credit||0;document.getElementById('setTwd').value=wallet.twd||0;document.getElementById('setModal').style.display='flex';}
+function saveSettings(){wallet.rate=parseFloat(document.getElementById('setRate').value)||0.203;wallet.suica=parseInt(document.getElementById('setSuica').value)||0;wallet.cash=parseInt(document.getElementById('setCash').value)||0;wallet.credit=parseInt(document.getElementById('setCredit').value)||0;wallet.twd=parseInt(document.getElementById('setTwd').value)||0;sync();renderAll();closeModal('setModal');}
 </script>
 </body>
 </html>
