@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-    <title>日系手帳 - PikaNote v7</title>
+    <title>日系手帳 - PikaNote v8</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;700&family=Kiwi+Maru:wght@400;500&family=Varela+Round&family=Kosugi+Maru&family=Sawarabi+Gothic&family=M+PLUS+Rounded+1c:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700&family=Kiwi+Maru:wght@400;500&family=Varela+Round&family=Kosugi+Maru&family=M+PLUS+Rounded+1c:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
         :root{--jp-white:#FAF9F6;--jp-gray:#4A4A4A;--jp-accent:#8EACCD}
         .font-style-0{font-family:'Zen Maru Gothic',sans-serif}
@@ -15,17 +15,22 @@
         .font-style-4{font-family:'Varela Round','Zen Maru Gothic',sans-serif}
 
         body{background-color:var(--jp-white);color:var(--jp-gray);transition:all .3s;-webkit-tap-highlight-color:transparent;overflow-x:hidden}
-        .nav-btn{padding:12px 15px;font-size:.9rem;color:#A0A0A0;position:relative;transition:.3s}
-        .nav-btn.active{color:#2D3436;font-weight:700}
+        
+        /* 導航列微調 */
+        .nav-btn{padding:12px 15px;font-size:.95rem;color:#A0A0A0;position:relative;transition:.3s}
+        .nav-btn.active{color:#4A4A4A;font-weight:500}
         .nav-btn.active::after{content:'';position:absolute;bottom:4px;left:50%;transform:translateX(-50%);width:12px;height:3px;background:var(--jp-accent);border-radius:10px}
         
         .page{display:none;animation:fadeIn .3s ease}
         .page.active{display:block}
         @keyframes fadeIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
         
-        .list-row{background:#fff;padding:18px 20px;border-radius:24px;border:1px solid #F0F0F0;margin-bottom:12px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;transition:0.2s}
+        /* 標題字體精細化修改 (重點區) */
+        .list-row{background:#fff;padding:20px 22px;border-radius:24px;border:1px solid rgba(0,0,0,0.03);margin-bottom:12px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;transition:0.2s;box-shadow:0 2px 8px rgba(0,0,0,0.01)}
         .list-row:active{transform:scale(0.98)}
-        
+        .list-title{font-weight:500; letter-spacing: 0.02em; color:#444; font-size: 1.1rem;} /* 標題改為中等粗細 */
+        .list-arrow{font-size: 10px; color:#C0C0C0; font-weight: 400;}
+
         .bg-color-1{background-color:#FFECF1!important}.bg-color-2{background-color:#E0F2FE!important}.bg-color-3{background-color:#F0FDF4!important}.bg-color-4{background-color:#FFFBEB!important}.bg-color-5{background-color:#F5F3FF!important}
         
         #editor-overlay {
@@ -33,7 +38,7 @@
             z-index:1000; background:var(--jp-white); overflow-y:auto; padding-bottom:100px;
         }
         .img-grid{display:flex;flex-wrap:wrap;gap:10px;margin:15px 0}
-        .thumb-img{width:80px;height:80px;object-fit:cover;border-radius:12px;cursor:pointer}
+        .thumb-img{width:80px;height:80px;object-fit:cover;border-radius:15px;cursor:pointer}
         .delete-img-btn{position:absolute;top:-6px;right:-6px;background:#ff4757;color:white;width:20px;height:20px;border-radius:50%;font-size:12px;display:flex;justify-content:center;align-items:center;z-index:10}
         .lightbox{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.9);z-index:2000;justify-content:center;align-items:center}
         .color-dot.active { border: 2px solid #4A4A4A !important; }
@@ -48,9 +53,9 @@
                 <button onclick="closeEditor()" class="text-stone-400 font-bold">✕ 關閉</button>
                 <label class="cursor-pointer bg-stone-100 px-4 py-2 rounded-full text-sm">🖼️ 加圖<input type="file" multiple class="hidden" onchange="handleImageUpload(event, 'edit')"></label>
             </div>
-            <input type="text" id="edit-item-title" oninput="autoSaveEdit()" class="w-full text-2xl font-bold bg-transparent border-none outline-none mb-4" placeholder="標題">
+            <input type="text" id="edit-item-title" oninput="autoSaveEdit()" class="w-full text-2xl font-medium bg-transparent border-none outline-none mb-4" placeholder="標題">
             <div id="edit-img-grid" class="img-grid"></div>
-            <div id="edit-content" contenteditable="true" oninput="autoSaveEdit()" class="w-full min-h-[50vh] text-lg leading-relaxed outline-none" placeholder="內容..."></div>
+            <div id="edit-content" contenteditable="true" oninput="autoSaveEdit()" class="w-full min-h-[50vh] text-lg leading-relaxed outline-none opacity-80" placeholder="內容..."></div>
             <div class="mt-12 pt-8 border-t border-stone-100 flex justify-between items-center">
                 <button onclick="toggleDimCurrent()" id="dim-btn" class="text-stone-400 text-sm">標記完成</button>
                 <button onclick="deleteCurrentNote()" class="text-red-300 text-sm italic">刪除</button>
@@ -60,7 +65,7 @@
 
     <div id="lightbox" class="lightbox" onclick="this.style.display='none'"><img id="lightbox-img" style="max-width:95%; max-height:95%"></div>
 
-    <nav class="fixed top-0 w-full bg-white/90 backdrop-blur-md z-50 border-b border-stone-100 px-4">
+    <nav class="fixed top-0 w-full bg-white/80 backdrop-blur-lg z-50 border-b border-stone-100 px-4">
         <div class="max-w-4xl mx-auto flex justify-around items-center h-14">
             <button onclick="showPage('create-page')" class="nav-btn active" id="btn-create-page">新增</button>
             <button onclick="showPage('todo-page')" class="nav-btn" id="btn-todo-page">待辦</button>
@@ -69,64 +74,64 @@
     </nav>
 
     <div class="fixed bottom-6 left-6 z-50 flex flex-col gap-3">
-        <button onclick="cycleFont()" class="w-12 h-12 bg-white rounded-full shadow-lg border border-stone-100 flex items-center justify-center text-[10px] font-bold">字體</button>
+        <button onclick="cycleFont()" class="w-12 h-12 bg-white rounded-full shadow-lg border border-stone-50 flex items-center justify-center text-[10px] font-medium text-stone-500">字體</button>
     </div>
     <div class="fixed bottom-6 right-6 z-50 flex flex-col gap-3">
-        <button onclick="exportData()" class="w-12 h-12 bg-stone-800 text-white rounded-full shadow-lg flex items-center justify-center text-xs">匯出</button>
-        <label class="w-12 h-12 bg-stone-400 text-white rounded-full shadow-lg flex items-center justify-center text-xs cursor-pointer">匯入<input type="file" class="hidden" onchange="importData(event)"></label>
+        <button onclick="exportData()" class="w-12 h-12 bg-stone-800 text-white rounded-full shadow-lg flex items-center justify-center text-[10px]">匯出</button>
+        <label class="w-12 h-12 bg-stone-100 text-stone-400 rounded-full shadow-md flex items-center justify-center text-[10px] cursor-pointer">匯入<input type="file" class="hidden" onchange="importData(event)"></label>
     </div>
 
     <main class="max-w-2xl mx-auto pt-20 px-6">
         <section id="create-page" class="page active">
-            <div class="mb-8">
-                <h1 class="text-3xl font-black text-stone-800 tracking-tighter">PIKANOTE</h1>
-                <p id="quote-display" class="text-xs text-stone-400 mt-1 italic">...載入中...</p>
+            <div class="mb-10">
+                <h1 class="text-3xl font-bold text-stone-700 tracking-tight">PIKANOTE</h1>
+                <p id="quote-display" class="text-[10px] text-stone-400 mt-2 tracking-widest opacity-70 italic">...載入中...</p>
             </div>
             <div class="grid grid-cols-1 gap-4">
-                <div onclick="showPage('add-todo-sub')" class="bg-white p-8 rounded-[32px] shadow-sm border border-stone-100 text-center cursor-pointer">📋 快速待辦</div>
-                <div onclick="showPage('add-note-sub')" class="bg-white p-8 rounded-[32px] shadow-sm border border-stone-100 text-center cursor-pointer">✍️ 心情便條</div>
+                <div onclick="showPage('add-todo-sub')" class="bg-white p-8 rounded-[32px] border border-stone-50 shadow-sm text-center cursor-pointer text-stone-600 font-medium">📋 快速待辦</div>
+                <div onclick="showPage('add-note-sub')" class="bg-white p-8 rounded-[32px] border border-stone-50 shadow-sm text-center cursor-pointer text-stone-600 font-medium">✍️ 心情便條</div>
             </div>
         </section>
 
         <section id="add-note-sub" class="page">
-            <button onclick="showPage('create-page')" class="mb-4 text-stone-400 font-bold text-sm">← 返回</button>
-            <div class="bg-white rounded-[32px] p-6 shadow-sm space-y-4">
+            <button onclick="showPage('create-page')" class="mb-6 text-stone-300 font-bold text-xs tracking-widest">← BACK</button>
+            <div class="bg-white rounded-[35px] p-6 shadow-sm border border-stone-50 space-y-5">
                 <div class="flex gap-2 overflow-x-auto py-2 no-scrollbar">
-                    <div onclick="selectColor('bg-color-1',this)" class="color-dot bg-color-1 active w-8 h-8 rounded-full cursor-pointer"></div>
-                    <div onclick="selectColor('bg-color-2',this)" class="color-dot bg-color-2 w-8 h-8 rounded-full cursor-pointer"></div>
-                    <div onclick="selectColor('bg-color-3',this)" class="color-dot bg-color-3 w-8 h-8 rounded-full cursor-pointer"></div>
-                    <div onclick="selectColor('bg-color-4',this)" class="color-dot bg-color-4 w-8 h-8 rounded-full cursor-pointer"></div>
-                    <div onclick="selectColor('bg-color-5',this)" class="color-dot bg-color-5 w-8 h-8 rounded-full cursor-pointer"></div>
+                    <div onclick="selectColor('bg-color-1',this)" class="color-dot bg-color-1 active w-7 h-7 rounded-full cursor-pointer"></div>
+                    <div onclick="selectColor('bg-color-2',this)" class="color-dot bg-color-2 w-7 h-7 rounded-full cursor-pointer"></div>
+                    <div onclick="selectColor('bg-color-3',this)" class="color-dot bg-color-3 w-7 h-7 rounded-full cursor-pointer"></div>
+                    <div onclick="selectColor('bg-color-4',this)" class="color-dot bg-color-4 w-7 h-7 rounded-full cursor-pointer"></div>
+                    <div onclick="selectColor('bg-color-5',this)" class="color-dot bg-color-5 w-7 h-7 rounded-full cursor-pointer"></div>
                 </div>
-                <input type="text" id="new-group-title" class="w-full p-4 bg-stone-50 rounded-2xl outline-none font-bold" placeholder="分組名稱 (選填)">
-                <input type="text" id="new-item-title" class="w-full p-4 bg-stone-50 rounded-2xl outline-none" placeholder="便條標題 (必填一項)">
+                <input type="text" id="new-group-title" class="w-full p-4 bg-stone-50 rounded-2xl outline-none font-medium text-stone-700" placeholder="分組名稱 (選填)">
+                <input type="text" id="new-item-title" class="w-full p-4 bg-stone-50 rounded-2xl outline-none text-stone-600" placeholder="便條標題 (必填一項)">
                 <div id="new-img-grid" class="img-grid"></div>
-                <label class="block text-center p-4 border-2 border-dashed border-stone-100 rounded-2xl cursor-pointer text-stone-400">🖼️ 選擇多張圖片<input type="file" multiple class="hidden" onchange="handleImageUpload(event, 'new')"></label>
-                <div id="new-note-editor" contenteditable="true" class="min-h-[150px] p-4 bg-color-1 rounded-2xl outline-none" placeholder="內容..."></div>
-                <button onclick="saveNewNote()" class="w-full bg-stone-800 text-white py-4 rounded-2xl font-bold">儲存並查看</button>
+                <label class="block text-center p-4 border border-dashed border-stone-200 rounded-2xl cursor-pointer text-stone-300 text-xs">🖼️ 增加圖片<input type="file" multiple class="hidden" onchange="handleImageUpload(event, 'new')"></label>
+                <div id="new-note-editor" contenteditable="true" class="min-h-[160px] p-5 bg-color-1 rounded-2xl outline-none text-stone-700" placeholder="內容..."></div>
+                <button onclick="saveNewNote()" class="w-full bg-stone-800 text-white py-4 rounded-2xl font-medium tracking-widest text-sm shadow-lg">儲存便條</button>
             </div>
         </section>
 
         <section id="todo-page" class="page"><div id="todo-container" class="space-y-4"></div></section>
-        <section id="note-page" class="page"><div id="main-note-list" class="space-y-3"></div></section>
+        <section id="note-page" class="page"><div id="main-note-list" class="space-y-2"></div></section>
         
         <section id="detail-page" class="page">
-            <div class="flex items-center gap-4 mb-6"><button onclick="showPage('note-page')" class="text-stone-400">←</button><h2 id="group-display-title" class="text-xl font-bold"></h2></div>
+            <div class="flex items-center gap-4 mb-6"><button onclick="showPage('note-page')" class="text-stone-300">←</button><h2 id="group-display-title" class="text-lg font-medium text-stone-600"></h2></div>
             <div id="note-grid" class="grid grid-cols-2 gap-3"></div>
         </section>
 
         <section id="add-todo-sub" class="page">
-            <button onclick="showPage('create-page')" class="mb-4 text-stone-400 font-bold text-sm">← 返回</button>
-            <div class="bg-white rounded-[32px] p-6 shadow-sm space-y-4">
-                <input type="text" id="todo-cat-input" class="w-full p-4 bg-stone-50 rounded-2xl outline-none" placeholder="分類">
-                <textarea id="todo-text-input" class="w-full p-4 bg-stone-50 rounded-2xl outline-none min-h-[150px]" placeholder="換行可新增多項內容"></textarea>
-                <button onclick="addNewTodo()" class="w-full bg-[#8EACCD] text-white py-4 rounded-2xl font-bold">儲存待辦</button>
+            <button onclick="showPage('create-page')" class="mb-6 text-stone-300 font-bold text-xs tracking-widest">← BACK</button>
+            <div class="bg-white rounded-[35px] p-6 shadow-sm border border-stone-50 space-y-4">
+                <input type="text" id="todo-cat-input" class="w-full p-4 bg-stone-50 rounded-2xl outline-none text-stone-600" placeholder="分類 (如: 購物)">
+                <textarea id="todo-text-input" class="w-full p-4 bg-stone-50 rounded-2xl outline-none min-h-[150px] text-stone-600" placeholder="換行可新增多項"></textarea>
+                <button onclick="addNewTodo()" class="w-full bg-[#8EACCD] text-white py-4 rounded-2xl font-medium shadow-md">加入待辦</button>
             </div>
         </section>
     </main>
 
     <script>
-        const STORAGE_KEY = `pika_v23_db_513`;
+        const STORAGE_KEY = `pika_v24_db_513`;
         let db = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {todos:[], groups:{}, fontIdx:0};
         let currentGroup = '', currentNoteIdx = -1, tempImages = [], selectedColor = 'bg-color-1';
         const quotes = ["今日という日は、残りの人生の最初の一日である。","一期一会","日日是好日。","初心忘るべからず。","生活の斷片を記録する。","ゆっくり歩めば、遠くまで行ける。"];
@@ -146,17 +151,13 @@
 
         function refreshQuote() { document.getElementById('quote-display').innerText = quotes[Math.floor(Math.random()*quotes.length)]; }
 
-        // --- 便條邏輯 ---
         function saveNewNote() {
             const gTitle = document.getElementById('new-group-title').value.trim();
             const iTitle = document.getElementById('new-item-title').value.trim();
             const content = document.getElementById('new-note-editor').innerText.trim();
-            
             if(!gTitle && !iTitle && !content && tempImages.length === 0) return;
-
             const targetGroup = gTitle || iTitle || "未分類";
             if(!db.groups[targetGroup]) db.groups[targetGroup] = [];
-            
             db.groups[targetGroup].push({
                 title: iTitle || "無標題",
                 content: content,
@@ -181,11 +182,17 @@
                 const groupItems = db.groups[g];
                 if(groupItems.length === 1 && groupItems[0].isSingle) {
                     const n = groupItems[0];
-                    return `<div onclick="openEditorDirectly('${g}', 0)" class="list-row ${n.color} ${n.dimmed?'opacity-50':''}"><span class="font-bold text-stone-700">${g}</span><span class="text-[10px] text-stone-300 font-bold">查看內容 →</span></div>`;
+                    return `<div onclick="openEditorDirectly('${g}', 0)" class="list-row ${n.color} ${n.dimmed?'opacity-50':''}">
+                                <span class="list-title">${g}</span>
+                                <span class="list-arrow">查看內容 →</span>
+                            </div>`;
                 } else {
-                    return `<div onclick="openGroup('${g}')" class="list-row"><span class="font-bold text-stone-700">${g}</span><span class="text-[10px] text-stone-300 font-bold">${groupItems.length} 則 →</span></div>`;
+                    return `<div onclick="openGroup('${g}')" class="list-row">
+                                <span class="list-title">${g}</span>
+                                <span class="list-arrow">${groupItems.length} 則 →</span>
+                            </div>`;
                 }
-            }).join('') || '<p class="text-center text-stone-300 py-10">尚無便條</p>';
+            }).join('') || '<p class="text-center text-stone-300 py-10 text-xs">尚無便條</p>';
         }
 
         function openEditorDirectly(g, idx) {
@@ -205,8 +212,8 @@
         function renderNoteGrid() {
             document.getElementById('note-grid').innerHTML = db.groups[currentGroup].map((n, i) => `
                 <div onclick="openEditorDirectly('${currentGroup}', ${i})" class="p-4 rounded-2xl ${n.color} ${n.dimmed?'opacity-50':''}">
-                    <h4 class="font-bold text-sm truncate">${n.title}</h4>
-                    <p class="text-[10px] line-clamp-1 mt-1 opacity-60">${n.content}</p>
+                    <h4 class="font-medium text-sm truncate text-stone-700">${n.title}</h4>
+                    <p class="text-[10px] line-clamp-1 mt-1 opacity-50">${n.content}</p>
                 </div>
             `).join('');
         }
@@ -216,7 +223,6 @@
         function deleteCurrentNote() { if(confirm('確定刪除？')) { db.groups[currentGroup].splice(currentNoteIdx, 1); if(!db.groups[currentGroup].length) delete db.groups[currentGroup]; save(); closeEditor(); showPage('note-page'); } }
         function toggleDimCurrent() { const n = db.groups[currentGroup][currentNoteIdx]; n.dimmed = !n.dimmed; save(); document.getElementById('dim-btn').innerText = n.dimmed ? '標記未完成' : '標記完成'; }
 
-        // --- 圖片 ---
         async function handleImageUpload(e, mode) {
             const files = Array.from(e.target.files);
             for(let file of files) {
@@ -247,28 +253,25 @@
         function removeImg(i, isNew) { if(isNew) { tempImages.splice(i,1); renderImgGrid('new-img-grid', tempImages, true); } else { db.groups[currentGroup][currentNoteIdx].images.splice(i,1); save(); renderImgGrid('edit-img-grid', db.groups[currentGroup][currentNoteIdx].images, false); } }
         function zoomImg(s) { document.getElementById('lightbox-img').src = s; document.getElementById('lightbox').style.display = 'flex'; }
 
-        // --- 功能性 ---
-        function selectColor(c, el) { selectedColor = c; document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('active')); el.classList.add('active'); document.getElementById('new-note-editor').className = `min-h-[150px] p-4 rounded-2xl outline-none ${c}`; }
+        function selectColor(c, el) { selectedColor = c; document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('active')); el.classList.add('active'); document.getElementById('new-note-editor').className = `min-h-[160px] p-5 rounded-2xl outline-none ${c} text-stone-700`; }
         function addNewTodo() { const t = document.getElementById('todo-text-input').value; const c = document.getElementById('todo-cat-input').value || '一般'; if(!t.trim()) return; t.split('\n').filter(l => l.trim()).forEach(l => { db.todos.push({text: l.trim(), cat: c, done: false, id: Date.now() + Math.random()}); }); save(); showPage('todo-page'); document.getElementById('todo-text-input').value = ''; }
         function renderTodos() {
             const cats = [...new Set(db.todos.map(t => t.cat))];
             document.getElementById('todo-container').innerHTML = cats.map(c => `
-                <div class="bg-white p-6 rounded-[30px] border border-stone-100 shadow-sm"><div class="font-bold mb-4 flex items-center gap-2"><div class="w-1 h-4 bg-[#8EACCD] rounded-full"></div>${c}</div>
-                ${db.todos.filter(x => x.cat === c).map(x => `<div class="flex items-center justify-between py-2 border-b border-stone-50 last:border-0" onclick="toggleTodo(${x.id})"><span class="${x.done ? 'line-through text-stone-300' : ''}">${x.text}</span><button onclick="event.stopPropagation(); deleteTodo(${x.id})" class="text-stone-300">✕</button></div>`).join('')}</div>
-            `).join('') || '<p class="text-center text-stone-300 py-10">尚無待辦</p>';
+                <div class="bg-white p-7 rounded-[35px] border border-stone-50 shadow-sm"><div class="font-medium text-stone-600 mb-5 flex items-center gap-2 text-sm"><div class="w-1 h-3 bg-[#8EACCD] rounded-full"></div>${c}</div>
+                ${db.todos.filter(x => x.cat === c).map(x => `<div class="flex items-center justify-between py-3 border-b border-stone-50 last:border-0" onclick="toggleTodo(${x.id})"><span class="text-stone-500 text-sm ${x.done ? 'line-through text-stone-200' : ''}">${x.text}</span><button onclick="event.stopPropagation(); deleteTodo(${x.id})" class="text-stone-200">✕</button></div>`).join('')}</div>
+            `).join('') || '<p class="text-center text-stone-300 py-10 text-xs">尚無待辦</p>';
         }
         function toggleTodo(id) { const x = db.todos.find(i => i.id === id); x.done = !x.done; save(); renderTodos(); }
         function deleteTodo(id) { db.todos = db.todos.filter(i => i.id !== id); save(); renderTodos(); }
         
-        // --- 字體與匯入出 ---
         function cycleFont() { db.fontIdx = (db.fontIdx + 1) % fontClasses.length; document.getElementById('main-body').className = `min-h-screen pb-24 ${fontClasses[db.fontIdx]}`; save(); }
-        function exportData() { const blob = new Blob([JSON.stringify(db)], {type: "application/json"}), a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `手帳備份.json`; a.click(); }
+        function exportData() { const blob = new Blob([JSON.stringify(db)], {type: "application/json"}), a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `PikaNote_Backup.json`; a.click(); }
         function importData(e) { const r = new FileReader(); r.onload = (ev) => { db = JSON.parse(ev.target.result); save(); location.reload(); }; r.readAsText(e.target.files[0]); }
 
-        // 初始化
         refreshQuote();
         document.getElementById('main-body').className = `min-h-screen pb-24 ${fontClasses[db.fontIdx]}`;
-        showPage('create-page');
+        showPage('note-page');
     </script>
 </body>
 </html>
