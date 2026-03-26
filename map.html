@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-    <title>Pikaka 513 Soft</title>
+    <title>Pikaka 513 Minimal</title>
     <link href="https://fonts.googleapis.com/css2?family=Mochiy+Pop+One&family=Kiwi+Maru:wght@300;400;500&display=swap" rel="stylesheet">
     <style>
-        :root{--y:#FFF2CC;--o:#F3A05F;--b:#606266;--bg:#FEF9EF;--g:#A5D6A7;--bl:#90CAF9;--p:#E2DBF0;--lo:#FFE4CC;--eat:#FFCC80}
+        :root{--y:#FFF2CC;--o:#F3A05F;--b:#606266;--bg:#FEF9EF;--g:#A5D6A7;--bl:#90CAF9;--p:#E2DBF0;--lo:#FFE4CC}
         *{font-family:'Kiwi Maru',serif;box-sizing:border-box; -webkit-tap-highlight-color: transparent;}
         body{background:var(--bg);color:var(--b);margin:0;padding-bottom:100px;display:flex;flex-direction:column;align-items:center;min-height: 100vh;}
         .p-h{font-family:'Mochiy Pop One',sans-serif!important;font-size:2.5rem;color:var(--o);text-align:center;margin:15px 0;letter-spacing:1px}
@@ -19,58 +19,55 @@
         .nav-item.active{color:var(--o);transform:scale(1.1);font-weight:700}
         
         .panel{background:#fff;padding:20px;border-radius:25px;border:3px solid var(--y);margin-bottom:15px}
-        input,textarea{padding:12px;border:1.5px solid #EEE;border-radius:12px;width:100%;margin-bottom:10px;background:#fafafa;color:var(--b)}
+        input,textarea{padding:12px;border:1.5px solid #EEE;border-radius:12px;width:100%;margin-bottom:10px;background:#fafafa;color:var(--b);font-weight:300}
         .pika-btn{background:var(--o);color:#fff;border:none;padding:14px;border-radius:30px;font-size:1.1rem;cursor:pointer;width:100%;box-shadow:0 4px 0 #d88b4d;font-family:'Mochiy Pop One',sans-serif!important}
         
         .l-card{margin-bottom:8px;border-radius:15px;border:2px solid var(--y);background:#fff;overflow:hidden;transition: opacity 0.3s}
         .l-card.done { opacity: 0.35; filter: grayscale(0.5); }
         .l-h{padding:12px;cursor:pointer;display:flex;justify-content:space-between;align-items:center}
-        .l-h-name { flex: 1; font-weight: 500; font-size: 0.95rem; letter-spacing: 0.8px; color: #5a5a5a; user-select: none; }
+        .l-h-name { flex: 1; font-weight: 300; font-size: 0.95rem; letter-spacing: 0.8px; color: #5a5a5a; }
         .go-btn{background:var(--bl);color:#455A64;border:none;padding:4px 10px;border-radius:8px;font-size:0.7rem;margin-left:8px}
         .items-box{display:none;background:#fafafa}.open .items-box{display:block}
-        .s-item{padding:14px 16px;border-bottom:1px solid #f0f0f0;border-left:6px solid var(--o);display:flex;justify-content:space-between;align-items:center;background:#fff}
-        .date-header{background:var(--lo);padding:12px;border-radius:15px;margin:15px 0 10px 0;font-family:'Mochiy Pop One',sans-serif!important;cursor:pointer;color:var(--b)}
+        .s-item{padding:14px 16px;border-bottom:1px solid #f0f0f0;border-left:6px solid var(--o);display:flex;justify-content:space-between;align-items:center;background:#fff;font-weight:300}
+        .date-header{background:var(--lo);padding:12px;border-radius:15px;margin:15px 0 10px 0;font-family:'Mochiy Pop One',sans-serif!important;cursor:pointer;color:var(--b);font-weight:normal}
         
-        /* Note 視覺優化 - 文字減輕版 */
-        .note-card{background:#fff;border-radius:25px;margin-bottom:20px;border:3px solid var(--y);overflow:hidden;box-shadow: 0 4px 15px rgba(0,0,0,0.05)}
-        .note-title{padding:18px;font-weight:700;cursor:pointer;display:flex;justify-content:space-between;align-items:center;border-bottom:2px dashed var(--y);background: #FFFDF7;}
-        .note-title span{color:var(--o); opacity: 0.9;}
+        /* Note 輕盈細緻版 */
+        .note-card{background:#fff;border-radius:25px;margin-bottom:20px;border:3px solid var(--y);overflow:hidden;}
+        .note-title{padding:18px;font-weight:400;cursor:pointer;display:flex;justify-content:space-between;align-items:center;border-bottom:1px dashed var(--y);background: #FFFDF7;}
+        .note-title span{color:var(--b); opacity: 0.8; font-size: 1.1rem;}
         .note-body{display:none;padding:12px;background:#fff}.open .note-body{display:block}
-        .note-item{padding:15px;margin-bottom:10px;border-radius:18px;display:flex;align-items:flex-start;position:relative;transition:all 0.2s;border-left:8px solid transparent}
-        .note-item.done{opacity:0.25;filter:grayscale(1);text-decoration:line-through}
-        .note-time-box{min-width:60px;font-family:'Mochiy Pop One',sans-serif!important;font-size:0.75rem;color:var(--o);opacity:0.8;margin-right:8px;padding-top:2px}
-        .note-dot{width:10px;height:10px;border-radius:50%;margin-right:15px;margin-top:7px;flex-shrink:0}
+        .note-item{padding:12px 15px;margin-bottom:8px;border-radius:15px;display:flex;align-items:flex-start;position:relative;transition:all 0.2s;border-left:4px solid transparent}
+        .note-item.done{opacity:0.2;filter:grayscale(1);text-decoration:line-through}
+        .note-time-box{min-width:55px;font-family:'Mochiy Pop One',sans-serif!important;font-size:0.75rem;color:var(--o);opacity:0.7;margin-right:8px;padding-top:3px}
+        .note-dot{width:8px;height:8px;border-radius:50%;margin-right:15px;margin-top:8px;flex-shrink:0}
         .note-content-main{flex:1}
-        .note-main-text{font-weight:700;font-size:1rem;color:#666;display:block;margin-bottom:4px;letter-spacing:0.5px}
-        .note-sub-text{font-size:0.8rem;color:#AAB8C2;font-weight:400;display:block;padding-top:2px}
+        .note-main-text{font-weight:300;font-size:0.95rem;color:#707070;display:block;margin-bottom:2px;letter-spacing:0.3px}
+        .note-sub-text{font-size:0.8rem;color:#B0BEC5;font-weight:300;display:block;}
 
-        .ed-btn, .del-btn{cursor:pointer;padding:8px 10px;margin:0 2px;font-size:0.9rem;display:inline-block}.ed-btn{color:#BBB}.del-btn{color:#FFAB91;font-weight:700}
-        .hint-box{font-size:0.8rem;color:var(--o);margin-bottom:8px;display:none;cursor:pointer;background:var(--y);padding:6px;border-radius:8px;text-align:center}
-        .modal{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;z-index:3000}
+        .ed-btn, .del-btn{cursor:pointer;padding:8px 10px;margin:0 2px;font-size:0.9rem;display:inline-block}.ed-btn{color:#DDD}.del-btn{color:#FFCCBC;font-weight:400}
+        .modal{position:fixed;inset:0;background:rgba(0,0,0,.3);display:none;align-items:center;justify-content:center;z-index:3000}
         .modal-b{background:#fff;width:88%;max-width:340px;padding:25px;border-radius:35px;border:4px solid var(--y);text-align:center}
-        .trip-item{display:flex;justify-content:space-between;align-items:center;padding:10px;margin-bottom:5px;border-radius:10px;background:#f9f9f9;border:1px solid #eee}
-        .trip-item.active{background:var(--lo);border-color:var(--o)}
+        .trip-item{display:flex;justify-content:space-between;align-items:center;padding:10px;margin-bottom:5px;border-radius:10px;background:#f9f9f9;border:1px solid #eee; font-weight:300}
     </style>
 </head>
 <body>
     <div id="appInterface" style="width:100%;max-width:420px">
         <div class="top-bar">
             <div><div class="u-i" id="welcomeMsg">Hi!</div><div onclick="openTM()" style="cursor:pointer;font-size:0.9rem;font-weight:bold;color:var(--bl);text-decoration:underline;font-family:'Mochiy Pop One',sans-serif!important"><span id="curTripN"></span></div></div>
-            <div style="font-size: 0.8rem; color: #CCC; font-family: 'Mochiy Pop One';">Pikaka</div>
+            <div style="font-size: 0.7rem; color: #DDD; font-family: 'Mochiy Pop One';">Pikaka</div>
         </div>
 
         <div id="addView" class="view-sec active">
             <h2 class="p-h">Pikaka</h2>
             <div class="panel">
                 <input type="date" id="ld">
-                <input type="text" id="ln" placeholder="店名" oninput="checkHint()">
-                <div id="lastHint" class="hint-box" onclick="fillLast()">✨ 點我填入上次的網址與日期</div>
+                <input type="text" id="ln" placeholder="店名">
                 <input type="text" id="lu" placeholder="Google地圖網址">
                 <textarea id="sd" placeholder="備註" rows="3"></textarea>
                 <button class="pika-btn" id="saveBtn" onclick="saveS()">加入清單</button>
                 <div style="display:flex;gap:10px;margin-top:10px">
-                    <button class="pika-btn" style="background:#CCC;box-shadow:0 4px 0 #AAA;font-size:0.8rem" onclick="expD()">匯出</button>
-                    <button class="pika-btn" style="background:#CCC;box-shadow:0 4px 0 #AAA;font-size:0.8rem" onclick="impD()">匯入</button>
+                    <button class="pika-btn" style="background:#EEE;color:#AAA;box-shadow:0 4px 0 #DDD;font-size:0.8rem" onclick="expD()">匯出</button>
+                    <button class="pika-btn" style="background:#EEE;color:#AAA;box-shadow:0 4px 0 #DDD;font-size:0.8rem" onclick="impD()">匯入</button>
                 </div>
             </div>
         </div>
@@ -80,8 +77,8 @@
         <div id="noteAddView" class="view-sec">
             <h2 class="p-h">New Note</h2>
             <div class="panel">
-                <input type="text" id="ntT" placeholder="大標題 (例如：Day 1 行程)">
-                <textarea id="ntC" placeholder="範例：&#10;09:00 桃園機場 / 記得拿WiFi&#10;吃拉麵 / 難波店&#10;咖啡廳 / 下午茶" rows="10"></textarea>
+                <input type="text" id="ntT" placeholder="標題">
+                <textarea id="ntC" placeholder="09:00 桃園機場 / 備註&#10;午餐 / 某某店" rows="10"></textarea>
                 <button class="pika-btn" id="noteSaveBtn" onclick="saveN()">新增</button>
             </div>
         </div>
@@ -94,14 +91,12 @@
         </nav>
     </div>
 
-    <div id="tModal" class="modal"><div class="modal-b"><h3>旅程管理</h3><div id="tAcc" style="max-height:220px;overflow-y:auto;margin:15px 0"></div><input type="text" id="newTN" placeholder="新旅程名稱"><button class="pika-btn" style="background:var(--bl);box-shadow:0 4px 0 #7FB8E6;margin-bottom:10px" onclick="addT()">建立新旅程</button><button class="pika-btn" style="background:#EEE;color:#888;box-shadow:0 4px 0 #DDD" onclick="closeM()">關閉</button></div></div>
+    <div id="tModal" class="modal"><div class="modal-b"><h3>旅程管理</h3><div id="tAcc" style="max-height:220px;overflow-y:auto;margin:15px 0"></div><input type="text" id="newTN" placeholder="名稱"><button class="pika-btn" style="background:var(--bl);box-shadow:0 4px 0 #7FB8E6;margin-bottom:10px" onclick="addT()">建立</button><button class="pika-btn" style="background:#EEE;color:#888;box-shadow:0 4px 0 #DDD" onclick="closeM()">關閉</button></div></div>
 
 <script>
 const DK='pikaka_v513_final';
 const maca=['#FFD1DC','#DEECFF','#CAE9E0','#FFF9C4','#FCE4EC','#E8E0FF'];
-const eatKeys=['吃','餐','飯','麵','肉','茶','咖','飲','甜','燒','炸','壽司','味','宵夜','早','午','晚','食'];
-
-let curU="5133", curT="default", db={}, openD=[], openG=[], openN=[], editIdx=-1, editNIdx=-1, lastLoc=null;
+let curU="5133", curT="default", db={}, openD=[], openG=[], openN=[], editIdx=-1, editNIdx=-1;
 
 window.onload = function() { curU = localStorage.getItem('pika_current_user') || '5133'; document.getElementById('welcomeMsg').innerText = `Hi! ${curU}`; initApp(); };
 function initApp() {
@@ -113,7 +108,7 @@ function initApp() {
 }
 function checkData(){if(!db[curU].data[curT])db[curU].data[curT]={items:[],notes:[]}}
 function save(){localStorage.setItem(DK,JSON.stringify(db))}
-function openTM(){const a=document.getElementById('tAcc');a.innerHTML="";for(let i in db[curU].trips){a.innerHTML+=`<div class="trip-item ${i===curT?'active':''}"><span onclick="switchT('${i}')" style="flex:1;text-align:left;cursor:pointer">${db[curU].trips[i]}</span><span class="ed-btn" onclick="renameT('${i}')">✎</span>${i!=='default'?`<span class="del-btn" onclick="delT('${i}')">✘</span>`:''}</div>`}document.getElementById('tModal').style.display='flex'}
+function openTM(){const a=document.getElementById('tAcc');a.innerHTML="";for(let i in db[curU].trips){a.innerHTML+=`<div class="trip-item ${i===curT?'active':''}" style="display:flex;align-items:center;padding:10px;border-bottom:1px solid #eee"><span onclick="switchT('${i}')" style="flex:1;text-align:left;cursor:pointer">${db[curU].trips[i]}</span><span class="ed-btn" onclick="renameT('${i}')">✎</span>${i!=='default'?`<span class="del-btn" onclick="delT('${i}')">✘</span>`:''}</div>`}document.getElementById('tModal').style.display='flex'}
 function addT(){const n=document.getElementById('newTN').value.trim();if(!n)return;const id='t'+Date.now();db[curU].trips[id]=n;db[curU].data[id]={items:[],notes:[]};document.getElementById('newTN').value="";save();openTM()}
 function switchT(id){curT=id;db[curU].curT=id;document.getElementById('curTripN').innerText=db[curU].trips[id];save();render();renderN();closeM()}
 function delT(id){if(confirm("確定刪除此旅程？")){delete db[curU].trips[id];delete db[curU].data[id];if(curT===id)curT='default';save();openTM()}}
@@ -122,8 +117,6 @@ function closeM(){document.getElementById('tModal').style.display='none'}
 function expD(){const data=JSON.stringify({n:db[curU].trips[curT],d:db[curU].data[curT]});const blob=new Blob([data],{type:"application/json"});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=`${db[curU].trips[curT]}.pkk`;a.click()}
 function impD(){const input=document.createElement('input');input.type='file';input.onchange=e=>{const file=e.target.files[0];const reader=new FileReader();reader.onload=event=>{try{const imported=JSON.parse(event.target.result);if(imported.n&&imported.d){const id='t'+Date.now();db[curU].trips[id]=imported.n;db[curU].data[id]=imported.d;curT=id;db[curU].curT=id;alert("成功新增旅程："+imported.n)}else{db[curU].data[curT]=imported;alert("資料已更新")}save();render();renderN();document.getElementById('curTripN').innerText=db[curU].trips[curT]}catch(e){alert("檔案不符")}};reader.readAsText(file)};input.click()}
 function sw(v,el){document.querySelectorAll('.view-sec').forEach(s=>s.classList.remove('active'));document.getElementById(v+'View').classList.add('active');document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));el.classList.add('active');if(v==='list')render();if(v==='noteList')renderN()}
-function checkHint(){const n=document.getElementById('ln').value.trim();document.getElementById('lastHint').style.display=(n.length>0&&lastLoc)?"block":"none"}
-function fillLast(){if(lastLoc){document.getElementById('ld').value=lastLoc.d;document.getElementById('lu').value=lastLoc.u;document.getElementById('lastHint').style.display='none'}}
 
 function render(){
     checkData();const d=db[curU].data[curT],list=document.getElementById('listItems');list.innerHTML="";
@@ -148,7 +141,7 @@ function renderN(){
     const d=db[curU].data[curT],list=document.getElementById('noteItems');list.innerHTML="";
     d.notes.forEach((n,i)=>{
         const isO=openN.includes(i),div=document.createElement('div');div.className=`note-card ${isO?'open':''}`;
-        let h=`<div class="note-title" onclick="tgNC(${i})"><span style="flex:1;font-weight:bold">${n.t}</span><div style="font-size:0.75rem;display:flex;align-items:center"><span class="ed-btn" onclick="event.stopPropagation();moveN(${i},-1)">↑</span><span class="ed-btn" onclick="event.stopPropagation();moveN(${i},1)">↓</span><span class="ed-btn" onclick="event.stopPropagation();edN(${i})">✎</span><span class="del-btn" onclick="event.stopPropagation();delN(${i})">✘</span></div></div><div class="note-body">`;
+        let h=`<div class="note-title" onclick="tgNC(${i})"><span style="flex:1">${n.t}</span><div style="font-size:0.75rem;display:flex;align-items:center"><span class="ed-btn" onclick="event.stopPropagation();moveN(${i},-1)">↑</span><span class="ed-btn" onclick="event.stopPropagation();moveN(${i},1)">↓</span><span class="ed-btn" onclick="event.stopPropagation();edN(${i})">✎</span><span class="del-btn" onclick="event.stopPropagation();delN(${i})">✘</span></div></div><div class="note-body">`;
         n.c.split(/[。\n]/).filter(l=>l.trim()!=="").forEach((l,li)=>{
             const s=l.trim(),isD=n.done&&n.done[li];
             const timeMatch = s.match(/^(\d{1,2}[:：]?\d{2})\s*(.*)/);
@@ -156,14 +149,11 @@ function renderN(){
             let mainT = restStr, remT = "", sep = restStr.includes("/")?"/":restStr.includes("|")?"|":null;
             if(sep){ let pts=restStr.split(sep); mainT=pts[0].trim(); remT=pts[1].trim(); }
 
-            const isEat = eatKeys.some(k => mainT.includes(k) || remT.includes(k));
-            const bg = isEat ? 'var(--eat)' : maca[li % maca.length];
-            const icon = isEat ? '🍴 ' : '';
-
-            h+=`<div class="note-item ${isD?'done':''}" style="background:${bg}33; border-left-color:${bg}" ondblclick="tgND(${i},${li})">`;
+            const bg = maca[li % maca.length];
+            h+=`<div class="note-item ${isD?'done':''}" style="background:${bg}22; border-left-color:${bg}" ondblclick="tgND(${i},${li})">`;
             if(timeStr) h+=`<div class="note-time-box">${timeStr}</div>`;
             else h+=`<div class="note-dot" style="background:${bg}"></div>`;
-            h+=`<div class="note-content-main"><span class="note-main-text">${icon}${mainT}</span>${remT?`<span class="note-sub-text">${remT}</span>`:''}</div></div>`;
+            h+=`<div class="note-content-main"><span class="note-main-text">${mainT}</span>${remT?`<span class="note-sub-text">${remT}</span>`:''}</div></div>`;
         });
         h+=`</div>`;div.innerHTML=h;list.appendChild(div)
     })
@@ -171,9 +161,9 @@ function renderN(){
 
 function saveS(){
     const ld=document.getElementById('ld').value,ln=document.getElementById('ln').value.trim(),lu=document.getElementById('lu').value.trim(),sd=document.getElementById('sd').value.trim();
-    if(!ln)return; lastLoc={d:ld,u:lu}; const items=db[curU].data[curT].items;
+    if(!ln)return; const items=db[curU].data[curT].items;
     if(editIdx>-1){items[editIdx]={...items[editIdx],ld,ln,lu,sd,v:!0};editIdx=-1} else{items.push({id:Date.now(),ld,ln,lu,sd,v:!0,gv:!0})} 
-    save();render();['sd','ln','lu'].forEach(i=>document.getElementById(i).value=""); document.getElementById('saveBtn').innerText="加入清單";document.getElementById('lastHint').style.display='none'
+    save();render();['sd','ln','lu'].forEach(i=>document.getElementById(i).value=""); document.getElementById('saveBtn').innerText="加入清單";
 }
 function saveN(){
     const t=document.getElementById('ntT').value.trim(),c=document.getElementById('ntC').value.trim(); if(!t)return;
