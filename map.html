@@ -1,78 +1,80 @@
+
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-    <title>Pikaka 513 Full Pro</title>
+    <title>Pikaka 513 Tier-3</title>
     <link href="https://fonts.googleapis.com/css2?family=Mochiy+Pop+One&family=Kiwi+Maru:wght@300;400;500&display=swap" rel="stylesheet">
     <style>
-        :root{--y:#FFE58F;--o:#F3A05F;--b:#5A5E66;--bg:#FEF9EF;--lo:#FFD8B1;--bl:#90CAF9}
+        :root{--y:#FFFBE6;--o:#FFEDE0;--b:#666;--bg:#FFFEFD;--lo:#FFF9F0;--bl:#F0F9FF;--dot:#FFCCBC}
         *{font-family:'Kiwi Maru',serif;box-sizing:border-box; -webkit-tap-highlight-color: transparent;}
         body{background:var(--bg);color:var(--b);margin:0;padding-bottom:100px;display:flex;flex-direction:column;align-items:center;min-height: 100vh;}
-        .p-h{font-family:'Mochiy Pop One',sans-serif!important;font-size:2.2rem;color:var(--o);text-align:center;margin:12px 0;letter-spacing:1px}
-        .top-bar{background:#fff;padding:10px 15px;display:flex;justify-content:space-between;align-items:center;border-bottom:3px solid var(--y);position:sticky;top:0;z-index:100;width:100%;max-width:420px}
-        .u-i{color:var(--o);font-size:1.1rem;font-family:'Mochiy Pop One',sans-serif!important}
+        .p-h{font-family:'Mochiy Pop One',sans-serif!important;font-size:2rem;color:#E0C3B0;text-align:center;margin:10px 0;letter-spacing:1px}
+        .top-bar{background:#fff;padding:8px 15px;display:flex;justify-content:space-between;align-items:center;border-bottom:1.5px solid var(--y);position:sticky;top:0;z-index:100;width:100%;max-width:420px}
+        .u-i{color:#D4A373;font-size:1rem;font-family:'Mochiy Pop One',sans-serif!important}
         .view-sec{width:100%;max-width:420px;padding:0 10px;display:none;margin:0 auto}.view-sec.active{display:block}
-        .bottom-nav{position:fixed;bottom:0;width:100%;max-width:420px;background:#fff;display:flex;justify-content:space-around;padding:12px 12px calc(12px + env(safe-area-inset-bottom));border-top:3px solid var(--y);z-index:1000}
-        .nav-item{font-size:.85rem;cursor:pointer;text-align:center;color:#A0A0A0;flex:1;font-family:'Mochiy Pop One',sans-serif!important}
-        .nav-item.active{color:var(--o);transform:scale(1.1);font-weight:700}
-        .panel{background:#fff;padding:20px;border-radius:25px;border:3px solid var(--y);margin-bottom:15px}
-        input,textarea{padding:12px;border:1.5px solid #EEE;border-radius:12px;width:100%;margin-bottom:10px;background:#fafafa;color:var(--b);font-weight:300}
-        .pika-btn{background:var(--o);color:#fff;border:none;padding:14px;border-radius:30px;font-size:1.1rem;cursor:pointer;width:100%;box-shadow:0 4px 0 #d88b4d;font-family:'Mochiy Pop One',sans-serif!important}
         
-        /* List & Note Card Style */
-        .date-header{background:var(--lo);padding:10px;border-radius:15px;cursor:pointer;font-family:'Mochiy Pop One',sans-serif!important;text-align:center;font-size:0.9rem; margin-bottom: 5px; border: 1.5px solid var(--y);}
-        .date-content { display: none; padding: 0 5px; }
-        .date-group.open .date-content { display: block; }
-        .l-card, .note-card{margin-bottom:10px;border-radius:18px;border:2px solid var(--y);background:#fff;overflow:hidden}
-        .l-h, .note-title{padding:10px 15px;display:flex;justify-content:space-between;align-items:center;cursor:pointer}
-        .l-h-name, .note-title span{font-weight:300;font-size:0.95rem; flex:1; display:flex; align-items:center;}
-        .has-note-dot{width:6px;height:6px;background:var(--o);border-radius:50%;margin-left:6px;display:inline-block;}
-        .items-box, .note-body{display:none;background:#FFF9F0;border-top:1px dashed #eee;padding:10px}
-        .open .items-box, .open .note-body{display:block}
+        .bottom-nav{position:fixed;bottom:0;width:100%;max-width:420px;background:#fff;display:flex;justify-content:space-around;padding:10px 10px calc(10px + env(safe-area-inset-bottom));border-top:1.5px solid var(--y);z-index:1000}
+        .nav-item{font-size:.8rem;cursor:pointer;text-align:center;color:#DDD;flex:1;font-family:'Mochiy Pop One',sans-serif!important}
+        .nav-item.active{color:#D4A373;transform:scale(1.05);font-weight:700}
         
-        /* Note Items */
-        .note-item{padding:10px 12px;margin-bottom:5px;border-radius:12px;display:flex;align-items:flex-start;background:rgba(255,255,255,0.7);border:1px solid #FFEBB7}
-        .note-item.done{opacity:0.2;filter:grayscale(1);text-decoration:line-through}
-        .note-time-box{min-width:50px;font-family:'Mochiy Pop One',sans-serif!important;font-size:0.7rem;opacity:0.7;margin-right:8px;padding-top:3px}
-        .note-dot{width:5px;height:5px;border-radius:50%;margin-right:12px;margin-top:8px;flex-shrink:0;background:var(--y)}
-        .note-main-text{font-weight:300;font-size:0.9rem;display:block;color:#5A5E66}
-        .note-sub-text{font-size:0.75rem;opacity:0.6;font-weight:300;display:block;}
+        .panel{background:#fff;padding:15px;border-radius:20px;border:1.5px solid var(--y);margin-bottom:15px}
+        input,textarea{padding:10px;border:1px solid #F5F5F5;border-radius:10px;width:100%;margin-bottom:8px;background:#FAFAFA;color:var(--b);font-weight:300}
+        .pika-btn{background:#E0C3B0;color:#fff;border:none;padding:12px;border-radius:30px;font-size:1rem;cursor:pointer;width:100%;box-shadow:0 3px 0 #CDB4A6;font-family:'Mochiy Pop One',sans-serif!important}
 
-        .ed-btn, .del-btn{cursor:pointer;padding:5px 8px;margin:0 1px;font-size:0.85rem;display:inline-block;font-weight:300}.ed-btn{color:#BBB}.del-btn{color:#FFAB91}
-        .color-tip{font-size:0.75rem;color:#AAA;margin-bottom:10px;display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
-        .color-tip span{padding:2px 6px;border-radius:5px;background:#F0F0F0;font-weight:300}
-        .modal{position:fixed;inset:0;background:rgba(0,0,0,.3);display:none;align-items:center;justify-content:center;z-index:3000}
-        .modal-b{background:#fff;width:88%;max-width:340px;padding:25px;border-radius:35px;border:4px solid var(--y);text-align:center}
+        /* List 三層樣式 */
+        .date-group { margin-bottom: 8px; }
+        .date-header{background:var(--lo);padding:8px;border-radius:12px;cursor:pointer;font-family:'Mochiy Pop One',sans-serif!important;text-align:center;font-size:0.85rem; margin-bottom: 4px; border: 1px solid var(--y); color:#B08968}
+        .date-content { display: none; padding: 0 4px; }
+        .date-group.open .date-content { display: block; }
+
+        .l-card{margin-bottom:6px;border-radius:12px;border:1px solid #F0F0F0;background:#fff;overflow:hidden}
+        .l-h{padding:8px 12px;display:flex;justify-content:space-between;align-items:center;cursor:pointer}
+        .l-h-name{font-weight:300;font-size:0.85rem; flex:1; display:flex; align-items:center; color:#777}
+        .has-note-dot{width:5px;height:5px;background:var(--dot);border-radius:50%;margin-left:6px;display:inline-block;}
+        .items-box{display:none;background:#FFFEFC;border-top:1px dashed #EEE;padding:10px 15px;font-size:0.8rem;color:#888;line-height:1.5}
+        .l-card.open .items-box{display:block}
+
+        .ed-btn, .del-btn{cursor:pointer;padding:4px 6px;margin:0 1px;font-size:0.75rem;display:inline-block;font-weight:300}.ed-btn{color:#CCC}.del-btn{color:#FFD1D1}
+        .color-tip{font-size:0.7rem;color:#DDD;margin-bottom:8px;display:flex;flex-wrap:wrap;gap:6px;justify-content:center}
+        
+        /* Note 樣式略微調淡 */
+        .note-card{border-radius:15px;margin-bottom:10px;border:1px solid var(--y);background:#fff;overflow:hidden;}
+        .note-title{padding:10px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;border-bottom:1px dashed var(--y);font-size:0.85rem}
+        .note-body{display:none;padding:8px;background:#FFFEFB}.open .note-body{display:block}
+        .note-item{padding:8px;margin-bottom:4px;border-radius:8px;display:flex;align-items:flex-start;background:rgba(255,255,255,0.5);border:1px solid #FDFDFD}
+        .note-item.done{opacity:0.2;text-decoration:line-through}
     </style>
 </head>
 <body>
     <div id="appInterface" style="width:100%;max-width:420px">
         <div class="top-bar">
-            <div><div class="u-i" id="welcomeMsg">Hi!</div><div onclick="openTM()" style="cursor:pointer;font-size:0.85rem;font-weight:bold;color:var(--bl);text-decoration:underline;font-family:'Mochiy Pop One',sans-serif!important"><span id="curTripN"></span></div></div>
-            <div style="font-size: 0.65rem; color: #CCC; font-family: 'Mochiy Pop One';">Pikaka</div>
+            <div><div class="u-i" id="welcomeMsg">Hi!</div><div onclick="openTM()" style="cursor:pointer;font-size:0.75rem;color:#A8A8A8;text-decoration:underline;font-family:'Mochiy Pop One',sans-serif!important"><span id="curTripN"></span></div></div>
+            <div style="font-size: 0.6rem; color: #EEE; font-family: 'Mochiy Pop One';">513 v3</div>
         </div>
+
         <div id="addView" class="view-sec active">
             <h2 class="p-h">Pikaka</h2>
             <div class="panel">
-                <input type="date" id="ld">
-                <input type="text" id="ln" placeholder="店名/景點">
-                <input type="text" id="lu" placeholder="Google地圖連結">
-                <textarea id="sd" placeholder="簡單備註" rows="3"></textarea>
+                <input type="date" id="ld"><input type="text" id="ln" placeholder="店家/景點">
+                <input type="text" id="lu" placeholder="Google Map URL"><textarea id="sd" placeholder="備註 (留空則不展開)" rows="3"></textarea>
                 <button class="pika-btn" id="saveLBtn" onclick="saveS()">加入清單</button>
             </div>
         </div>
+
         <div id="listView" class="view-sec"><h2 class="p-h">List</h2><div id="listItems"></div></div>
         <div id="noteListView" class="view-sec"><h2 class="p-h">Notes</h2><div id="noteItems"></div></div>
+        
         <div id="noteAddView" class="view-sec">
             <h2 class="p-h">New Note</h2>
             <div class="panel">
-                <div class="color-tip"><span>*紅 (r)</span><span>*藍 (b)</span><span>*綠 (g)</span><span>*橘 (o)</span><span>*紫 (p)</span></div>
-                <input type="text" id="ntT" placeholder="行程標題">
-                <textarea id="ntC" placeholder="09:00 出發 *藍&#10;吃午餐 / 店名 *紅" rows="10"></textarea>
+                <div class="color-tip"><span>*紅(r)</span><span>*藍(b)</span><span>*綠(g)</span><span>*橘(o)</span><span>*紫(p)</span></div>
+                <input type="text" id="ntT" placeholder="標題"><textarea id="ntC" placeholder="09:00 出發 *藍" rows="10"></textarea>
                 <button class="pika-btn" id="noteSaveBtn" onclick="saveN()">新增</button>
             </div>
         </div>
+
         <nav class="bottom-nav">
             <div class="nav-item active" onclick="sw('add',this)"><span>ADD</span></div>
             <div class="nav-item" onclick="sw('list',this)"><span>LIST</span></div>
@@ -80,27 +82,29 @@
             <div class="nav-item" onclick="sw('noteAdd',this)"><span>NEW</span></div>
         </nav>
     </div>
-    <div id="tModal" class="modal"><div class="modal-b"><h3>切換旅程</h3><div id="tAcc" style="max-height:220px;overflow-y:auto;margin:15px 0"></div><input type="text" id="newTN" placeholder="新旅程名稱"><button class="pika-btn" style="background:var(--bl);box-shadow:0 4px 0 #7FB8E6;margin-bottom:10px" onclick="addT()">建立</button><button class="pika-btn" style="background:#EEE;color:#888;box-shadow:0 4px 0 #DDD" onclick="closeM()">關閉</button></div></div>
-    <script>
-const DK='pikaka_v513_final';
-const maca=['#FFD1DC','#DEECFF','#CAE9E0','#FFF9C4','#FCE4EC','#E8E0FF'];
+
+    <div id="tModal" class="modal"><div class="modal-b"><h3>旅程切換</h3><div id="tAcc" style="max-height:200px;overflow-y:auto;margin:10px 0"></div><input type="text" id="newTN" placeholder="新旅程"><button class="pika-btn" style="background:#B3E5FC;box-shadow:0 3px 0 #81D4FA" onclick="addT()">建立</button><br><br><button class="pika-btn" style="background:#F5F5F5;color:#AAA;box-shadow:none" onclick="closeM()">取消</button></div></div>
+
+<script>
+const DK='pikaka_v513_v3';
+const maca=['#FAFAFA','#FDFCFB','#FCFBFC','#FBFCFB','#FCFBFB','#FBFBFC'];
 const colorCode = {'紅':'#E57373','r':'#E57373','藍':'#64B5F6','b':'#64B5F6','綠':'#81C784','g':'#81C784','橘':'#FFB74D','o':'#FFB74D','紫':'#BA68C8'};
 let curU="5133", curT="default", db={}, openD=[], openG=[], openN=[], editLIdx=-1, editNIdx=-1;
 
-window.onload = function() { curU = localStorage.getItem('pika_current_user') || '5133'; document.getElementById('welcomeMsg').innerText = `Hi! ${curU}`; initApp(); };
+window.onload = function() { curU = localStorage.getItem('pika_user') || '5133'; document.getElementById('welcomeMsg').innerText = `Hi! ${curU}`; initApp(); };
 function initApp() {
     db = JSON.parse(localStorage.getItem(DK)) || {};
     if (!db[curU]) { db[curU] = {trips: {"default": "我的旅遊"}, curT: "default", data: {"default": {items: [], notes: []}}}; save(); }
     curT = db[curU].curT || "default"; checkData();
-    document.getElementById('curTripN').innerText = db[curU].trips[curT] || "我的旅遊";
+    document.getElementById('curTripN').innerText = db[curU].trips[curT];
     document.getElementById('ld').valueAsDate = new Date(); render(); renderN();
 }
 function checkData(){if(!db[curU].data[curT])db[curU].data[curT]={items:[],notes:[]}}
 function save(){localStorage.setItem(DK,JSON.stringify(db))}
-function openTM(){const a=document.getElementById('tAcc');a.innerHTML="";for(let i in db[curU].trips){a.innerHTML+=`<div style="display:flex;justify-content:space-between;padding:10px;border-bottom:1px solid #eee"><span onclick="switchT('${i}')" style="flex:1;text-align:left;cursor:pointer">${db[curU].trips[i]}</span><span class="del-btn" onclick="delT('${i}')">✘</span></div>`}document.getElementById('tModal').style.display='flex'}
+function openTM(){const a=document.getElementById('tAcc');a.innerHTML="";for(let i in db[curU].trips){a.innerHTML+=`<div style="display:flex;justify-content:space-between;padding:8px;border-bottom:1px solid #f9f9f9"><span onclick="switchT('${i}')" style="cursor:pointer">${db[curU].trips[i]}</span><span class="del-btn" onclick="delT('${i}')">✘</span></div>`}document.getElementById('tModal').style.display='flex'}
 function addT(){const n=document.getElementById('newTN').value.trim();if(!n)return;const id='t'+Date.now();db[curU].trips[id]=n;db[curU].data[id]={items:[],notes:[]};save();openTM()}
-function switchT(id){curT=id;db[curU].curT=id;document.getElementById('curTripN').innerText=db[curU].trips[id];save();render();renderN();closeM()}
-function delT(id){if(id==='default')return; if(confirm("刪？")){delete db[curU].trips[id];delete db[curU].data[id];if(curT===id)curT='default';save();openTM()}}
+function switchT(id){curT=id;db[curU].curT=id;save();initApp();closeM()}
+function delT(id){if(id==='default')return; if(confirm("刪除？")){delete db[curU].trips[id];delete db[curU].data[id];if(curT===id)curT='default';save();openTM()}}
 function closeM(){document.getElementById('tModal').style.display='none'}
 function sw(v,el){document.querySelectorAll('.view-sec').forEach(s=>s.classList.remove('active'));document.getElementById(v+'View').classList.add('active');document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));if(el)el.classList.add('active');if(v==='list')render();if(v==='noteList')renderN()}
 
@@ -111,17 +115,17 @@ function render(){
         const isDO=openD.includes(date), dDiv=document.createElement('div'); dDiv.className=`date-group ${isDO?'open':''}`;
         let h=`<div class="date-header" onclick="tgD('${date}')">📅 ${date}</div><div class="date-content">`;
         gDate[date].forEach((item,idx)=>{
+            const hasS = item.sd && item.sd.trim() !== "";
             const gk=date+item.ln+idx, isGO=openG.includes(gk);
             h+=`<div class="l-card ${isGO?'open':''}">`
-            + `<div class="l-h" style="background:${maca[idx%maca.length]}" onclick="tgG('${gk}')">`
-            + `<div class="l-h-name">${item.ln}${item.sd?`<span class="has-note-dot"></span>`:''}${item.lu?`<button style="margin-left:5px;font-size:0.6rem;padding:2px 6px;border-radius:5px;border:none;background:var(--bl)" onclick="event.stopPropagation();window.open('${item.lu}')">GO</button>`:''}</div>`
+            + `<div class="l-h" style="background:${maca[idx%maca.length]}" onclick="${hasS?`tgG('${gk}')`:''}">`
+            + `<div class="l-h-name">${item.ln}${hasS?`<span class="has-note-dot"></span>`:''}${item.lu?`<button style="margin-left:5px;font-size:0.6rem;border:none;background:var(--bl);color:#888" onclick="event.stopPropagation();window.open('${item.lu}')">GO</button>`:''}</div>`
             + `<div><span class="ed-btn" onclick="event.stopPropagation();moveL(${item.origIdx},-1)">↑</span><span class="ed-btn" onclick="event.stopPropagation();moveL(${item.origIdx},1)">↓</span><span class="ed-btn" onclick="event.stopPropagation();edL(${item.origIdx})">✎</span><span class="del-btn" onclick="event.stopPropagation();delL_direct(${item.origIdx})">✘</span></div></div>`
-            + `<div class="items-box"><div class="s-item">${item.sd||'無備註'}</div></div></div>`;
+            + (hasS?`<div class="items-box">${item.sd}</div>`:'') + `</div>`;
         });
         h+=`</div>`; dDiv.innerHTML=h; list.appendChild(dDiv);
     })
 }
-
 function renderN(){
     const d=db[curU].data[curT],list=document.getElementById('noteItems');list.innerHTML="";
     d.notes.forEach((n,i)=>{
@@ -132,20 +136,16 @@ function renderN(){
             const timeMatch = s.match(/^(\d{1,2}[:：]?\d{2})\s*(.*)/);
             let timeStr=timeMatch?timeMatch[1]:"", restStr=timeMatch?timeMatch[2]:s, finalColor='inherit', colorMatch=restStr.match(/\*([紅藍綠橘紫rbygop])/);
             if(colorMatch){finalColor=colorCode[colorMatch[1]]||'inherit';restStr=restStr.replace(colorMatch[0],'').trim();}
-            let mainT=restStr, remT="", sep=restStr.includes("/")?"/":restStr.includes("|")?"|":null;
-            if(sep){let pts=restStr.split(sep);mainT=pts[0].trim();remT=pts[1].trim();}
             h+=`<div class="note-item ${isD?'done':''}" ondblclick="tgND(${i},${li})">`;
-            if(timeStr) h+=`<div class="note-time-box" style="color:${finalColor}">${timeStr}</div>`;
-            else h+=`<div class="note-dot" style="background:${finalColor==='inherit'?'var(--y)':finalColor}"></div>`;
-            h+=`<div style="flex:1"><span class="note-main-text" style="color:${finalColor}">${mainT}</span>${remT?`<span class="note-sub-text">${remT}</span>`:''}</div></div>`;
+            if(timeStr) h+=`<div style="font-size:0.7rem;color:${finalColor};margin-right:8px">${timeStr}</div>`;
+            h+=`<div style="color:${finalColor}">${restStr}</div></div>`;
         });
         h+=`</div>`; div.innerHTML=h; list.appendChild(div);
     })
 }
-
 function moveL(idx,dir){const items=db[curU].data[curT].items; const nIdx=idx+dir; if(nIdx<0||nIdx>=items.length)return; [items[idx],items[nIdx]]=[items[nIdx],items[idx]]; save(); render();}
-function edL(idx){const item=db[curU].data[curT].items[idx]; editLIdx=idx; document.getElementById('ld').value=item.ld; document.getElementById('ln').value=item.ln; document.getElementById('lu').value=item.lu; document.getElementById('sd').value=item.sd; document.getElementById('saveLBtn').innerText="儲存修改"; sw('add',document.querySelectorAll('.nav-item')[0]);}
-function delL_direct(idx){if(confirm("刪除這間店？")){db[curU].data[curT].items.splice(idx,1);save();render();}}
+function edL(idx){const item=db[curU].data[curT].items[idx]; editLIdx=idx; document.getElementById('ld').value=item.ld; document.getElementById('ln').value=item.ln; document.getElementById('lu').value=item.lu; document.getElementById('sd').value=item.sd; document.getElementById('saveLBtn').innerText="儲存"; sw('add',document.querySelectorAll('.nav-item')[0]);}
+function delL_direct(idx){if(confirm("刪除店家？")){db[curU].data[curT].items.splice(idx,1);save();render();}}
 function tgD(d){const i=openD.indexOf(d);if(i===-1)openD.push(d);else openD.splice(i,1);render()}
 function tgG(gk){const i=openG.indexOf(gk);if(i===-1)openG.push(gk);else openG.splice(i,1);render()}
 function moveN(idx,dir){const ns=db[curU].data[curT].notes;const nIdx=idx+dir;if(nIdx<0||nIdx>=ns.length)return;[ns[idx],ns[nIdx]]=[ns[nIdx],ns[idx]];save();renderN()}
@@ -156,13 +156,13 @@ function saveS(){
 }
 function saveN(){
     const t=document.getElementById('ntT').value.trim(),c=document.getElementById('ntC').value.trim();if(!t)return;
-    if(editNIdx>-1){db[curU].data[curT].notes[editNIdx]={...db[curU].data[curT].notes[editNIdx],t,c};editNIdx=-1;document.getElementById('noteSaveBtn').innerText="新增";} else{db[curU].data[curT].notes.push({t,c,done:[]})}
+    if(editNIdx>-1){db[curU].data[curT].notes[editNIdx]={...db[curU].data[curT].notes[editNIdx],t,c};editNIdx=-1;} else{db[curU].data[curT].notes.push({t,c,done:[]})}
     save();renderN();document.getElementById('ntT').value="";document.getElementById('ntC').value="";sw('noteList',document.querySelectorAll('.nav-item')[2])
 }
 function tgNC(i){const x=openN.indexOf(i);if(x===-1)openN.push(i);else openN.splice(x,1);renderN()}
 function tgND(ni,li){const n=db[curU].data[curT].notes[ni];n.done=n.done||[];n.done[li]=!n.done[li];save();renderN()}
-function delN(i){if(confirm("刪？")){db[curU].data[curT].notes.splice(i,1);save();renderN()}}
-function edN(i){const n=db[curU].data[curT].notes[i];editNIdx=i;document.getElementById('ntT').value=n.t;document.getElementById('ntC').value=n.c;document.getElementById('noteSaveBtn').innerText="儲存";sw('noteAdd',document.querySelectorAll('.nav-item')[3])}
+function delN(i){if(confirm("刪除？")){db[curU].data[curT].notes.splice(i,1);save();renderN()}}
+function edN(i){const n=db[curU].data[curT].notes[i];editNIdx=i;document.getElementById('ntT').value=n.t;document.getElementById('ntC').value=n.c;sw('noteAdd',document.querySelectorAll('.nav-item')[3])}
 </script>
 </body>
 </html>
