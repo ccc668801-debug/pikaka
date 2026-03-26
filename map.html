@@ -36,7 +36,6 @@
 
         .btn-grp { display: flex; align-items: center; gap: 4px; }
         .m-btn { cursor:pointer; padding:6px; font-size:1rem; color:var(--o); opacity: 0.8; transition: 0.2s; }
-        .m-btn:active { transform: scale(1.2); }
         .ed-btn { color:#BBB; font-size: 0.9rem; padding: 6px; cursor: pointer; }
         .del-btn { color:#FFAB91; font-size: 0.9rem; padding: 6px; cursor: pointer; }
 
@@ -91,7 +90,9 @@
         </nav>
     </div>
 
-    <div id="tModal" class="modal"><div class="modal-b"><h3>切換旅程</h3><div id="tAcc" style="max-height:220px;overflow-y:auto;margin:15px 0"></div><input type="text" id="newTN" placeholder="新旅程名稱"><button class="pika-btn" style="background:var(--bl);box-shadow:0 4px 0 #7FB8E6;margin-bottom:10px" onclick="addT()">建立</button><button class="pika-btn" style="background:#EEE;color:#888;box-shadow:0 4px 0 #DDD" onclick="closeM()">關閉</button><div class="io-btn-grp"><button class="io-btn" onclick="exportData()">📤 匯出</button><button class="io-btn" onclick="importData()">📥 匯入</button></div></div></div>
+    <div id="tModal" class="modal"><div class="modal-b"><h3>切換旅程</h3><div id="tAcc" style="max-height:220px;overflow-y:auto;margin:15px 0"></div><input type="text" id="newTN" placeholder="新旅程名稱"><button class="pika-btn" style="background:var(--bl);box-shadow:0 4px 0 #7FB8E6;margin-bottom:10px" onclick="addT()">建立</button><button class="pika-btn" style="background:#EEE;color:#888;box-shadow:0 4px 0 #DDD" onclick="closeM()">關閉</button><div class="io-btn-grp"><button class="io-btn" onclick="exportData()">📤 匯出</button><button class="io-btn" onclick="triggerImport()">📥 匯入</button></div></div></div>
+
+    <input type="file" id="importFile" accept=".json" style="display:none" onchange="handleFileSelect(event)">
 
 <script>
 const DK='pikaka_v513_final';
@@ -132,7 +133,7 @@ function render(){
 function tgD(d){const i=openD.indexOf(d);if(i===-1)openD.push(d);else openD.splice(i,1);render()}
 function moveL(idx, dir){ const items = db[curU].data[curT].items; const target = idx + dir; if(target < 0 || target >= items.length) return; [items[idx], items[target]] = [items[target], items[idx]]; save(); render(); }
 function edL(idx){ const item = db[curU].data[curT].items[idx]; editLIdx = idx; document.getElementById('ld').value = item.ld; document.getElementById('ln').value = item.ln; document.getElementById('lu').value = item.lu; document.querySelector('#addView .pika-btn').innerText = "儲存修改"; sw('add', document.querySelectorAll('.nav-item')[0]); }
-function saveS(){ const ld=document.getElementById('ld').value,ln=document.getElementById('ln').value.trim(),lu=document.getElementById('lu').value.trim(); if(!ln)return; if(editLIdx > -1){ db[curU].data[curT].items[editLIdx] = {...db[curU].data[curT].items[editLIdx], ld, ln, lu}; editLIdx = -1; document.querySelector('#addView .pika-btn').innerText = "加入清單"; } else { db[curU].data[curT].items.push({ld,ln,lu,sd:""}); } save();render();['ln','lu'].forEach(i=>document.getElementById(i).value=""); sw('list', document.querySelectorAll('.nav-item')[1]); }
+function saveS(){ const ld=document.getElementById('ld').value,ln=document.getElementById('ln').value.trim(),lu=document.getElementById('lu').value.trim(); if(!ln)return; if(editLIdx > -1){ db[curU].data[curT].items[editLIdx] = {...db[curU].data[curT].items[editLIdx], ld, ln, lu}; editLIdx = -1; document.querySelector('#addView .pika-btn').innerText = "儲存修改"; } else { db[curU].data[curT].items.push({ld,ln,lu,sd:""}); } save();render();['ln','lu'].forEach(i=>document.getElementById(i).value=""); sw('list', document.querySelectorAll('.nav-item')[1]); }
 function delL(idx){if(confirm("刪除此地點？")){db[curU].data[curT].items.splice(idx,1);save();render()}}
 
 // Note 功能
@@ -161,14 +162,49 @@ function saveN(){const t=document.getElementById('ntT').value.trim(),c=document.
 function delN(i){if(confirm("刪？")){db[curU].data[curT].notes.splice(i,1);save();renderN()}}
 function edN(i){const n=db[curU].data[curT].notes[i];editNIdx=i;document.getElementById('ntT').value=n.t;document.getElementById('ntC').value=n.c;document.getElementById('noteSaveBtn').innerText="儲存";sw('noteAdd',document.querySelectorAll('.nav-item')[3])}
 
-// 匯入匯出
+// 匯出功能：下載 JSON 檔案
 function exportData(){
-    const dataStr = JSON.stringify(db);
-    navigator.clipboard.writeText(dataStr).then(()=>{ alert("數據已複製！"); }).catch(()=>{ alert("複製失敗"); });
+    const dataStr = JSON.stringify(db, null, 2);
+    const blob = new Blob([dataStr], {type: "application/json"});
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `pikaka_backup_${new Date().toLocaleDateString()}.json`;
+    link.click();
+    URL.revokeObjectURL(url);
 }
-function importData(){
-    const input = prompt("貼上數據：");
-    if(input){ try { const parsed = JSON.parse(input); if(parsed[curU]){ db = parsed; save(); location.reload(); } else { alert("格式錯誤"); } } catch(e) { alert("匯入失敗"); } }
+
+// 匯入功能：觸發選取檔案
+function triggerImport() {
+    document.getElementById('importFile').click();
+}
+
+// 處理選取的檔案
+function handleFileSelect(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const content = JSON.parse(e.target.result);
+            // 簡單檢查格式是否符合
+            if (content[curU]) {
+                if (confirm("匯入將會覆蓋現有數據，確定嗎？")) {
+                    db = content;
+                    save();
+                    location.reload();
+                }
+            } else {
+                alert("檔案格式不符");
+            }
+        } catch (err) {
+            alert("檔案讀取失敗");
+        }
+    };
+    reader.readAsText(file);
+    // 清空 input 讓同一個檔案可以重複選取觸發
+    event.target.value = "";
 }
 </script>
 </body>
