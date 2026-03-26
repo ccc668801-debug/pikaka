@@ -34,10 +34,9 @@
         .l-h-name{font-weight:400;font-size:0.92rem; flex:1; display: flex; align-items: center; color: var(--b);}
         .go-btn{margin-left:8px;font-size:0.6rem;padding:3px 8px;border-radius:8px;border:none;background:var(--bl);color:white;cursor:pointer;font-family:'Mochiy Pop One',sans-serif!important;}
 
-        /* 按鈕群組 */
         .btn-grp { display: flex; align-items: center; gap: 4px; }
         .m-btn { cursor:pointer; padding:6px; font-size:1rem; color:var(--o); opacity: 0.8; transition: 0.2s; }
-        .m-btn:active { transform: scale(1.2); opacity: 1; }
+        .m-btn:active { transform: scale(1.2); }
         .ed-btn { color:#BBB; font-size: 0.9rem; padding: 6px; cursor: pointer; }
         .del-btn { color:#FFAB91; font-size: 0.9rem; padding: 6px; cursor: pointer; }
 
@@ -48,10 +47,11 @@
         .note-body{display:none;padding:10px;background:#FFF9F0}.open .note-body{display:block}
         .note-item{padding:10px 12px;margin-bottom:5px;border-radius:12px;display:flex;align-items:flex-start;background:rgba(255,255,255,0.7);border:1px solid #FFEBB7}
         .note-item.done{opacity:0.2;filter:grayscale(1);text-decoration:line-through}
-        .note-time-box{min-width:50px;font-family:'Mochiy Pop One',sans-serif!important;font-size:0.7rem;opacity:0.7;margin-right:8px;padding-top:3px}
         
         .modal{position:fixed;inset:0;background:rgba(0,0,0,.3);display:none;align-items:center;justify-content:center;z-index:3000}
         .modal-b{background:#fff;width:88%;max-width:340px;padding:25px;border-radius:35px;border:4px solid var(--y);text-align:center}
+        .io-btn-grp { display: flex; gap: 10px; margin-top: 15px; }
+        .io-btn { flex: 1; padding: 8px; border-radius: 12px; border: 1.5px solid #EEE; background: #fafafa; font-size: 0.75rem; color: #888; cursor: pointer; font-family:'Mochiy Pop One',sans-serif!important; }
     </style>
 </head>
 <body>
@@ -67,7 +67,6 @@
                 <input type="date" id="ld">
                 <input type="text" id="ln" placeholder="店名/景點">
                 <input type="text" id="lu" placeholder="Google地圖連結">
-                <textarea id="sd" placeholder="簡單備註 (不顯示在清單)" rows="3" style="display:none"></textarea>
                 <button class="pika-btn" onclick="saveS()">加入清單</button>
             </div>
         </div>
@@ -92,7 +91,7 @@
         </nav>
     </div>
 
-    <div id="tModal" class="modal"><div class="modal-b"><h3>切換旅程</h3><div id="tAcc" style="max-height:220px;overflow-y:auto;margin:15px 0"></div><input type="text" id="newTN" placeholder="新旅程名稱"><button class="pika-btn" style="background:var(--bl);box-shadow:0 4px 0 #7FB8E6;margin-bottom:10px" onclick="addT()">建立</button><button class="pika-btn" style="background:#EEE;color:#888;box-shadow:0 4px 0 #DDD" onclick="closeM()">關閉</button></div></div>
+    <div id="tModal" class="modal"><div class="modal-b"><h3>切換旅程</h3><div id="tAcc" style="max-height:220px;overflow-y:auto;margin:15px 0"></div><input type="text" id="newTN" placeholder="新旅程名稱"><button class="pika-btn" style="background:var(--bl);box-shadow:0 4px 0 #7FB8E6;margin-bottom:10px" onclick="addT()">建立</button><button class="pika-btn" style="background:#EEE;color:#888;box-shadow:0 4px 0 #DDD" onclick="closeM()">關閉</button><div class="io-btn-grp"><button class="io-btn" onclick="exportData()">📤 匯出</button><button class="io-btn" onclick="importData()">📥 匯入</button></div></div></div>
 
 <script>
 const DK='pikaka_v513_final';
@@ -118,13 +117,7 @@ function sw(v,el){document.querySelectorAll('.view-sec').forEach(s=>s.classList.
 
 function render(){
     checkData();const d=db[curU].data[curT],list=document.getElementById('listItems');list.innerHTML="";
-    const gDate={};
-    d.items.forEach((i, idx) => {
-        const dk = i.ld || "未排期";
-        if (!gDate[dk]) gDate[dk] = [];
-        gDate[dk].push({...i, origIdx: idx});
-    });
-    
+    const gDate={}; d.items.forEach((i, idx) => { const dk = i.ld || "未排期"; if (!gDate[dk]) gDate[dk] = []; gDate[dk].push({...i, origIdx: idx}); });
     Object.keys(gDate).sort().forEach(date=>{
         const isDO=openD.includes(date), dDiv=document.createElement('div'); dDiv.className=`date-group ${isDO?'open':''}`;
         let h=`<div class="date-header" onclick="tgD('${date}')">📅 ${date}</div><div class="date-content">`;
@@ -136,44 +129,13 @@ function render(){
         h+=`</div>`; dDiv.innerHTML=h; list.appendChild(dDiv);
     })
 }
-
 function tgD(d){const i=openD.indexOf(d);if(i===-1)openD.push(d);else openD.splice(i,1);render()}
-
-function moveL(idx, dir){
-    const items = db[curU].data[curT].items;
-    const target = idx + dir;
-    if(target < 0 || target >= items.length) return;
-    [items[idx], items[target]] = [items[target], items[idx]];
-    save(); render();
-}
-
-function edL(idx){
-    const item = db[curU].data[curT].items[idx];
-    editLIdx = idx;
-    document.getElementById('ld').value = item.ld;
-    document.getElementById('ln').value = item.ln;
-    document.getElementById('lu').value = item.lu;
-    document.querySelector('#addView .pika-btn').innerText = "儲存修改";
-    sw('add', document.querySelectorAll('.nav-item')[0]);
-}
-
-function saveS(){
-    const ld=document.getElementById('ld').value,ln=document.getElementById('ln').value.trim(),lu=document.getElementById('lu').value.trim();
-    if(!ln)return;
-    if(editLIdx > -1){
-        db[curU].data[curT].items[editLIdx] = {...db[curU].data[curT].items[editLIdx], ld, ln, lu};
-        editLIdx = -1;
-        document.querySelector('#addView .pika-btn').innerText = "加入清單";
-    } else {
-        db[curU].data[curT].items.push({ld,ln,lu,sd:""});
-    }
-    save();render();['ln','lu'].forEach(i=>document.getElementById(i).value="");
-    sw('list', document.querySelectorAll('.nav-item')[1]);
-}
-
+function moveL(idx, dir){ const items = db[curU].data[curT].items; const target = idx + dir; if(target < 0 || target >= items.length) return; [items[idx], items[target]] = [items[target], items[idx]]; save(); render(); }
+function edL(idx){ const item = db[curU].data[curT].items[idx]; editLIdx = idx; document.getElementById('ld').value = item.ld; document.getElementById('ln').value = item.ln; document.getElementById('lu').value = item.lu; document.querySelector('#addView .pika-btn').innerText = "儲存修改"; sw('add', document.querySelectorAll('.nav-item')[0]); }
+function saveS(){ const ld=document.getElementById('ld').value,ln=document.getElementById('ln').value.trim(),lu=document.getElementById('lu').value.trim(); if(!ln)return; if(editLIdx > -1){ db[curU].data[curT].items[editLIdx] = {...db[curU].data[curT].items[editLIdx], ld, ln, lu}; editLIdx = -1; document.querySelector('#addView .pika-btn').innerText = "加入清單"; } else { db[curU].data[curT].items.push({ld,ln,lu,sd:""}); } save();render();['ln','lu'].forEach(i=>document.getElementById(i).value=""); sw('list', document.querySelectorAll('.nav-item')[1]); }
 function delL(idx){if(confirm("刪除此地點？")){db[curU].data[curT].items.splice(idx,1);save();render()}}
 
-// Note 相關功能維持
+// Note 功能
 function renderN(){
     const d=db[curU].data[curT],list=document.getElementById('noteItems');list.innerHTML="";
     d.notes.forEach((n,i)=>{
@@ -183,15 +145,11 @@ function renderN(){
             const s=l.trim(),isD=n.done&&n.done[li];
             const timeMatch = s.match(/^(\d{1,2}[:：]?\d{2})\s*(.*)/);
             let timeStr = timeMatch?timeMatch[1]:"", restStr = timeMatch?timeMatch[2]:s;
-            let finalColor = 'inherit';
-            const colorMatch = restStr.match(/\*([紅藍綠橘紫rbygop])/);
+            let finalColor = 'inherit'; const colorMatch = restStr.match(/\*([紅藍綠橘紫rbygop])/);
             if(colorMatch) { finalColor = colorCode[colorMatch[1]] || 'inherit'; restStr = restStr.replace(colorMatch[0], '').trim(); }
             let mainT = restStr, remT = "", sep = restStr.includes("/")?"/":restStr.includes("|")?"|":null;
             if(sep){ let pts=restStr.split(sep); mainT=pts[0].trim(); remT=pts[1].trim(); }
-            h+=`<div class="note-item ${isD?'done':''}" ondblclick="tgND(${i},${li})">`;
-            if(timeStr) h+=`<div class="note-time-box" style="color:${finalColor}">${timeStr}</div>`;
-            else h+=`<div style="width:5px;height:5px;border-radius:50%;margin:8px 12px 0 0;background:var(--y);flex-shrink:0;background:${finalColor==='inherit'?'var(--y)':finalColor}"></div>`;
-            h+=`<div style="flex:1"><span style="font-weight:300;font-size:0.9rem;color:${finalColor}">${mainT}</span>${remT?`<br><span style="font-size:0.75rem;opacity:0.6">${remT}</span>`:''}</div></div>`;
+            h+=`<div class="note-item ${isD?'done':''}" ondblclick="tgND(${i},${li})"><div style="width:5px;height:5px;border-radius:50%;margin:8px 12px 0 0;background:var(--y);flex-shrink:0;background:${finalColor==='inherit'?'var(--y)':finalColor}"></div><div style="flex:1"><span style="font-weight:300;font-size:0.9rem;color:${finalColor}">${mainT}</span>${remT?`<br><span style="font-size:0.75rem;opacity:0.6">${remT}</span>`:''}</div></div>`;
         });
         h+=`</div>`; div.innerHTML=h; list.appendChild(div);
     })
@@ -202,6 +160,16 @@ function moveN(idx,dir){const ns=db[curU].data[curT].notes;const nIdx=idx+dir;if
 function saveN(){const t=document.getElementById('ntT').value.trim(),c=document.getElementById('ntC').value.trim();if(!t)return;if(editNIdx>-1){db[curU].data[curT].notes[editNIdx]={...db[curU].data[curT].notes[editNIdx],t,c};editNIdx=-1}else{db[curU].data[curT].notes.push({t,c,done:[]})}save();renderN();document.getElementById('ntT').value="";document.getElementById('ntC').value="";sw('noteList',document.querySelectorAll('.nav-item')[2])}
 function delN(i){if(confirm("刪？")){db[curU].data[curT].notes.splice(i,1);save();renderN()}}
 function edN(i){const n=db[curU].data[curT].notes[i];editNIdx=i;document.getElementById('ntT').value=n.t;document.getElementById('ntC').value=n.c;document.getElementById('noteSaveBtn').innerText="儲存";sw('noteAdd',document.querySelectorAll('.nav-item')[3])}
+
+// 匯入匯出
+function exportData(){
+    const dataStr = JSON.stringify(db);
+    navigator.clipboard.writeText(dataStr).then(()=>{ alert("數據已複製！"); }).catch(()=>{ alert("複製失敗"); });
+}
+function importData(){
+    const input = prompt("貼上數據：");
+    if(input){ try { const parsed = JSON.parse(input); if(parsed[curU]){ db = parsed; save(); location.reload(); } else { alert("格式錯誤"); } } catch(e) { alert("匯入失敗"); } }
+}
 </script>
 </body>
 </html>
