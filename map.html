@@ -1,186 +1,189 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-    <title>Pikaka 513 Final</title>
-    <link href="https://fonts.googleapis.com/css2?family=Mochiy+Pop+One&family=Kiwi+Maru:wght@300;400;500&display=swap" rel="stylesheet">
-    <style>
-        :root{--y:#FFFBE6;--o:#FFEDE0;--b:#666;--bg:#FFFEFD;--lo:#FFF9F0;--bl:#F0F9FF}
-        *{font-family:'Kiwi Maru',serif;box-sizing:border-box; -webkit-tap-highlight-color: transparent;}
-        body{background:var(--bg);color:var(--b);margin:0;padding-bottom:100px;display:flex;flex-direction:column;align-items:center;min-height: 100vh;}
-        .p-h{font-family:'Mochiy Pop One',sans-serif!important;font-size:2rem;color:#E0C3B0;text-align:center;margin:10px 0}
-        
-        /* Top Bar */
-        .top-bar{background:#fff;padding:8px 15px;display:flex;justify-content:space-between;align-items:center;border-bottom:1.5px solid var(--y);position:sticky;top:0;z-index:100;width:100%;max-width:420px}
-        .u-i{color:#D4A373;font-size:1rem;font-family:'Mochiy Pop One'!important}
-        .io-btn{cursor:pointer;font-size:0.75rem;background:var(--bl);padding:4px 10px;border-radius:15px;color:#888}
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>Pikaka</title>
+<link href="https://fonts.googleapis.com/css2?family=Mochiy+Pop+One&family=Kiwi+Maru:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{--y:#FFF2CC;--o:#F3A05F;--b:#555;--bg:#FEF9EF;--g:#A5D6A7;--bl:#90CAF9;--p:#E2DBF0;--lo:#FFE4CC}
+*{font-family:'Kiwi Maru',serif;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);color:var(--b);margin:0;padding-bottom:100px;display:flex;flex-direction:column;align-items:center;min-height:100vh}
+.p-h{font-family:'Mochiy Pop One',sans-serif!important;font-size:2.5rem;color:var(--o);text-align:center;margin:15px 0;letter-spacing:1px}
+.top-bar{background:#fff;padding:10px 15px;display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid var(--y);position:sticky;top:0;z-index:100;width:100%;max-width:420px}
+.u-i{color:var(--o);font-size:1.1rem;font-family:'Mochiy Pop One',sans-serif!important}
+.view-sec{width:100%;max-width:420px;padding:0 10px;display:none;margin:0 auto}.view-sec.active{display:block}
+.bottom-nav{position:fixed;bottom:0;width:100%;max-width:420px;background:#fff;display:flex;justify-content:space-around;padding:12px 12px calc(12px + env(safe-area-inset-bottom));border-top:3px solid var(--y);z-index:1000}
+.nav-item{font-size:.85rem;cursor:pointer;text-align:center;color:#A0A0A0;flex:1;font-family:'Mochiy Pop One',sans-serif!important}
+.nav-item.active{color:var(--o);transform:scale(1.1);font-weight:700}
+.panel{background:#fff;padding:20px;border-radius:25px;border:3px solid var(--y);margin-bottom:15px}
+input,textarea{padding:12px;border:1.5px solid #EEE;border-radius:12px;width:100%;margin-bottom:10px;background:#fafafa}
+.pika-btn{background:var(--o);color:#fff;border:none;padding:14px;border-radius:30px;font-size:1.1rem;cursor:pointer;width:100%;box-shadow:0 4px 0 #d88b4d;font-family:'Mochiy Pop One',sans-serif!important}
 
-        .view-sec{width:100%;max-width:420px;padding:0 10px;display:none;margin:0 auto}.view-sec.active{display:block}
-        
-        /* Nav */
-        .bottom-nav{position:fixed;bottom:0;width:100%;max-width:420px;background:#fff;display:flex;justify-content:space-around;padding:10px 10px calc(10px + env(safe-area-inset-bottom));border-top:1.5px solid var(--y);z-index:1000}
-        .nav-item{font-size:.8rem;cursor:pointer;text-align:center;color:#DDD;flex:1;font-family:'Mochiy Pop One'!important}
-        .nav-item.active{color:#D4A373;font-weight:700}
-        
-        /* UI Components */
-        .panel{background:#fff;padding:15px;border-radius:20px;border:1.5px solid var(--y);margin-bottom:15px}
-        input,textarea{padding:10px;border:1px solid #FAFAFA;border-radius:10px;width:100%;margin-bottom:8px;background:#FDFDFD;color:var(--b);font-weight:300}
-        .pika-btn{background:#E0C3B0;color:#fff;border:none;padding:12px;border-radius:30px;font-size:1rem;cursor:pointer;width:100%;box-shadow:0 3px 0 #CDB4A6;font-family:'Mochiy Pop One'!important}
+/* List & Note 共同樣式 */
+.date-header{background:#fff;padding:15px;border-radius:18px;margin:10px 0;border:2px solid var(--y);font-family:'Mochiy Pop One',sans-serif!important;cursor:pointer;display:flex;align-items:center;box-shadow:0 2px 5px rgba(0,0,0,0.02)}
+.date-content{display:none;padding:0 5px}.date-group.open .date-content{display:block}
+.l-card{margin-bottom:8px;border-radius:15px;border:1.5px solid var(--y);background:#fff;overflow:hidden}
+.l-h{padding:12px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;background:#fff}
+.l-h-name{flex:1;font-weight:500;font-size:.95rem;color:#444}
+.go-btn{background:var(--bl);color:#455A64;border:none;padding:4px 10px;border-radius:8px;font-size:.7rem;margin-left:8px}
 
-        /* List 兩層結構 */
-        .date-group { margin-bottom: 12px; }
-        .date-header{background:var(--lo);padding:8px;border-radius:12px;cursor:pointer;font-family:'Mochiy Pop One'!important;text-align:center;font-size:0.85rem; margin-bottom: 6px; border: 1px solid var(--y); color:#B08968}
-        .date-content { display: none; }
-        .date-group.open .date-content { display: block; }
+/* 胖胖按鈕樣式 */
+.fat-btn {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    margin: 0 3px;
+    cursor: pointer;
+    transition: transform 0.1s;
+}
+.fat-btn:active { transform: scale(0.9); }
+.fat-up { background: #E3F2FD; color: #2196F3; }
+.fat-down { background: #E8F5E9; color: #4CAF50; }
 
-        .l-card{margin-bottom:8px;border-radius:15px;border:1px solid #F8F8F8;background:#fff; padding:10px; box-shadow: 0 2px 5px rgba(0,0,0,0.02)}
-        .l-h{display:flex;justify-content:space-between;align-items:center; margin-bottom: 4px;}
-        .l-h-name{font-weight:400;font-size:0.9rem; color:#666; flex:1;}
-        .s-item-box{background:#FFFEFA; border-radius:8px; padding:6px 10px; font-size:0.8rem; color:#999; border:1px solid #FFF9F0; margin-top:4px; white-space: pre-wrap;}
+.note-card{background:#FFF9F0;border-radius:20px;margin-bottom:15px;border:2px solid var(--y);overflow:hidden}
+.note-title{padding:12px 15px;font-weight:700;cursor:pointer;display:flex;justify-content:space-between;align-items:center;border-bottom:1.5px dashed var(--y);background:#FFFBF5}
+.note-body{display:none;padding:10px;background:#FFF4E0}.open .note-body{display:block}
+.note-item{padding:12px;margin-bottom:8px;border-radius:12px;display:flex;align-items:flex-start;background:#fff;border:1.5px solid #FFEDC4;box-shadow:0 2px 4px rgba(0,0,0,0.03)}
+.note-item.done{opacity:0.3;filter:grayscale(1);text-decoration:line-through}
+.note-time-box{min-width:55px;font-family:'Mochiy Pop One',sans-serif!important;font-size:0.75rem;opacity:0.8;margin-right:8px;padding-top:2px}
+.note-dot{width:6px;height:6px;border-radius:50%;margin-right:12px;margin-top:8px;flex-shrink:0;background:var(--y)}
+.note-content-main{flex:1;display:flex;flex-direction:column}
+.note-main-text{font-weight:500;font-size:1rem;margin-bottom:2px;letter-spacing:0.3px;line-height:1.3}
+.note-sub-text{font-size:0.85rem;color:#888;font-weight:400;line-height:1.2}
 
-        /* 功能按鈕樣式 */
-        .btn-g{display:flex; gap:3px;}
-        .ed-btn, .del-btn{cursor:pointer;padding:4px 7px;font-size:0.75rem;border-radius:8px;background:#FDFDFD;border:1px solid #EEE;color:#AAA}
-        .del-btn{color:#FFAB91}
-        
-        /* Modals */
-        .modal{position:fixed;inset:0;background:rgba(0,0,0,.1);display:none;align-items:center;justify-content:center;z-index:3000}
-        .modal-b{background:#fff;width:85%;max-width:340px;padding:20px;border-radius:30px;border:2px solid var(--y);text-align:center}
-        .io-area{width:100%;height:120px;font-size:0.7rem;margin:10px 0;border:1px solid #EEE;}
-    </style>
+.ed-btn,.del-btn{cursor:pointer;padding:8px;margin:0 2px;font-size:.9rem;display:inline-block}
+.ed-btn{color:#888}.del-btn{color:#ff8a80;font-weight:700}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;z-index:3000}
+.modal-b{background:#fff;width:88%;max-width:340px;padding:25px;border-radius:35px;border:4px solid var(--y);text-align:center}
+</style>
 </head>
 <body>
-    <div id="appInterface" style="width:100%;max-width:420px">
-        <div class="top-bar">
-            <div>
-                <div class="u-i">Hi! 513</div>
-                <div style="display:flex; gap:8px; margin-top:2px">
-                    <span onclick="openTM()" style="cursor:pointer;font-size:0.7rem;color:#AAA;text-decoration:underline;font-family:'Mochiy Pop One'"><span id="curTripN"></span></span>
-                    <span class="io-btn" onclick="openIO()">備份/還原</span>
-                </div>
-            </div>
-            <div style="font-size: 0.6rem; color: #F0F0F0; font-family: 'Mochiy Pop One';">Pikaka v8</div>
-        </div>
+<div id="appInterface" style="width:100%;max-width:420px">
+<div class="top-bar">
+<div><div class="u-i" id="welcomeMsg">Hi!</div><div onclick="openTM()" style="cursor:pointer;font-size:.85rem;font-weight:bold;color:var(--bl);text-decoration:underline;font-family:'Mochiy Pop One',sans-serif!important"><span id="curTripN"></span></div></div>
+<div style="font-size:.8rem;color:#CCC;font-family:'Mochiy Pop One'">Pikaka</div>
+</div>
 
-        <div id="addView" class="view-sec active">
-            <h2 class="p-h">Add</h2>
-            <div class="panel">
-                <input type="date" id="ld">
-                <input type="text" id="ln" placeholder="要去哪裡？">
-                <input type="text" id="lu" placeholder="地圖連結 (選填)">
-                <button class="pika-btn" onclick="saveS()">加入清單</button>
-            </div>
-        </div>
+<div id="addView" class="view-sec active">
+<h2 class="p-h">Pikaka</h2>
+<div class="panel">
+<input type="date" id="ld"><input type="text" id="ln" placeholder="店名/景點"><input type="text" id="lu" placeholder="Google地圖網址"><button class="pika-btn" id="saveBtn" onclick="saveS()">加入清單</button>
+<div style="display:flex;gap:10px;margin-top:10px"><button class="pika-btn" style="background:#888;box-shadow:0 4px 0 #666;font-size:.8rem" onclick="expD()">匯出</button><button class="pika-btn" style="background:#888;box-shadow:0 4px 0 #666;font-size:.8rem" onclick="impD()">匯入</button></div>
+</div>
+</div>
 
-        <div id="listView" class="view-sec"><h2 class="p-h">List</h2><div id="listItems"></div></div>
-        
-        <div id="noteListView" class="view-sec"><h2 class="p-h">Notes</h2><div id="noteItems"></div></div>
-        <div id="noteAddView" class="view-sec"><h2 class="p-h">New Note</h2><div class="panel"><input type="text" id="ntT" placeholder="標題"><textarea id="ntC" placeholder="內容..." rows="10"></textarea><button class="pika-btn" onclick="saveN()">儲存筆記</button></div></div>
+<div id="listView" class="view-sec"><h2 class="p-h">List</h2><div id="listItems"></div></div>
+<div id="noteListView" class="view-sec"><h2 class="p-h">Notes</h2><div id="noteItems"></div></div>
 
-        <nav class="bottom-nav">
-            <div class="nav-item active" onclick="sw('add',this)"><span>ADD</span></div>
-            <div class="nav-item" onclick="sw('list',this)"><span>LIST</span></div>
-            <div class="nav-item" onclick="sw('noteList',this)"><span>NOTE</span></div>
-            <div class="nav-item" onclick="sw('noteAdd',this)"><span>NEW</span></div>
-        </nav>
-    </div>
+<div id="noteAddView" class="view-sec">
+<h2 class="p-h">New Note</h2>
+<div class="panel">
+<div style="display:flex;gap:5px;margin-bottom:10px;flex-wrap:wrap;justify-content:center;font-size:0.75rem;color:#AAA">
+<span>*紅 (r)</span><span>*藍 (b)</span><span>*綠 (g)</span><span>*橘 (o)</span><span>*紫 (p)</span>
+</div>
+<input type="text" id="ntT" placeholder="日期 (例如：5/26)"><textarea id="ntC" placeholder="09:00 桃園機場 / 買西瓜卡 *藍&#10;淺草文化中心 / 9點開" rows="10"></textarea><button class="pika-btn" id="noteSaveBtn" onclick="saveN()">新增</button>
+</div>
+</div>
 
-    <div id="tModal" class="modal"><div class="modal-b"><h3>旅程切換</h3><div id="tAcc" style="max-height:200px;overflow-y:auto;margin:10px 0"></div><input type="text" id="newTN" placeholder="新旅程"><button class="pika-btn" onclick="addT()">建立</button><br><br><button class="pika-btn" style="background:#F5F5F5;color:#AAA;box-shadow:none" onclick="closeM()">關閉</button></div></div>
-    <div id="ioModal" class="modal"><div class="modal-b"><h3>資料備份</h3><textarea id="ioBox" class="io-area"></textarea><div style="display:flex;gap:5px"><button class="pika-btn" style="font-size:0.8rem" onclick="exportD()">複製代碼</button><button class="pika-btn" style="background:#C5E1A5;box-shadow:none;font-size:0.8rem" onclick="importD()">匯入</button></div><br><button class="pika-btn" style="background:#F5F5F5;color:#AAA;box-shadow:none" onclick="closeM()">關閉</button></div></div>
+<nav class="bottom-nav">
+<div class="nav-item active" onclick="sw('add',this)"><span>ADD</span></div>
+<div class="nav-item" onclick="sw('list',this)"><span>LIST</span></div>
+<div class="nav-item" onclick="sw('noteList',this)"><span>NOTE</span></div>
+<div class="nav-item" onclick="sw('noteAdd',this)"><span>NEW</span></div>
+</nav>
+</div>
+
+<div id="tModal" class="modal"><div class="modal-b"><h3>旅程管理</h3><div id="tAcc" style="max-height:220px;overflow-y:auto;margin:15px 0"></div><input type="text" id="newTN" placeholder="新旅程名稱"><button class="pika-btn" style="background:var(--bl);box-shadow:0 4px 0 #7FB8E6;margin-bottom:10px" onclick="addT()">建立新旅程</button><button class="pika-btn" style="background:#EEE;color:#888;box-shadow:0 4px 0 #DDD" onclick="closeM()">關閉</button></div></div>
 
 <script>
-const DK='pikaka_513_v8';
-let curU="5133", curT="default", db={}, openD=[];
+const DK='pikaka_v513_final',colorCode={'紅':'#E57373','r':'#E57373','藍':'#64B5F6','b':'#64B5F6','綠':'#81C784','g':'#81C784','橘':'#FFB74D','o':'#FFB74D','紫':'#BA68C8','p':'#BA68C8'};
+let curU="5133",curT="default",db={},openD=[],openN=[],editIdx=-1,editNIdx=-1;
 
-window.onload = function() { initApp(); };
-function initApp() {
-    db = JSON.parse(localStorage.getItem(DK)) || {};
-    if (!db[curU]) { db[curU] = {trips: {"default": "我的旅遊"}, curT: "default", data: {"default": {items: [], notes: []}}}; save(); }
-    curT = db[curU].curT || "default";
-    document.getElementById('curTripN').innerText = db[curU].trips[curT];
-    document.getElementById('ld').valueAsDate = new Date(); 
-    render(); renderN();
-}
+window.onload=function(){curU=localStorage.getItem('pika_current_user')||'5133';document.getElementById('welcomeMsg').innerText=`Hi! ${curU}`;initApp()};
+function initApp(){db=JSON.parse(localStorage.getItem(DK))||{};if(!db[curU]){db[curU]={trips:{"default":"我的旅遊"},curT:"default",data:{"default":{items:[],notes:[]}}};save()}curT=db[curU].curT||"default";checkData();document.getElementById('curTripN').innerText=db[curU].trips[curT]||"我的旅遊";document.getElementById('ld').valueAsDate=new Date();render();renderN()}
+function checkData(){if(!db[curU].data[curT])db[curU].data[curT]={items:[],notes:[]}}
 function save(){localStorage.setItem(DK,JSON.stringify(db))}
-function sw(v,el){document.querySelectorAll('.view-sec').forEach(s=>s.classList.remove('active'));document.getElementById(v+'View').classList.add('active');document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));if(el)el.classList.add('active');if(v==='list')render();if(v==='noteList')renderN()}
-function closeM(){document.querySelectorAll('.modal').forEach(m=>m.style.display='none')}
+function openTM(){const a=document.getElementById('tAcc');a.innerHTML="";for(let i in db[curU].trips){a.innerHTML+=`<div style="display:flex;justify-content:space-between;padding:10px;border-bottom:1px solid #eee"><span onclick="switchT('${i}')" style="flex:1;text-align:left;cursor:pointer">${db[curU].trips[i]}</span><span class="del-btn" onclick="delT('${i}')">✘</span></div>`}document.getElementById('tModal').style.display='flex'}
+function addT(){const n=document.getElementById('newTN').value.trim();if(!n)return;const id='t'+Date.now();db[curU].trips[id]=n;db[curU].data[id]={items:[],notes:[]};save();openTM()}
+function switchT(id){curT=id;db[curU].curT=id;document.getElementById('curTripN').innerText=db[curU].trips[id];save();render();renderN();closeM()}
+function delT(id){if(id==='default')return;if(confirm("刪除？")){delete db[curU].trips[id];delete db[curU].data[id];if(curT===id)curT='default';save();openTM()}}
+function closeM(){document.getElementById('tModal').style.display='none'}
+function expD(){const data=JSON.stringify(db[curU].data[curT]),blob=new Blob([data],{type:"application/json"}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=`pikaka_data.json`;a.click()}
+function impD(){const input=document.createElement('input');input.type='file';input.onchange=e=>{const file=e.target.files[0],reader=new FileReader();reader.onload=event=>{try{db[curU].data[curT]=JSON.parse(event.target.result);save();render();renderN()}catch(e){alert("格式錯誤")}};reader.readAsText(file)};input.click()}
+function sw(v,el){document.querySelectorAll('.view-sec').forEach(s=>s.classList.remove('active'));document.getElementById(v+'View').classList.add('active');document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));el.classList.add('active');if(v==='list')render();if(v==='noteList')renderN()}
+function getWD(dStr){const d=new Date(dStr),w=['週日','週一','週二','週三','週四','週五','週六'];return isNaN(d)?'':` (${w[d.getDay()]})`}
 
-// --- LIST 邏輯 ---
 function render(){
-    const d=db[curU].data[curT], list=document.getElementById('listItems'); list.innerHTML="";
-    const gDate={}; d.items.forEach((i,idx)=>{const dk=i.ld||"未排期"; if(!gDate[dk])gDate[dk]=[]; gDate[dk].push({...i,origIdx:idx})});
-    
+    checkData();const d=db[curU].data[curT],list=document.getElementById('listItems');list.innerHTML="";const gDate={};
+    d.items.forEach((i,idx)=>{const dk=i.ld||"未排期";if(!gDate[dk])gDate[dk]=[];if(!gDate[dk].includes(i.ln))gDate[dk].push(i.ln)});
     Object.keys(gDate).sort().forEach(date=>{
-        const isDO=openD.includes(date), dDiv=document.createElement('div'); dDiv.className=`date-group ${isDO?'open':''}`;
-        let h=`<div class="date-header" onclick="tgD('${date}')">📅 ${date}</div><div class="date-content">`;
-        gDate[date].forEach((item)=>{
-            h+=`<div class="l-card"><div class="l-h">`
-            + `<div class="l-h-name">${item.ln}${item.lu?`<button style="margin-left:5px;font-size:0.6rem;border:none;background:var(--bl);border-radius:5px" onclick="event.stopPropagation();window.open('${item.lu}')">GO</button>`:''}</div>`
-            + `<div class="btn-g">`
-            + `<span class="ed-btn" onclick="moveL(${item.origIdx},-1)">↑</span>`
-            + `<span class="ed-btn" onclick="moveL(${item.origIdx},1)">↓</span>`
-            + `<span class="ed-btn" onclick="edL(${item.origIdx})">✎</span>`
-            + `<span class="del-btn" onclick="delL(${item.origIdx})">✘</span>`
-            + `</div></div>`
-            + (item.sd?`<div class="s-item-box">${item.sd}</div>`:'') + `</div>`;
+        const isDO=openD.includes(date),dDiv=document.createElement('div');dDiv.className=`date-group ${isDO?'open':''}`;
+        let dH=`<div class="date-header" onclick="tgD('${date}')"><span>📅 ${date}${getWD(date)}</span></div><div class="date-content">`;
+        gDate[date].forEach((ln,gIdx)=>{
+            const item = d.items.find(x => (x.ld||"未排期")===date && x.ln===ln);
+            dH+=`<div class="l-card"><div class="l-h"><div class="l-h-name" onclick="window.open('${item.lu||'#'}')">${ln}${item.lu?`<button class="go-btn">GO</button>`:''}</div><div style="display:flex;align-items:center"><span class="fat-btn fat-up" onclick="event.stopPropagation();moveL('${date}',${gIdx},-1)">▲</span><span class="fat-btn fat-down" onclick="event.stopPropagation();moveL('${date}',${gIdx},1)">▼</span><span class="ed-btn" onclick="event.stopPropagation();edG('${date}','${ln}')">✎</span><span class="del-btn" onclick="event.stopPropagation();delL('${date}','${ln}')">✘</span></div></div></div>`;
         });
-        h+=`</div>`; dDiv.innerHTML=h; list.appendChild(dDiv);
+        dH+=`</div>`;dDiv.innerHTML=dH;list.appendChild(dDiv)
     })
 }
 
-function saveS(){
-    const ld=document.getElementById('ld').value, ln=document.getElementById('ln').value.trim(), lu=document.getElementById('lu').value.trim();
-    if(!ln)return; 
-    db[curU].data[curT].items.push({ld,ln,lu,sd:""});
-    save(); render(); 
-    ['ln','lu'].forEach(i=>document.getElementById(i).value=""); 
-    sw('list',document.querySelectorAll('.nav-item')[1]);
-}
-
-function edL(idx){
-    const item=db[curU].data[curT].items[idx];
-    const nN = prompt("修改地名：", item.ln); if(nN) item.ln = nN;
-    const nS = prompt("修改/增加備註：", item.sd || ""); if(nS!==null) item.sd = nS;
-    const nU = prompt("修改連結：", item.lu || ""); if(nU!==null) item.lu = nU;
-    save(); render();
-}
-
-function moveL(idx,dir){
-    const items=db[curU].data[curT].items; 
-    const nIdx=idx+dir; 
-    if(nIdx<0||nIdx>=items.length)return; 
-    [items[idx],items[nIdx]]=[items[nIdx],items[idx]]; 
-    save(); render();
-}
-
-function delL(idx){
-    if(confirm("確定刪除此地點？")){db[curU].data[curT].items.splice(idx,1);save();render();}
-}
-
-function tgD(d){const i=openD.indexOf(d); i===-1?openD.push(d):openD.splice(i,1); render()}
-
-// --- NOTE & TRIPS ---
 function renderN(){
     const d=db[curU].data[curT],list=document.getElementById('noteItems');list.innerHTML="";
     d.notes.forEach((n,i)=>{
-        let h=`<div class="panel" style="padding:10px; margin-bottom:10px"><b>${n.t}</b><div style="font-size:0.85rem;white-space:pre-wrap;margin-top:5px;color:#888">${n.c}</div><div style="text-align:right"><span class="del-btn" onclick="delN(${i})">✘</span></div></div>`;
-        list.innerHTML+=h;
+        const isO=openN.includes(i),div=document.createElement('div');div.className=`note-card ${isO?'open':''}`;
+        let h=`<div class="note-title" onclick="tgNC(${i})"><span style="flex:1">${n.t}</span><div style="display:flex;align-items:center"><span class="fat-btn fat-up" onclick="event.stopPropagation();moveN(${i},-1)">▲</span><span class="fat-btn fat-down" onclick="event.stopPropagation();moveN(${i},1)">▼</span><span class="ed-btn" onclick="event.stopPropagation();edN(${i})">✎</span><span class="del-btn" onclick="event.stopPropagation();delN(${i})">✘</span></div></div><div class="note-body">`;
+        n.c.split('\n').filter(l=>l.trim()!=="").forEach((l,li)=>{
+            const s=l.trim(),isD=n.done&&n.done[li],timeMatch=s.match(/^(\d{1,2}[:：]?\d{2})\s*(.*)/);
+            let timeStr=timeMatch?timeMatch[1]:"",restStr=timeMatch?timeMatch[2]:s,finalColor='inherit',colorMatch=restStr.match(/\*([紅藍綠橘紫rbygop])/);
+            if(colorMatch){finalColor=colorCode[colorMatch[1]]||'inherit';restStr=restStr.replace(colorMatch[0],'').trim()}
+            let mainT=restStr,remT="",sep=restStr.includes("/")?"/":restStr.includes("|")?"|":null;
+            if(sep){let pts=restStr.split(sep);mainT=pts[0].trim();remT=pts[1].trim()}
+            h+=`<div class="note-item ${isD?'done':''}" ondblclick="tgND(${i},${li})">`;
+            if(timeStr)h+=`<div class="note-time-box" style="color:${finalColor}">${timeStr}</div>`;
+            else h+=`<div class="note-dot" style="background:${finalColor==='inherit'?'var(--y)':finalColor}"></div>`;
+            h+=`<div class="note-content-main"><span class="note-main-text" style="color:${finalColor}">${mainT}</span>${remT?`<span class="note-sub-text">${remT}</span>`:''}</div></div>`
+        });
+        h+=`</div>`;div.innerHTML=h;list.appendChild(div)
     })
 }
-function saveN(){
-    const t=document.getElementById('ntT').value.trim(), c=document.getElementById('ntC').value.trim(); if(!t)return;
-    db[curU].data[curT].notes.push({t,c}); save(); renderN();
-    document.getElementById('ntT').value="";document.getElementById('ntC').value=""; sw('noteList',document.querySelectorAll('.nav-item')[2]);
+
+function saveS(){const ld=document.getElementById('ld').value,ln=document.getElementById('ln').value.trim(),lu=document.getElementById('lu').value.trim();if(!ln)return;const items=db[curU].data[curT].items;if(editIdx>-1){items[editIdx]={...items[editIdx],ld,ln,lu};editIdx=-1}else{items.push({ld,ln,lu,sd:""})}save();render();['ln','lu'].forEach(i=>document.getElementById(i).value="");document.getElementById('saveBtn').innerText="加入清單"}
+function saveN(){const t=document.getElementById('ntT').value.trim(),c=document.getElementById('ntC').value.trim();if(!t)return;if(editNIdx>-1){db[curU].data[curT].notes[editNIdx]={...db[curU].data[curT].notes[editNIdx],t,c};editNIdx=-1;document.getElementById('noteSaveBtn').innerText="新增"}else{db[curU].data[curT].notes.push({t,c,done:[]})}save();renderN();document.getElementById('ntT').value="";document.getElementById('ntC').value="";sw('noteList',document.querySelectorAll('.nav-item')[2])}
+function tgD(d){const i=openD.indexOf(d);if(i===-1)openD.push(d);else openD.splice(i,1);render()}
+function tgNC(i){const x=openN.indexOf(i);if(x===-1)openN.push(i);else openN.splice(x,1);renderN()}
+function tgND(ni,li){const n=db[curU].data[curT].notes[ni];n.done=n.done||[];n.done[li]=!n.done[li];save();renderN()}
+function delL(d,l){if(confirm("刪？")){db[curU].data[curT].items=db[curU].data[curT].items.filter(x=>!((x.ld||"未排期")===d&&x.ln===l));save();render()}}
+function delN(i){if(confirm("刪？")){db[curU].data[curT].notes.splice(i,1);save();renderN()}}
+function edG(date,ln){const i=db[curU].data[curT].items.findIndex(x=>(x.ld||"未排期")===date&&x.ln===ln);if(i>-1){const x=db[curU].data[curT].items[i];editIdx=i;document.getElementById('ld').value=x.ld;document.getElementById('ln').value=x.ln;document.getElementById('lu').value=x.lu;document.getElementById('saveBtn').innerText="儲存";sw('add',document.querySelectorAll('.nav-item')[0])}}
+function edN(i){const n=db[curU].data[curT].notes[i];editNIdx=i;document.getElementById('ntT').value=n.t;document.getElementById('ntC').value=n.c;document.getElementById('noteSaveBtn').innerText="儲存";sw('noteAdd',document.querySelectorAll('.nav-item')[3])}
+
+function moveL(date,idx,dir){
+    const items=db[curU].data[curT].items;
+    const gDate={};
+    items.forEach(i=>{
+        const dk=i.ld||"未排期";
+        if(!gDate[dk])gDate[dk]=[];
+        if(!gDate[dk].includes(i.ln))gDate[dk].push(i.ln);
+    });
+    const groups=gDate[date];
+    const nIdx=idx+dir;
+    if(nIdx<0||nIdx>=groups.length)return;
+    [groups[idx],groups[nIdx]]=[groups[nIdx],groups[idx]];
+    const sItems=[];
+    Object.keys(gDate).sort().forEach(dk=>{
+        gDate[dk].forEach(ln=>{
+            items.filter(i=>(i.ld||"未排期")===dk&&i.ln===ln).forEach(i=>sItems.push(i));
+        });
+    });
+    db[curU].data[curT].items=sItems;
+    save();render();
 }
-function delN(i){if(confirm("刪筆記？")){db[curU].data[curT].notes.splice(i,1);save();renderN();}}
-function openTM(){const a=document.getElementById('tAcc');a.innerHTML="";for(let i in db[curU].trips){a.innerHTML+=`<div style="display:flex;justify-content:space-between;padding:8px;border-bottom:1px solid #f9f9f9"><span onclick="switchT('${i}')" style="cursor:pointer;flex:1">${db[curU].trips[i]}</span><span class="del-btn" onclick="delT('${i}')">✘</span></div>`}document.getElementById('tModal').style.display='flex'}
-function addT(){const n=document.getElementById('newTN').value.trim();if(!n)return;const id='t'+Date.now();db[curU].trips[id]=n;db[curU].data[id]={items:[],notes:[]};save();openTM()}
-function switchT(id){curT=id;db[curU].curT=id;save();initApp();closeM()}
-function delT(id){if(id==='default')return; if(confirm("刪除整個旅程？")){delete db[curU].trips[id];delete db[curU].data[id];if(curT===id)curT='default';save();openTM()}}
-function openIO(){document.getElementById('ioModal').style.display='flex'}
-function exportD(){document.getElementById('ioBox').value=JSON.stringify(db);document.getElementById('ioBox').select();document.execCommand('copy');alert("代碼已複製！可以存到手機記事本。")}
-function importD(){try{const d=JSON.parse(document.getElementById('ioBox').value);if(d){db=d;save();initApp();alert("匯入成功！");closeM();}}catch(e){alert("格式錯誤！")}}
+function moveN(idx,dir){const ns=db[curU].data[curT].notes,nIdx=idx+dir;if(nIdx<0||nIdx>=ns.length)return;[ns[idx],ns[nIdx]]=[ns[nIdx],ns[idx]];save();renderN()}
 </script>
 </body>
 </html>
