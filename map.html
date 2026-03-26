@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-    <title>Pikaka 513 DeepNote</title>
+    <title>Pikaka 513 Compact</title>
     <link href="https://fonts.googleapis.com/css2?family=Mochiy+Pop+One&family=Kiwi+Maru:wght@300;400;500&display=swap" rel="stylesheet">
     <style>
         :root{--y:#FFE58F;--o:#F3A05F;--b:#5A5E66;--bg:#FEF9EF;--lo:#FFD8B1;--bl:#90CAF9}
         *{font-family:'Kiwi Maru',serif;box-sizing:border-box; -webkit-tap-highlight-color: transparent;}
         body{background:var(--bg);color:var(--b);margin:0;padding-bottom:100px;display:flex;flex-direction:column;align-items:center;min-height: 100vh;}
-        .p-h{font-family:'Mochiy Pop One',sans-serif!important;font-size:2.5rem;color:var(--o);text-align:center;margin:15px 0;letter-spacing:1px}
+        .p-h{font-family:'Mochiy Pop One',sans-serif!important;font-size:2.2rem;color:var(--o);text-align:center;margin:12px 0;letter-spacing:1px}
         .top-bar{background:#fff;padding:10px 15px;display:flex;justify-content:space-between;align-items:center;border-bottom:3px solid var(--y);position:sticky;top:0;z-index:100;width:100%;max-width:420px}
         .u-i{color:var(--o);font-size:1.1rem;font-family:'Mochiy Pop One',sans-serif!important}
         .view-sec{width:100%;max-width:420px;padding:0 10px;display:none;margin:0 auto}.view-sec.active{display:block}
@@ -22,29 +22,32 @@
         input,textarea{padding:12px;border:1.5px solid #EEE;border-radius:12px;width:100%;margin-bottom:10px;background:#fafafa;color:var(--b);font-weight:300}
         .pika-btn{background:var(--o);color:#fff;border:none;padding:14px;border-radius:30px;font-size:1.1rem;cursor:pointer;width:100%;box-shadow:0 4px 0 #d88b4d;font-family:'Mochiy Pop One',sans-serif!important}
         
-        .l-card{margin-bottom:8px;border-radius:15px;border:2px solid var(--y);background:#fff;overflow:hidden;transition: opacity 0.3s}
-        .l-card.done { opacity: 0.3; filter: grayscale(1); }
-        .l-h{padding:12px;cursor:pointer;display:flex;justify-content:space-between;align-items:center}
-        .l-h-name { flex: 1; font-weight: 300; font-size: 0.95rem; color: #5a5a5a; }
-        .go-btn{background:var(--bl);color:#455A64;border:none;padding:4px 10px;border-radius:8px;font-size:0.7rem;margin-left:8px}
-        .items-box{display:none;background:#fafafa}.open .items-box{display:block}
-        .s-item{padding:14px 16px;border-bottom:1px solid #f0f0f0;border-left:6px solid var(--o);display:flex;justify-content:space-between;align-items:center;background:#fff;font-weight:300}
-        .date-header{background:var(--lo);padding:12px;border-radius:15px;margin:15px 0 10px 0;font-family:'Mochiy Pop One',sans-serif!important;cursor:pointer;color:var(--b);font-weight:normal}
-        
-        /* Note 區域顏色加深 */
-        .note-card{background:#FFF9F0;border-radius:25px;margin-bottom:20px;border:3px solid var(--y);overflow:hidden;box-shadow:0 4px 12px rgba(243,160,95,0.1)}
-        .note-title{padding:18px;font-weight:400;cursor:pointer;display:flex;justify-content:space-between;align-items:center;border-bottom:2px dashed var(--y);background: #FFFBF5;}
-        .note-title span{color:var(--b); opacity: 0.8; font-size: 1.1rem; font-weight: 300;}
-        .note-body{display:none;padding:12px;background:#FFF9F0}.open .note-body{display:block}
-        .note-item{padding:12px 15px;margin-bottom:6px;border-radius:15px;display:flex;align-items:flex-start;background:rgba(255,255,255,0.7);border:1px solid #FFEBB7}
+        /* Note 區域 (縮小標題) */
+        .note-card{background:#FFF9F0;border-radius:20px;margin-bottom:15px;border:2.5px solid var(--y);overflow:hidden;box-shadow:0 3px 10px rgba(243,160,95,0.05)}
+        .note-title{padding:10px 15px;font-weight:400;cursor:pointer;display:flex;justify-content:space-between;align-items:center;border-bottom:1.5px dashed var(--y);background: #FFFBF5;}
+        .note-title span{color:var(--b); opacity: 0.8; font-size: 0.95rem; font-weight: 300;}
+        .note-body{display:none;padding:10px;background:#FFF9F0}.open .note-body{display:block}
+        .note-item{padding:10px 12px;margin-bottom:5px;border-radius:12px;display:flex;align-items:flex-start;background:rgba(255,255,255,0.7);border:1px solid #FFEBB7}
         .note-item.done{opacity:0.2;filter:grayscale(1);text-decoration:line-through}
-        .note-time-box{min-width:55px;font-family:'Mochiy Pop One',sans-serif!important;font-size:0.75rem;opacity:0.7;margin-right:8px;padding-top:3px}
-        .note-dot{width:6px;height:6px;border-radius:50%;margin-right:15px;margin-top:9px;flex-shrink:0;background:var(--y)}
+        .note-time-box{min-width:50px;font-family:'Mochiy Pop One',sans-serif!important;font-size:0.7rem;opacity:0.7;margin-right:8px;padding-top:3px}
+        .note-dot{width:5px;height:5px;border-radius:50%;margin-right:12px;margin-top:8px;flex-shrink:0;background:var(--y)}
         .note-content-main{flex:1}
-        .note-main-text{font-weight:300;font-size:0.95rem;display:block;margin-bottom:2px;letter-spacing:0.3px;color:#5A5E66}
-        .note-sub-text{font-size:0.8rem;opacity:0.6;font-weight:300;display:block;}
+        .note-main-text{font-weight:300;font-size:0.9rem;display:block;margin-bottom:2px;letter-spacing:0.3px;color:#5A5E66}
+        .note-sub-text{font-size:0.75rem;opacity:0.6;font-weight:300;display:block;}
 
-        .ed-btn, .del-btn{cursor:pointer;padding:8px 10px;margin:0 2px;font-size:0.9rem;display:inline-block}.ed-btn{color:#BBB}.del-btn{color:#FFAB91;font-weight:400}
+        .ed-btn, .del-btn{cursor:pointer;padding:5px 8px;margin:0 1px;font-size:0.85rem;display:inline-block;font-weight:300}.ed-btn{color:#BBB}.del-btn{color:#FFAB91}
+        
+        /* 顏色指令說明 */
+        .color-tip{font-size:0.75rem;color:#AAA;margin-bottom:10px;display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+        .color-tip span{padding:2px 6px;border-radius:5px;background:#F0F0F0;font-weight:300}
+
+        /* List 區域 */
+        .date-header{background:var(--lo);padding:10px;border-radius:15px;margin:15px 0 10px 0;font-family:'Mochiy Pop One',sans-serif!important;text-align:center;font-size:0.9rem}
+        .l-card{margin-bottom:10px;border-radius:15px;border:2px solid var(--y);background:#fff;overflow:hidden}
+        .l-h{padding:10px;display:flex;justify-content:space-between;align-items:center}
+        .l-h-name{font-weight:300;font-size:0.9rem}
+        .s-item{padding:10px 15px;border-top:1px solid #f0f0f0;font-weight:300;font-size:0.85rem;color:#777}
+        
         .modal{position:fixed;inset:0;background:rgba(0,0,0,.3);display:none;align-items:center;justify-content:center;z-index:3000}
         .modal-b{background:#fff;width:88%;max-width:340px;padding:25px;border-radius:35px;border:4px solid var(--y);text-align:center}
     </style>
@@ -52,28 +55,32 @@
 <body>
     <div id="appInterface" style="width:100%;max-width:420px">
         <div class="top-bar">
-            <div><div class="u-i" id="welcomeMsg">Hi!</div><div onclick="openTM()" style="cursor:pointer;font-size:0.9rem;font-weight:bold;color:var(--bl);text-decoration:underline;font-family:'Mochiy Pop One',sans-serif!important"><span id="curTripN"></span></div></div>
-            <div style="font-size: 0.7rem; color: #CCC; font-family: 'Mochiy Pop One';">Pikaka</div>
+            <div><div class="u-i" id="welcomeMsg">Hi!</div><div onclick="openTM()" style="cursor:pointer;font-size:0.85rem;font-weight:bold;color:var(--bl);text-decoration:underline;font-family:'Mochiy Pop One',sans-serif!important"><span id="curTripN"></span></div></div>
+            <div style="font-size: 0.65rem; color: #CCC; font-family: 'Mochiy Pop One';">Pikaka</div>
         </div>
 
         <div id="addView" class="view-sec active">
             <h2 class="p-h">Pikaka</h2>
             <div class="panel">
                 <input type="date" id="ld">
-                <input type="text" id="ln" placeholder="店名">
-                <input type="text" id="lu" placeholder="Google地圖網址">
-                <textarea id="sd" placeholder="備註" rows="3"></textarea>
-                <button class="pika-btn" id="saveBtn" onclick="saveS()">加入清單</button>
+                <input type="text" id="ln" placeholder="店名/景點">
+                <input type="text" id="lu" placeholder="Google地圖連結">
+                <textarea id="sd" placeholder="簡單備註" rows="3"></textarea>
+                <button class="pika-btn" onclick="saveS()">加入清單</button>
             </div>
         </div>
 
         <div id="listView" class="view-sec"><h2 class="p-h">List</h2><div id="listItems"></div></div>
         <div id="noteListView" class="view-sec"><h2 class="p-h">Notes</h2><div id="noteItems"></div></div>
+        
         <div id="noteAddView" class="view-sec">
             <h2 class="p-h">New Note</h2>
             <div class="panel">
-                <input type="text" id="ntT" placeholder="行程標題">
-                <textarea id="ntC" placeholder="使用範例：&#10;09:00 出發 *藍&#10;吃午餐 / 很貴的店 *紅&#10;回飯店 *綠" rows="10"></textarea>
+                <div class="color-tip">
+                    <span>*紅 (r)</span><span>*藍 (b)</span><span>*綠 (g)</span><span>*橘 (o)</span><span>*紫 (p)</span>
+                </div>
+                <input type="text" id="ntT" placeholder="行程標題 (例如：第一天)">
+                <textarea id="ntC" placeholder="範例：&#10;09:00 出發 *藍&#10;吃午餐 / 店名 *紅" rows="10"></textarea>
                 <button class="pika-btn" id="noteSaveBtn" onclick="saveN()">新增</button>
             </div>
         </div>
@@ -86,7 +93,7 @@
         </nav>
     </div>
 
-    <div id="tModal" class="modal"><div class="modal-b"><h3>旅程管理</h3><div id="tAcc" style="max-height:220px;overflow-y:auto;margin:15px 0"></div><input type="text" id="newTN" placeholder="名稱"><button class="pika-btn" style="background:var(--bl);box-shadow:0 4px 0 #7FB8E6;margin-bottom:10px" onclick="addT()">建立</button><button class="pika-btn" style="background:#EEE;color:#888;box-shadow:0 4px 0 #DDD" onclick="closeM()">關閉</button></div></div>
+    <div id="tModal" class="modal"><div class="modal-b"><h3>切換旅程</h3><div id="tAcc" style="max-height:220px;overflow-y:auto;margin:15px 0"></div><input type="text" id="newTN" placeholder="新旅程名稱"><button class="pika-btn" style="background:var(--bl);box-shadow:0 4px 0 #7FB8E6;margin-bottom:10px" onclick="addT()">建立</button><button class="pika-btn" style="background:#EEE;color:#888;box-shadow:0 4px 0 #DDD" onclick="closeM()">關閉</button></div></div>
 
 <script>
 const DK='pikaka_v513_final';
@@ -97,7 +104,7 @@ const colorCode = {
     '橘': '#FFB74D', 'o': '#FFB74D',
     '紫': '#BA68C8'
 };
-let curU="5133", curT="default", db={}, openD=[], openG=[], openN=[], editIdx=-1, editNIdx=-1;
+let curU="5133", curT="default", db={}, openN=[], editNIdx=-1;
 
 window.onload = function() { curU = localStorage.getItem('pika_current_user') || '5133'; document.getElementById('welcomeMsg').innerText = `Hi! ${curU}`; initApp(); };
 function initApp() {
@@ -109,8 +116,8 @@ function initApp() {
 }
 function checkData(){if(!db[curU].data[curT])db[curU].data[curT]={items:[],notes:[]}}
 function save(){localStorage.setItem(DK,JSON.stringify(db))}
-function openTM(){const a=document.getElementById('tAcc');a.innerHTML="";for(let i in db[curU].trips){a.innerHTML+=`<div style="display:flex;justify-content:space-between;padding:10px;border-bottom:1px solid #eee"><span onclick="switchT('${i}')" style="flex:1;cursor:pointer">${db[curU].trips[i]}</span><span class="del-btn" onclick="delT('${i}')">✘</span></div>`}document.getElementById('tModal').style.display='flex'}
-function addT(){const n=document.getElementById('newTN').value.trim();if(!n)return;const id='t'+Date.now();db[curU].trips[id]=n;db[curU].data[id]={items:[],notes:[]};document.getElementById('newTN').value="";save();openTM()}
+function openTM(){const a=document.getElementById('tAcc');a.innerHTML="";for(let i in db[curU].trips){a.innerHTML+=`<div style="display:flex;justify-content:space-between;padding:10px;border-bottom:1px solid #eee"><span onclick="switchT('${i}')" style="flex:1;text-align:left;cursor:pointer">${db[curU].trips[i]}</span><span class="del-btn" onclick="delT('${i}')">✘</span></div>`}document.getElementById('tModal').style.display='flex'}
+function addT(){const n=document.getElementById('newTN').value.trim();if(!n)return;const id='t'+Date.now();db[curU].trips[id]=n;db[curU].data[id]={items:[],notes:[]};save();openTM()}
 function switchT(id){curT=id;db[curU].curT=id;document.getElementById('curTripN').innerText=db[curU].trips[id];save();render();renderN();closeM()}
 function delT(id){if(id==='default')return; if(confirm("刪？")){delete db[curU].trips[id];delete db[curU].data[id];if(curT===id)curT='default';save();openTM()}}
 function closeM(){document.getElementById('tModal').style.display='none'}
@@ -118,12 +125,12 @@ function sw(v,el){document.querySelectorAll('.view-sec').forEach(s=>s.classList.
 
 function render(){
     checkData();const d=db[curU].data[curT],list=document.getElementById('listItems');list.innerHTML="";
-    const gDate={};d.items.forEach((i,idx)=>{const dk=i.ld||"未排期";if(!gDate[dk])gDate[dk]=[];let group=gDate[dk].find(g=>g.ln===i.ln);if(!group)group={ln:i.ln,url:i.lu||"",items:[]},gDate[dk].push(group);group.items.push({...i,origIdx:idx})});
+    const gDate={};d.items.forEach((i)=>{const dk=i.ld||"未排期";if(!gDate[dk])gDate[dk]=[];let group=gDate[dk].find(g=>g.ln===i.ln);if(!group)group={ln:i.ln,url:i.lu||"",items:[]},gDate[dk].push(group);group.items.push(i)});
     Object.keys(gDate).sort().forEach(date=>{
         let dH=`<div class="date-header">📅 ${date}</div>`;
         gDate[date].forEach((group)=>{
-            dH+=`<div class="l-card"><div class="l-h"><div class="l-h-name">${group.ln}${group.url?`<button class="go-btn" onclick="window.open('${group.url}')">GO</button>`:''}</div><span class="del-btn" onclick="delL('${date}','${group.ln}')">✘</span></div>`
-            + `<div class="items-box" style="display:block">` + group.items.filter(i=>i.sd).map(i=>`<div class="s-item"><div>${i.sd}</div></div>`).join('') + `</div></div>`
+            dH+=`<div class="l-card"><div class="l-h"><div class="l-h-name">${group.ln}${group.url?`<button style="margin-left:5px;font-size:0.6rem;padding:2px 6px;border-radius:5px;border:none;background:var(--bl)" onclick="window.open('${group.url}')">GO</button>`:''}</div><span class="del-btn" onclick="delL('${date}','${group.ln}')">✘</span></div>`
+            + `<div class="items-box">` + group.items.filter(i=>i.sd).map(i=>`<div class="s-item">${i.sd}</div>`).join('') + `</div></div>`
         });
         list.innerHTML+=dH;
     })
@@ -133,7 +140,15 @@ function renderN(){
     const d=db[curU].data[curT],list=document.getElementById('noteItems');list.innerHTML="";
     d.notes.forEach((n,i)=>{
         const isO=openN.includes(i),div=document.createElement('div');div.className=`note-card ${isO?'open':''}`;
-        let h=`<div class="note-title" onclick="tgNC(${i})"><span style="flex:1">${n.t}</span><div><span class="ed-btn" onclick="event.stopPropagation();edN(${i})">✎</span><span class="del-btn" onclick="event.stopPropagation();delN(${i})">✘</span></div></div><div class="note-body">`;
+        let h=`<div class="note-title" onclick="tgNC(${i})">
+            <span style="flex:1">${n.t}</span>
+            <div style="display:flex;align-items:center">
+                <span class="ed-btn" onclick="event.stopPropagation();moveN(${i},-1)">↑</span>
+                <span class="ed-btn" onclick="event.stopPropagation();moveN(${i},1)">↓</span>
+                <span class="ed-btn" onclick="event.stopPropagation();edN(${i})">✎</span>
+                <span class="del-btn" onclick="event.stopPropagation();delN(${i})">✘</span>
+            </div>
+        </div><div class="note-body">`;
         n.c.split('\n').filter(l=>l.trim()!=="").forEach((l,li)=>{
             const s=l.trim(),isD=n.done&&n.done[li];
             const timeMatch = s.match(/^(\d{1,2}[:：]?\d{2})\s*(.*)/);
@@ -155,6 +170,13 @@ function renderN(){
     })
 }
 
+function moveN(idx,dir){
+    const ns=db[curU].data[curT].notes; const nIdx=idx+dir;
+    if(nIdx<0||nIdx>=ns.length)return;
+    [ns[idx],ns[nIdx]]=[ns[nIdx],ns[idx]];
+    save();renderN();
+}
+
 function saveS(){
     const ld=document.getElementById('ld').value,ln=document.getElementById('ln').value.trim(),lu=document.getElementById('lu').value.trim(),sd=document.getElementById('sd').value.trim();
     if(!ln)return; db[curU].data[curT].items.push({ld,ln,lu,sd});
@@ -162,7 +184,7 @@ function saveS(){
 }
 function saveN(){
     const t=document.getElementById('ntT').value.trim(),c=document.getElementById('ntC').value.trim(); if(!t)return;
-    if(editNIdx>-1){db[curU].data[curT].notes[editNIdx]={...db[curU].data[curT].notes[editNIdx],t,c};editNIdx=-1;} 
+    if(editNIdx>-1){db[curU].data[curT].notes[editNIdx]={...db[curU].data[curT].notes[editNIdx],t,c};editNIdx=-1;document.getElementById('noteSaveBtn').innerText="新增";} 
     else {db[curU].data[curT].notes.push({t,c,done:[]});}
     save();renderN();document.getElementById('ntT').value="";document.getElementById('ntC').value="";sw('noteList',document.querySelectorAll('.nav-item')[2])
 }
@@ -170,7 +192,7 @@ function tgNC(i){const x=openN.indexOf(i);if(x===-1)openN.push(i);else openN.spl
 function tgND(ni,li){const n=db[curU].data[curT].notes[ni];n.done=n.done||[];n.done[li]=!n.done[li];save();renderN()}
 function delL(d,l){if(confirm("刪？")){db[curU].data[curT].items=db[curU].data[curT].items.filter(x=>!((x.ld||"未排期")===d&&x.ln===l));save();render()}}
 function delN(i){if(confirm("刪？")){db[curU].data[curT].notes.splice(i,1);save();renderN()}}
-function edN(i){const n=db[curU].data[curT].notes[i];editNIdx=i;document.getElementById('ntT').value=n.t;document.getElementById('ntC').value=n.c;sw('noteAdd',document.querySelectorAll('.nav-item')[3])}
+function edN(i){const n=db[curU].data[curT].notes[i];editNIdx=i;document.getElementById('ntT').value=n.t;document.getElementById('ntC').value=n.c;document.getElementById('noteSaveBtn').innerText="儲存";sw('noteAdd',document.querySelectorAll('.nav-item')[3])}
 </script>
 </body>
 </html>
