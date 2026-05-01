@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-    <title>日系手帳 - PikaNote v8</title>
+    <title>日系手帳 - PikaNote v8 (Moveable)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700&family=Kiwi+Maru:wght@400;500&family=Varela+Round&family=Kosugi+Maru&family=M+PLUS+Rounded+1c:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
@@ -16,7 +16,6 @@
 
         body{background-color:var(--jp-white);color:var(--jp-gray);transition:all .3s;-webkit-tap-highlight-color:transparent;overflow-x:hidden}
         
-        /* 導航列微調 */
         .nav-btn{padding:12px 15px;font-size:.95rem;color:#A0A0A0;position:relative;transition:.3s}
         .nav-btn.active{color:#4A4A4A;font-weight:500}
         .nav-btn.active::after{content:'';position:absolute;bottom:4px;left:50%;transform:translateX(-50%);width:12px;height:3px;background:var(--jp-accent);border-radius:10px}
@@ -25,10 +24,9 @@
         .page.active{display:block}
         @keyframes fadeIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
         
-        /* 標題字體精細化修改 (重點區) */
         .list-row{background:#fff;padding:20px 22px;border-radius:24px;border:1px solid rgba(0,0,0,0.03);margin-bottom:12px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;transition:0.2s;box-shadow:0 2px 8px rgba(0,0,0,0.01)}
-        .list-row:active{transform:scale(0.98)}
-        .list-title{font-weight:500; letter-spacing: 0.02em; color:#444; font-size: 1.1rem;} /* 標題改為中等粗細 */
+        .list-row:active{transform:scale(0.99)}
+        .list-title{font-weight:500; letter-spacing: 0.02em; color:#444; font-size: 1.1rem;}
         .list-arrow{font-size: 10px; color:#C0C0C0; font-weight: 400;}
 
         .bg-color-1{background-color:#FFECF1!important}.bg-color-2{background-color:#E0F2FE!important}.bg-color-3{background-color:#F0FDF4!important}.bg-color-4{background-color:#FFFBEB!important}.bg-color-5{background-color:#F5F3FF!important}
@@ -43,6 +41,10 @@
         .lightbox{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.9);z-index:2000;justify-content:center;align-items:center}
         .color-dot.active { border: 2px solid #4A4A4A !important; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
+        
+        /* 移動按鈕樣式 */
+        .move-btn-group { display: none; } /* 預設隱藏 */
+        body.sort-mode .move-btn-group { display: flex; flex-direction: column; gap: 8px; border-right: 1px solid #f0f0f0; margin-right: 15px; padding-right: 10px; }
     </style>
 </head>
 <body class="min-h-screen pb-24 font-style-0" id="main-body">
@@ -75,6 +77,7 @@
 
     <div class="fixed bottom-6 left-6 z-50 flex flex-col gap-3">
         <button onclick="cycleFont()" class="w-12 h-12 bg-white rounded-full shadow-lg border border-stone-50 flex items-center justify-center text-[10px] font-medium text-stone-500">字體</button>
+        <button onclick="toggleSortMode()" id="sort-toggle-btn" class="w-12 h-12 bg-white rounded-full shadow-lg border border-stone-50 flex items-center justify-center text-[10px] font-medium text-stone-500">排序</button>
     </div>
     <div class="fixed bottom-6 right-6 z-50 flex flex-col gap-3">
         <button onclick="exportData()" class="w-12 h-12 bg-stone-800 text-white rounded-full shadow-lg flex items-center justify-center text-[10px]">匯出</button>
@@ -113,7 +116,9 @@
         </section>
 
         <section id="todo-page" class="page"><div id="todo-container" class="space-y-4"></div></section>
-        <section id="note-page" class="page"><div id="main-note-list" class="space-y-2"></div></section>
+        <section id="note-page" class="page">
+            <div id="main-note-list" class="space-y-2"></div>
+        </section>
         
         <section id="detail-page" class="page">
             <div class="flex items-center gap-4 mb-6"><button onclick="showPage('note-page')" class="text-stone-300">←</button><h2 id="group-display-title" class="text-lg font-medium text-stone-600"></h2></div>
@@ -151,6 +156,41 @@
 
         function refreshQuote() { document.getElementById('quote-display').innerText = quotes[Math.floor(Math.random()*quotes.length)]; }
 
+        // --- 排序功能關鍵代碼 ---
+        function toggleSortMode() {
+            const body = document.getElementById('main-body');
+            const btn = document.getElementById('sort-toggle-btn');
+            body.classList.toggle('sort-mode');
+            const isActive = body.classList.contains('sort-mode');
+            btn.innerText = isActive ? '完成' : '排序';
+            btn.style.backgroundColor = isActive ? '#4A4A4A' : '#fff';
+            btn.style.color = isActive ? '#fff' : '#4A4A4A';
+            renderMainList();
+        }
+
+        function moveItem(index, direction, e) {
+            e.stopPropagation(); // 防止點擊到開啟便條
+            const keys = Object.keys(db.groups);
+            const newIndex = index + direction;
+            if (newIndex < 0 || newIndex >= keys.length) return;
+
+            const newGroups = {};
+            // 交換 Key 的位置
+            const temp = keys[index];
+            keys[index] = keys[newIndex];
+            keys[newIndex] = temp;
+
+            // 重新按順序構建物件
+            keys.forEach(key => {
+                newGroups[key] = db.groups[key];
+            });
+
+            db.groups = newGroups;
+            save();
+            renderMainList();
+        }
+        // -----------------------
+
         function saveNewNote() {
             const gTitle = document.getElementById('new-group-title').value.trim();
             const iTitle = document.getElementById('new-item-title').value.trim();
@@ -178,18 +218,35 @@
 
         function renderMainList() {
             const list = document.getElementById('main-note-list');
-            list.innerHTML = Object.keys(db.groups).map(g => {
+            const groupKeys = Object.keys(db.groups);
+            
+            list.innerHTML = groupKeys.map((g, index) => {
                 const groupItems = db.groups[g];
-                if(groupItems.length === 1 && groupItems[0].isSingle) {
-                    const n = groupItems[0];
-                    return `<div onclick="openEditorDirectly('${g}', 0)" class="list-row ${n.color} ${n.dimmed?'opacity-50':''}">
-                                <span class="list-title">${g}</span>
-                                <span class="list-arrow">查看內容 →</span>
+                const isSingle = groupItems.length === 1 && groupItems[0].isSingle;
+                const n = isSingle ? groupItems[0] : null;
+                
+                const moveBtns = `
+                    <div class="move-btn-group">
+                        <button onclick="moveItem(${index}, -1, event)" class="text-stone-400">▲</button>
+                        <button onclick="moveItem(${index}, 1, event)" class="text-stone-400">▼</button>
+                    </div>
+                `;
+
+                if(isSingle) {
+                    return `<div class="list-row ${n.color} ${n.dimmed?'opacity-50':''}" onclick="openEditorDirectly('${g}', 0)">
+                                ${moveBtns}
+                                <div class="flex flex-grow justify-between items-center">
+                                    <span class="list-title">${g}</span>
+                                    <span class="list-arrow">查看內容 →</span>
+                                </div>
                             </div>`;
                 } else {
-                    return `<div onclick="openGroup('${g}')" class="list-row">
-                                <span class="list-title">${g}</span>
-                                <span class="list-arrow">${groupItems.length} 則 →</span>
+                    return `<div class="list-row" onclick="openGroup('${g}')">
+                                ${moveBtns}
+                                <div class="flex flex-grow justify-between items-center">
+                                    <span class="list-title">${g}</span>
+                                    <span class="list-arrow">${groupItems.length} 則 →</span>
+                                </div>
                             </div>`;
                 }
             }).join('') || '<p class="text-center text-stone-300 py-10 text-xs">尚無便條</p>';
