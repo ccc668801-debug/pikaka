@@ -65,55 +65,329 @@ input,select,textarea{width:100%;padding:10px;margin:5px 0;border:2px solid #eee
 <div id="analysisView" class="view-section"><h2 class="pika-header">Pika Analysis</h2><div class="panel" id="analysisContent"></div></div>
 <nav class="bottom-nav"><div class="nav-item" onclick="switchTab('add',this)"><div>＋</div><span>新增</span></div><div class="nav-item active" onclick="switchTab('list',this)"><div>📋</div><span>清單</span></div><div class="nav-item" onclick="switchTab('ledger',this)"><div>👛</div><span>記帳</span></div><div class="nav-item" onclick="switchTab('history',this)"><div>💰</div><span>明細</span></div><div class="nav-item" onclick="switchTab('analysis',this)"><div>📊</div><span>分析</span></div></nav>
 </div>
-<div id="setModal" class="modal"><div class="modal-content"><h3 style="margin-top:0">⚙️ 設定</h3><label>匯率 (1 JPY = ? TWD)</label><input type="number" id="setRate" step="0.001"><label>Suica 餘額</label><input type="number" id="setSuica"><label>現金 餘額</label><input type="number" id="setCash"><label>信用卡 累計</label><input type="number" id="setCredit"><label>台幣 餘額</label><input type="number" id="setTwd"><button onclick="saveSettings()" class="btn-main">保存設定</button><hr style="border:none;border-top:1px solid #eee;margin:20px 0;"><h4>💾 資料備份</h4><button onclick="exportData()" class="btn-outline">📤 匯出備份檔 (.json)</button><button onclick="document.getElementById('importInput').click()" class="btn-outline">📥 匯入備份檔</button><input type="file" id="importInput" style="display:none" accept=".json" onchange="importData(this)"><button onclick="closeModal('setModal')" style="width:100%;background:none;border:none;margin-top:20px;color:#999">關閉</button></div></div>
+
+<!-- 修改後的設定 Modal -->
+<div id="setModal" class="modal"><div class="modal-content"><h3 style="margin-top:0;display:flex;justify-content:space-between;">⚙️ 設定<span onclick="closeModal('setModal')" style="cursor:pointer;color:#ccc;font-size:1.2rem">×</span></h3>
+<label>匯率 (1 JPY = ? TWD)</label><input type="number" id="setRate" step="0.001">
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+<div><label>Suica 餘額</label><input type="number" id="setSuica"></div>
+<div><label>現金 餘額</label><input type="number" id="setCash"></div>
+<div><label>信用卡 累計</label><input type="number" id="setCredit"></div>
+<div><label>台幣 餘額</label><input type="number" id="setTwd"></div>
+</div>
+<button onclick="saveSettings()" class="btn-main">保存設定</button>
+<hr style="border:none;border-top:1px solid #eee;margin:20px 0;">
+<h4>💾 資料備份與管理</h4>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+<button onclick="exportData()" class="btn-outline" style="background:#f0f7ff;border-color:#D0E7FF">📤 匯出備份</button>
+<button onclick="document.getElementById('importInput').click()" class="btn-outline" style="background:#f0fffb;border-color:#CAE9E0">📥 匯入資料</button>
+</div>
+<input type="file" id="importInput" style="display:none" accept=".json" onchange="importData(this)">
+<button onclick="clearCurrentTripData()" class="btn-outline" style="color:#e74c3c;border-color:#fadbd8;margin-top:15px;font-size:0.75rem;">⚠️ 清空目前旅程資料</button>
+<div style="text-align:center;margin-top:20px;font-size:0.6rem;color:#ccc;">PikaMoney v1.2</div>
+</div></div>
+
 <div id="imgZoomModal" class="modal" onclick="this.style.display='none'" style="background:rgba(0,0,0,0.9);"><img id="zoomedImg" style="max-width:95%;max-height:90%;border-radius:10px;border:2px solid #fff;"></div>
-  <script>
+
+<script>
 const getAccount=()=>localStorage.getItem('pika_current_user')||'guest',getDBKey=()=>`pika_${getAccount()}_money_v1`;
 let currentTripId="default",wallet={suica:0,cash:0,credit:0,rate:0.203,twd:0},shoppingItems=[],ledgerItems=[],trips={},currentCat="🍱 飲食",calcInput="0",tempImgBase64="";
 const categories=['🍱 飲食','💊 藥妝','🚌 交通','🛍️ 購物','👕 衣服','🍰 甜點','😎 皮卡丘','🍹 飲料','💰 儲值','🏷️ 其他'];
 let openedShops=new Set();
+
 function getWeekday(d){if(!d)return "";const days=['日','一','二','三','四','五','六'],dt=new Date(d);return isNaN(dt.getTime())?"":` 週${days[dt.getDay()]}`;}
-window.onload=function(){document.getElementById('displayUserName').innerText=`Hi!`;let db=JSON.parse(localStorage.getItem(getDBKey()));if(!db){db={trips:{"default":"我的日本之旅"},currentTripId:"default",data:{"default":{wallet:{suica:0,cash:0,credit:0,rate:0.203,twd:0},shoppingItems:[],ledgerItems:[]}}};localStorage.setItem(getDBKey(),JSON.stringify(db));}loadTripData(db.currentTripId);initCats();document.getElementById('ledgerDate').value=new Date().toISOString().split('T')[0];renderAll();};
+
+window.onload=function(){
+    document.getElementById('displayUserName').innerText=`Hi!`;
+    let db=JSON.parse(localStorage.getItem(getDBKey()));
+    if(!db){
+        db={trips:{"default":"我的日本之旅"},currentTripId:"default",data:{"default":{wallet:{suica:0,cash:0,credit:0,rate:0.203,twd:0},shoppingItems:[],ledgerItems:[]}}};
+        localStorage.setItem(getDBKey(),JSON.stringify(db));
+    }
+    loadTripData(db.currentTripId);
+    initCats();
+    document.getElementById('ledgerDate').value=new Date().toISOString().split('T')[0];
+    renderAll();
+};
+
 function toggleTripMenu(e){e.stopPropagation();const d=document.getElementById('tripDropdown');d.classList.toggle('show');if(d.classList.contains('show'))renderTripListMenu();}
-function renderTripListMenu(){const m=document.getElementById('tripListMenu');m.innerHTML="";Object.entries(trips).forEach(([id,n])=>{const v=document.createElement('div');v.className='trip-item';v.innerHTML=`<span onclick="switchTrip('${id}')" style="flex:1">${id===currentTripId?'✅ ':''}${n}</span><span onclick="deleteTrip('${id}')" style="color:#ccc;font-size:0.7rem">✘</span>`;m.appendChild(v);});}
-window.onclick=()=>document.getElementById('tripDropdown').classList.remove('show');
-function switchTrip(id){loadTripData(id);openedShops.clear();renderAll();}
-function loadTripData(id){let db=JSON.parse(localStorage.getItem(getDBKey()));currentTripId=id;trips=db.trips;const d=db.data[id]||{wallet:{suica:0,cash:0,credit:0,rate:0.203,twd:0},shoppingItems:[],ledgerItems:[]};wallet=d.wallet;if(wallet.credit===undefined)wallet.credit=0;shoppingItems=d.shoppingItems||[];ledgerItems=d.ledgerItems||[];document.getElementById('currentTripName').innerText=trips[id];sync();}
-function createNewTrip(){const n=prompt("請輸入旅程名稱:");if(!n)return;const id='t_'+Date.now();trips[id]=n;sync();switchTrip(id);}
-function deleteTrip(id){if(id==='default')return alert("預設旅程不能刪除");if(confirm("確定刪除此旅程及其所有資料？")){delete trips[id];sync();if(currentTripId===id)switchTrip('default');else renderTripListMenu();}}
-function sync(){let db=JSON.parse(localStorage.getItem(getDBKey()))||{data:{}};db.currentTripId=currentTripId;db.trips=trips;db.data[currentTripId]={wallet,shoppingItems,ledgerItems};localStorage.setItem(getDBKey(),JSON.stringify(db));}
-function exportData(){const db=localStorage.getItem(getDBKey());if(!db)return alert("尚無資料可匯出");const b=new Blob([db],{type:"application/json"}),u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download=`PikaMoney_Backup_${new Date().toISOString().split('T')[0]}.json`;a.click();URL.revokeObjectURL(u);}
-function importData(i){const f=i.files[0];if(!f)return;if(!confirm("匯入將會覆蓋目前所有資料，確定嗎？"))return;const r=new FileReader();r.onload=e=>{try{const j=JSON.parse(e.target.result);if(j.trips&&j.data){localStorage.setItem(getDBKey(),e.target.result);location.reload();}else alert("無效格式");}catch(err){alert("失敗："+err);}};r.readAsText(f);}
-function handleImg(i){const f=i.files[0];if(!f)return;const r=new FileReader();r.onload=e=>{const img=new Image();img.onload=()=>{const c=document.createElement('canvas');let w=img.width,h=img.height,m=500;if(w>h){if(w>m){h*=m/w;w=m;}}else{if(h>m){w*=m/h;h=m;}}c.width=w;c.height=h;const ctx=c.getContext('2d');ctx.drawImage(img,0,0,w,h);tempImgBase64=c.toDataURL('image/jpeg',0.6);document.getElementById('previewImg').src=tempImgBase64;document.getElementById('previewImg').style.display='block';document.getElementById('imgTip').style.display='none';};img.src=e.target.result;};r.readAsDataURL(f);}
-function delByShop(s){if(confirm(`刪除「${s}」的所有商品？`)){shoppingItems=shoppingItems.filter(i=>i.shop!==s);sync();renderAll();}}
-function editShopping(id){const i=shoppingItems.find(x=>x.id===id);if(!i)return;document.getElementById('editId').value=i.id;document.getElementById('shopLoc').value=i.shop;document.getElementById('itemName').value=i.name;document.getElementById('itemPrice').value=i.price;document.getElementById('itemNote').value=i.note;if(i.img){tempImgBase64=i.img;document.getElementById('previewImg').src=i.img;document.getElementById('previewImg').style.display='block';document.getElementById('imgTip').style.display='none';}document.getElementById('saveBtn').innerText="更新商品";switchTab('add',document.querySelectorAll('.nav-item')[0]);}
-function renderAll(){
-const l=document.getElementById('listItemsGrouped');l.innerHTML="";const gs={};shoppingItems.forEach(i=>{if(!gs[i.shop])gs[i.shop]=[];gs[i.shop].push(i)});
-for(let s in gs){const g=document.createElement('div');g.className=`date-group ${openedShops.has(s)?'open':''}`;g.innerHTML=`<div class="date-header"><div onclick="toggleShop('${s}',this.parentElement.parentElement)" style="flex:1"><span>${s}</span><span>▾</span></div><span onclick="delByShop('${s}')" style="padding:5px;font-size:0.8rem">🗑️</span></div><div class="date-content"></div>`;const b=g.querySelector('.date-content');gs[s].forEach(i=>{const r=document.createElement('div');r.className=`item-row ${i.bought?'item-bought':''}`;r.innerHTML=`${i.img?`<img src="${i.img}" class="list-img" onclick="zoomImg('${i.img}')">`:`<div class="list-img" style="background:#eee;display:flex;align-items:center;justify-content:center">📷</div>`}<div style="flex:1"><b>${i.name}</b><br><small>${i.price}円 ${i.note?`| ${i.note}`:''}</small></div><div class="btn-group"><button class="btn-sm" style="background:var(--suica-green)" onclick="toggleBought(${i.id})">✔</button><button class="btn-sm" style="background:#fdf5e6" onclick="editShopping(${i.id})">✎</button><button class="btn-sm" style="background:#eee;color:red" onclick="delShopping(${i.id})">✘</button></div>`;b.appendChild(r);});l.appendChild(g);}
-let gT=0;const h=document.getElementById('ledgerHistoryGroups');h.innerHTML="";const hG={};ledgerItems.forEach(i=>{if(!hG[i.date])hG[i.date]={items:[],total:0};hG[i.date].items.push(i);if(i.cat!=='💰 儲值'){let v=i.method==='TWD'?Math.round(i.amount/(wallet.rate||0.203)):i.amount;hG[i.date].total+=v;gT+=v;}});
-document.getElementById('grandTotalBanner').innerText=`總支出: ${gT} 円`;document.getElementById('walletSummary').innerHTML=`<div class="summary-box">🍉 Suica<br>${wallet.suica}円</div><div class="summary-box">💴 現金<br>${wallet.cash}円</div><div class="summary-box">💳 刷卡<br>${wallet.credit||0}円</div><div class="summary-box">🇹🇼 台幣<br>${wallet.twd||0}元</div>`;
-Object.keys(hG).sort((a,b)=>new Date(b)-new Date(a)).forEach(dt=>{const d=document.createElement('div');d.className="date-group";d.innerHTML=`<div class="date-header" onclick="this.parentElement.classList.toggle('open')"><span>${dt}${getWeekday(dt)}</span><span style="color:#2980B9">${hG[dt].total}円 ▾</span></div><div class="date-content"></div>`;hG[dt].items.forEach(i=>{const r=document.createElement('div');r.style.padding="10px 0";r.style.borderBottom="1px solid #eee";r.style.display="flex";r.style.justifyContent="space-between";const ic=i.method==='Credit'?'💳':(i.method==='Suica'?'🍉':(i.method==='Cash'?'💴':'🇹🇼'));r.innerHTML=`<span>${i.cat.split(' ')[0]} ${ic}${i.name}</span><div style="display:flex;align-items:center;gap:8px"><b>${i.amount}${i.method==='TWD'?'元':'円'}</b><span onclick="delLedger(${i.id})" style="color:red;cursor:pointer;font-size:0.8rem">✘</span></div>`;d.querySelector('.date-content').appendChild(r);});h.appendChild(d);});
-const ac=document.getElementById('analysisContent');ac.innerHTML="";const st={};let tA=0;ledgerItems.forEach(i=>{if(i.cat==='💰 儲值')return;let v=i.method==='TWD'?Math.round(i.amount/(wallet.rate||0.203)):i.amount;st[i.cat]=(st[i.cat]||0)+v;tA+=v;});
-Object.entries(st).sort((a,b)=>b[1]-a[1]).forEach(([c,v])=>{const p=tA>0?Math.round((v/tA)*100):0;ac.innerHTML+=`<div style="margin-bottom:15px"><div style="display:flex;justify-content:space-between;margin-bottom:5px"><strong>${c}</strong><span>${v}円 (${p}%)</span></div><div style="background:#eee;height:12px;border-radius:6px;overflow:hidden"><div style="background:var(--btn-active);height:100%;width:${p}%"></div></div></div>`;});
+
+function renderTripListMenu(){
+    const m=document.getElementById('tripListMenu');
+    m.innerHTML="";
+    Object.entries(trips).forEach(([id,n])=>{
+        const v=document.createElement('div');
+        v.className='trip-item';
+        v.innerHTML=`<span onclick="switchTrip('${id}')" style="flex:1">${id===currentTripId?'✅ ':''}${n}</span><span onclick="deleteTrip('${id}')" style="color:#ccc;font-size:0.7rem">✘</span>`;
+        m.appendChild(v);
+    });
 }
+
+window.onclick=()=>document.getElementById('tripDropdown').classList.remove('show');
+
+function switchTrip(id){loadTripData(id);openedShops.clear();renderAll();}
+
+function loadTripData(id){
+    let db=JSON.parse(localStorage.getItem(getDBKey()));
+    currentTripId=id;
+    trips=db.trips;
+    const d=db.data[id]||{wallet:{suica:0,cash:0,credit:0,rate:0.203,twd:0},shoppingItems:[],ledgerItems:[]};
+    wallet=d.wallet;
+    if(wallet.credit===undefined)wallet.credit=0;
+    shoppingItems=d.shoppingItems||[];
+    ledgerItems=d.ledgerItems||[];
+    document.getElementById('currentTripName').innerText=trips[id];
+    sync();
+}
+
+function createNewTrip(){
+    const n=prompt("請輸入旅程名稱:");
+    if(!n)return;
+    const id='t_'+Date.now();
+    trips[id]=n;
+    sync();
+    switchTrip(id);
+}
+
+function deleteTrip(id){
+    if(id==='default')return alert("預設旅程不能刪除");
+    if(confirm("確定刪除此旅程及其所有資料？")){
+        delete trips[id];
+        sync();
+        if(currentTripId===id)switchTrip('default');
+        else renderTripListMenu();
+    }
+}
+
+function sync(){
+    let db=JSON.parse(localStorage.getItem(getDBKey()))||{data:{}};
+    db.currentTripId=currentTripId;
+    db.trips=trips;
+    db.data[currentTripId]={wallet,shoppingItems,ledgerItems};
+    localStorage.setItem(getDBKey(),JSON.stringify(db));
+}
+
+// 優化後的匯出功能
+function exportData(){
+    const dbRaw = localStorage.getItem(getDBKey());
+    if(!dbRaw) return alert("尚無資料可匯出");
+    const tripName = trips[currentTripId] || "Trip";
+    const dateStr = new Date().toISOString().split('T')[0];
+    const blob = new Blob([dbRaw], {type: "application/json"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `PikaMoney_${tripName}_${dateStr}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+}
+
+// 優化後的匯入功能
+function importData(input){
+    const file = input.files[0];
+    if(!file) return;
+    if(!confirm("匯入將會覆蓋目前『所有』旅程資料與餘額，確定嗎？")) {
+        input.value = "";
+        return;
+    }
+    const reader = new FileReader();
+    reader.onload = e => {
+        try {
+            const json = JSON.parse(e.target.result);
+            if(json.trips && json.data) {
+                localStorage.setItem(getDBKey(), e.target.result);
+                alert("資料匯入成功！");
+                location.reload();
+            } else {
+                alert("無效的備份檔案格式。");
+            }
+        } catch (err) {
+            alert("檔案讀取失敗：" + err);
+        }
+    };
+    reader.readAsText(file);
+}
+
+// 新增：清空當前旅程資料
+function clearCurrentTripData() {
+    if(confirm(`確定要清空「${trips[currentTripId]}」的所有記帳與清單嗎？\n餘額也會歸零且無法復原！`)) {
+        shoppingItems = [];
+        ledgerItems = [];
+        wallet = {suica:0, cash:0, credit:0, rate:0.203, twd:0};
+        sync();
+        renderAll();
+        closeModal('setModal');
+    }
+}
+
+function handleImg(i){
+    const f=i.files[0];
+    if(!f)return;
+    const r=new FileReader();
+    r.onload=e=>{
+        const img=new Image();
+        img.onload=()=>{
+            const c=document.createElement('canvas');
+            let w=img.width,h=img.height,m=500;
+            if(w>h){if(w>m){h*=m/w;w=m;}}else{if(h>m){w*=m/h;h=m;}}
+            c.width=w;c.height=h;
+            const ctx=c.getContext('2d');
+            ctx.drawImage(img,0,0,w,h);
+            tempImgBase64=c.toDataURL('image/jpeg',0.6);
+            document.getElementById('previewImg').src=tempImgBase64;
+            document.getElementById('previewImg').style.display='block';
+            document.getElementById('imgTip').style.display='none';
+        };
+        img.src=e.target.result;
+    };
+    r.readAsDataURL(f);
+}
+
+function delByShop(s){if(confirm(`刪除「${s}」的所有商品？`)){shoppingItems=shoppingItems.filter(i=>i.shop!==s);sync();renderAll();}}
+
+function editShopping(id){
+    const i=shoppingItems.find(x=>x.id===id);
+    if(!i)return;
+    document.getElementById('editId').value=i.id;
+    document.getElementById('shopLoc').value=i.shop;
+    document.getElementById('itemName').value=i.name;
+    document.getElementById('itemPrice').value=i.price;
+    document.getElementById('itemNote').value=i.note;
+    if(i.img){
+        tempImgBase64=i.img;
+        document.getElementById('previewImg').src=i.img;
+        document.getElementById('previewImg').style.display='block';
+        document.getElementById('imgTip').style.display='none';
+    }
+    document.getElementById('saveBtn').innerText="更新商品";
+    switchTab('add',document.querySelectorAll('.nav-item')[0]);
+}
+
+function renderAll(){
+    const l=document.getElementById('listItemsGrouped');l.innerHTML="";const gs={};
+    shoppingItems.forEach(i=>{if(!gs[i.shop])gs[i.shop]=[];gs[i.shop].push(i)});
+    for(let s in gs){
+        const g=document.createElement('div');
+        g.className=`date-group ${openedShops.has(s)?'open':''}`;
+        g.innerHTML=`<div class="date-header"><div onclick="toggleShop('${s}',this.parentElement.parentElement)" style="flex:1"><span>${s}</span><span>▾</span></div><span onclick="delByShop('${s}')" style="padding:5px;font-size:0.8rem">🗑️</span></div><div class="date-content"></div>`;
+        const b=g.querySelector('.date-content');
+        gs[s].forEach(i=>{
+            const r=document.createElement('div');
+            r.className=`item-row ${i.bought?'item-bought':''}`;
+            r.innerHTML=`${i.img?`<img src="${i.img}" class="list-img" onclick="zoomImg('${i.img}')">`:`<div class="list-img" style="background:#eee;display:flex;align-items:center;justify-content:center">📷</div>`}<div style="flex:1"><b>${i.name}</b><br><small>${i.price}円 ${i.note?`| ${i.note}`:''}</small></div><div class="btn-group"><button class="btn-sm" style="background:var(--suica-green)" onclick="toggleBought(${i.id})">✔</button><button class="btn-sm" style="background:#fdf5e6" onclick="editShopping(${i.id})">✎</button><button class="btn-sm" style="background:#eee;color:red" onclick="delShopping(${i.id})">✘</button></div>`;
+            b.appendChild(r);
+        });
+        l.appendChild(g);
+    }
+    let gT=0;const h=document.getElementById('ledgerHistoryGroups');h.innerHTML="";const hG={};
+    ledgerItems.forEach(i=>{
+        if(!hG[i.date])hG[i.date]={items:[],total:0};
+        hG[i.date].items.push(i);
+        if(i.cat!=='💰 儲值'){
+            let v=i.method==='TWD'?Math.round(i.amount/(wallet.rate||0.203)):i.amount;
+            hG[i.date].total+=v;gT+=v;
+        }
+    });
+    document.getElementById('grandTotalBanner').innerText=`總支出: ${gT} 円`;
+    document.getElementById('walletSummary').innerHTML=`<div class="summary-box">🍉 Suica<br>${wallet.suica}円</div><div class="summary-box">💴 現金<br>${wallet.cash}円</div><div class="summary-box">💳 刷卡<br>${wallet.credit||0}円</div><div class="summary-box">🇹🇼 台幣<br>${wallet.twd||0}元</div>`;
+    Object.keys(hG).sort((a,b)=>new Date(b)-new Date(a)).forEach(dt=>{
+        const d=document.createElement('div');
+        d.className="date-group";
+        d.innerHTML=`<div class="date-header" onclick="this.parentElement.classList.toggle('open')"><span>${dt}${getWeekday(dt)}</span><span style="color:#2980B9">${hG[dt].total}円 ▾</span></div><div class="date-content"></div>`;
+        hG[dt].items.forEach(i=>{
+            const r=document.createElement('div');
+            r.style.padding="10px 0";r.style.borderBottom="1px solid #eee";r.style.display="flex";r.style.justifyContent="space-between";
+            const ic=i.method==='Credit'?'💳':(i.method==='Suica'?'🍉':(i.method==='Cash'?'💴':'🇹🇼'));
+            r.innerHTML=`<span>${i.cat.split(' ')[0]} ${ic}${i.name}</span><div style="display:flex;align-items:center;gap:8px"><b>${i.amount}${i.method==='TWD'?'元':'円'}</b><span onclick="delLedger(${i.id})" style="color:red;cursor:pointer;font-size:0.8rem">✘</span></div>`;
+            d.querySelector('.date-content').appendChild(r);
+        });
+        h.appendChild(d);
+    });
+    const ac=document.getElementById('analysisContent');ac.innerHTML="";const st={};let tA=0;
+    ledgerItems.forEach(i=>{
+        if(i.cat==='💰 儲值')return;
+        let v=i.method==='TWD'?Math.round(i.amount/(wallet.rate||0.203)):i.amount;
+        st[i.cat]=(st[i.cat]||0)+v;tA+=v;
+    });
+    Object.entries(st).sort((a,b)=>b[1]-a[1]).forEach(([c,v])=>{
+        const p=tA>0?Math.round((v/tA)*100):0;
+        ac.innerHTML+=`<div style="margin-bottom:15px"><div style="display:flex;justify-content:space-between;margin-bottom:5px"><strong>${c}</strong><span>${v}円 (${p}%)</span></div><div style="background:#eee;height:12px;border-radius:6px;overflow:hidden"><div style="background:var(--btn-active);height:100%;width:${p}%"></div></div></div>`;
+    });
+}
+
 function toggleShop(s,e){if(e.classList.contains('open')){openedShops.delete(s);e.classList.remove('open');}else{openedShops.add(s);e.classList.add('open');}}
 function zoomImg(s){document.getElementById('zoomedImg').src=s;document.getElementById('imgZoomModal').style.display='flex';}
 function toggleBought(id){const i=shoppingItems.find(x=>x.id===id);if(i)i.bought=!i.bought;sync();renderAll();}
 function delShopping(id){if(confirm("確定刪除？")){shoppingItems=shoppingItems.filter(x=>x.id!==id);sync();renderAll();}}
 function delLedger(id){if(confirm("刪除帳目？")){ledgerItems=ledgerItems.filter(x=>x.id!==id);sync();renderAll();}}
-function initCats(){const g=document.getElementById('catGrid');g.innerHTML="";categories.forEach(c=>{const d=document.createElement('div');d.className=`cat-item ${c===currentCat?'active':''}`;d.innerText=c;d.onclick=()=>{document.querySelectorAll('.cat-item').forEach(i=>i.classList.remove('active'));d.classList.add('active');currentCat=c};g.appendChild(d);});}
+
+function initCats(){
+    const g=document.getElementById('catGrid');g.innerHTML="";
+    categories.forEach(c=>{
+        const d=document.createElement('div');
+        d.className=`cat-item ${c===currentCat?'active':''}`;
+        d.innerText=c;
+        d.onclick=()=>{document.querySelectorAll('.cat-item').forEach(i=>i.classList.remove('active'));d.classList.add('active');currentCat=c};
+        g.appendChild(d);
+    });
+}
+
 function pressNum(n){if(n==='C')calcInput="0";else if(calcInput==="0")calcInput=n;else calcInput+=n;document.getElementById('calcDisplay').innerText=calcInput;}
 function closeModal(id){document.getElementById(id).style.display='none';}
+
 function saveShopping(){
-const n=document.getElementById('itemName').value;if(!n)return alert("品名?");const eid=document.getElementById('editId').value;
-if(eid){const i=shoppingItems.find(x=>x.id==eid);if(i){i.shop=document.getElementById('shopLoc').value||"未分類";i.name=n;i.price=document.getElementById('itemPrice').value||0;i.note=document.getElementById('itemNote').value||"";i.img=tempImgBase64;}}
-else{shoppingItems.push({id:Date.now(),shop:document.getElementById('shopLoc').value||"未分類",name:n,price:document.getElementById('itemPrice').value||0,note:document.getElementById('itemNote').value||"",img:tempImgBase64,bought:false});}
-tempImgBase64="";document.getElementById('previewImg').style.display='none';document.getElementById('imgTip').style.display='block';document.getElementById('editId').value="";document.getElementById('itemName').value="";document.getElementById('itemPrice').value="";document.getElementById('itemNote').value="";document.getElementById('shopLoc').value="";document.getElementById('saveBtn').innerText="新增到清單";sync();renderAll();switchTab('list',document.querySelectorAll('.nav-item')[1]);
+    const n=document.getElementById('itemName').value;if(!n)return alert("品名?");const eid=document.getElementById('editId').value;
+    if(eid){
+        const i=shoppingItems.find(x=>x.id==eid);
+        if(i){
+            i.shop=document.getElementById('shopLoc').value||"未分類";i.name=n;
+            i.price=document.getElementById('itemPrice').value||0;i.note=document.getElementById('itemNote').value||"";i.img=tempImgBase64;
+        }
+    } else {
+        shoppingItems.push({id:Date.now(),shop:document.getElementById('shopLoc').value||"未分類",name:n,price:document.getElementById('itemPrice').value||0,note:document.getElementById('itemNote').value||"",img:tempImgBase64,bought:false});
+    }
+    tempImgBase64="";document.getElementById('previewImg').style.display='none';document.getElementById('imgTip').style.display='block';
+    document.getElementById('editId').value="";document.getElementById('itemName').value="";document.getElementById('itemPrice').value="";
+    document.getElementById('itemNote').value="";document.getElementById('shopLoc').value="";document.getElementById('saveBtn').innerText="新增到清單";
+    sync();renderAll();switchTab('list',document.querySelectorAll('.nav-item')[1]);
 }
-function saveLedger(){const a=parseInt(calcInput);if(a<=0)return;const m=document.getElementById('payMethod').value,n=document.getElementById('ledgerNote').value||currentCat,d=document.getElementById('ledgerDate').value;if(currentCat==='💰 儲值'){wallet.cash-=a;wallet.suica+=a;}else{if(m==='Suica')wallet.suica-=a;else if(m==='Cash')wallet.cash-=a;else if(m==='TWD')wallet.twd-=a;else if(m==='Credit')wallet.credit=(wallet.credit||0)+a;}ledgerItems.unshift({id:Date.now(),name:n,amount:a,method:m,date:d,cat:currentCat});calcInput="0";document.getElementById('calcDisplay').innerText="0";document.getElementById('ledgerNote').value="";sync();renderAll();}
-function switchTab(t,e){document.querySelectorAll('.view-section').forEach(v=>v.classList.remove('active'));document.getElementById(t+'View').classList.add('active');document.querySelectorAll('.nav-item').forEach(i=>i.classList.remove('active'));e.classList.add('active');}
-function openSettings(){document.getElementById('setRate').value=wallet.rate;document.getElementById('setSuica').value=wallet.suica;document.getElementById('setCash').value=wallet.cash;document.getElementById('setCredit').value=wallet.credit||0;document.getElementById('setTwd').value=wallet.twd||0;document.getElementById('setModal').style.display='flex';}
-function saveSettings(){wallet.rate=parseFloat(document.getElementById('setRate').value)||0.203;wallet.suica=parseInt(document.getElementById('setSuica').value)||0;wallet.cash=parseInt(document.getElementById('setCash').value)||0;wallet.credit=parseInt(document.getElementById('setCredit').value)||0;wallet.twd=parseInt(document.getElementById('setTwd').value)||0;sync();renderAll();closeModal('setModal');}
+
+function saveLedger(){
+    const a=parseInt(calcInput);if(a<=0)return;
+    const m=document.getElementById('payMethod').value,n=document.getElementById('ledgerNote').value||currentCat,d=document.getElementById('ledgerDate').value;
+    if(currentCat==='💰 儲值'){wallet.cash-=a;wallet.suica+=a;}
+    else{
+        if(m==='Suica')wallet.suica-=a;else if(m==='Cash')wallet.cash-=a;else if(m==='TWD')wallet.twd-=a;else if(m==='Credit')wallet.credit=(wallet.credit||0)+a;
+    }
+    ledgerItems.unshift({id:Date.now(),name:n,amount:a,method:m,date:d,cat:currentCat});
+    calcInput="0";document.getElementById('calcDisplay').innerText="0";document.getElementById('ledgerNote').value="";
+    sync();renderAll();
+}
+
+function switchTab(t,e){
+    document.querySelectorAll('.view-section').forEach(v=>v.classList.remove('active'));
+    document.getElementById(t+'View').classList.add('active');
+    document.querySelectorAll('.nav-item').forEach(i=>i.classList.remove('active'));
+    e.classList.add('active');
+}
+
+function openSettings(){
+    document.getElementById('setRate').value=wallet.rate;
+    document.getElementById('setSuica').value=wallet.suica;
+    document.getElementById('setCash').value=wallet.cash;
+    document.getElementById('setCredit').value=wallet.credit||0;
+    document.getElementById('setTwd').value=wallet.twd||0;
+    document.getElementById('setModal').style.display='flex';
+}
+
+function saveSettings(){
+    wallet.rate=parseFloat(document.getElementById('setRate').value)||0.203;
+    wallet.suica=parseInt(document.getElementById('setSuica').value)||0;
+    wallet.cash=parseInt(document.getElementById('setCash').value)||0;
+    wallet.credit=parseInt(document.getElementById('setCredit').value)||0;
+    wallet.twd=parseInt(document.getElementById('setTwd').value)||0;
+    sync();renderAll();closeModal('setModal');
+}
 </script>
 </body>
 </html>
