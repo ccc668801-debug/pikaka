@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>Pika 買買助手</title>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+    --maca-yellow: #FFF2CC; --pika-brown: #5C4033; --bg-color: #FEF9EF;
+    --btn-active: #F3A05F; --tax-red: #FFADAD; --check-green: #A8D5BA;
+}
+
+/* 全面套用最圓潤字體 */
+* { 
+    font-family: 'Zen Maru Gothic', sans-serif !important; 
+    box-sizing: border-box; 
+    -webkit-font-smoothing: antialiased;
+    font-weight: 700; /* 加粗讓圓潤感更明顯 */
+}
+
+body { background: var(--bg-color); color: var(--pika-brown); margin: 0; padding-bottom: 90px; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
+
+/* Top Bar */
+.top-bar { background: #fff; padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--maca-yellow); position: sticky; top: 0; z-index: 1000; width: 100%; max-width: 420px; }
+
+.view-section { width: 100%; max-width: 420px; display: none; padding: 0 10px; }
+.active { display: block; }
+.pika-header { font-size: 1.5rem; color: var(--btn-active); text-align: center; margin: 15px 0; }
+
+.panel { background: #fff; padding: 15px; border-radius: 25px; border: 3px solid var(--maca-yellow); margin-bottom: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+
+input, textarea, select, button { 
+    width: 100%; padding: 12px; margin: 8px 0; border: 2px solid #eee; border-radius: 15px; 
+    font-size: 1rem; outline: none; background: #fff; color: var(--pika-brown);
+}
+
+.btn-main { background: var(--btn-active); border-radius: 20px; border: none; color: white; cursor: pointer; font-size: 1.1rem; margin-top: 10px; box-shadow: 0 4px 0 #d38446; }
+.btn-main:active { transform: translateY(2px); box-shadow: 0 2px 0 #d38446; }
+
+/* 清單樣式 */
+.friend-group { margin-bottom: 12px; border-radius: 20px; border: 2.5px solid var(--maca-yellow); background: #fff; overflow: hidden; }
+.friend-header { background: var(--maca-yellow); padding: 12px 15px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+.friend-content { display: none; padding: 8px; }
+.friend-group.open .friend-content { display: block; }
+
+.item-row { display: flex; align-items: center; padding: 12px 10px; border-bottom: 1px solid #eee; }
+.check-circle { width: 30px; height: 30px; border-radius: 50%; border: 2.5px solid #ddd; margin-right: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 1.1rem; transition: 0.2s; }
+.is-packed { background: var(--check-green); border-color: var(--check-green); color: white; }
+.packed-name { text-decoration: line-through; color: #bbb; opacity: 0.7; }
+
+.list-img { width: 65px; height: 65px; border-radius: 12px; object-fit: cover; margin-right: 12px; border: 1px solid #eee; }
+
+.btn-tax { width: auto !important; padding: 3px 10px !important; margin: 0 !important; border-radius: 10px !important; border: 1.5px solid var(--tax-red) !important; font-size: 0.8rem !important; color: var(--tax-red) !important; cursor: pointer; }
+.tax-active { background: var(--tax-red) !important; color: #fff !important; }
+
+.btn-copy { width: auto; background: #f5f5f5; border: none; padding: 6px 12px; border-radius: 12px; font-size: 0.85rem; color: #666; cursor: pointer; }
+
+/* Bottom Nav */
+.bottom-nav { position: fixed; bottom: 0; width: 100%; max-width: 420px; background: #fff; display: flex; justify-content: space-around; padding: 10px 10px calc(10px + env(safe-area-inset-bottom)); border-top: 3px solid var(--maca-yellow); z-index: 1000; }
+.nav-item { font-size: .9rem; cursor: pointer; text-align: center; color: #aaa; flex: 1; }
+.nav-item.active { color: var(--btn-active); }
+
+.modal { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; z-index: 3000; }
+.modal-content { background: #fff; width: 88%; max-width: 360px; padding: 20px; border-radius: 25px; border: 4px solid var(--maca-yellow); }
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+    <div style="color: var(--btn-active); font-size: 1.3rem;">Hi! Pika 買買</div>
+    <span onclick="openModal('settingModal')" style="cursor:pointer; font-size:1.5rem">⚙️</span>
+</div>
+
+<div id="addView" class="view-section active">
+    <h2 class="pika-header">買了什麼呢？</h2>
+    <div class="panel">
+        <select id="friendSelect"></select>
+        <input type="text" id="itemName" placeholder="商品名稱">
+        <input type="number" id="itemPrice" placeholder="日幣含稅價 (円)">
+        <textarea id="itemNote" placeholder="備註..." rows="2"></textarea>
+        <div onclick="document.getElementById('imgInput').click()" style="width:100%; height:110px; border:2.5px dashed #ddd; border-radius:20px; display:flex; align-items:center; justify-content:center; margin:10px 0; background:#fafafa; overflow:hidden;">
+            <img id="previewImg" style="display:none; width:100%; height:100%; object-fit:cover;">
+            <span id="imgTip" style="font-size:0.9rem; color:#aaa;">📸 拍照記錄</span>
+        </div>
+        <input type="file" id="imgInput" accept="image/*" style="display:none" onchange="handleImg(this)">
+        <button class="btn-main" onclick="saveItem()">加入清單</button>
+    </div>
+</div>
+
+<div id="listView" class="view-section">
+    <h2 class="pika-header">買買清單</h2>
+    <div id="friendList"></div>
+</div>
+
+<nav class="bottom-nav">
+    <div class="nav-item active" onclick="switchTab('add',this)"><div>🛍️</div><span>記錄</span></div>
+    <div class="nav-item" onclick="switchTab('list',this)"><div>📖</div><span>清單</span></div>
+</nav>
+
+<div id="settingModal" class="modal">
+    <div class="modal-content">
+        <h3 class="pika-header" style="margin-top:0;">設定與工具</h3>
+        <label style="font-size:0.85rem;">💰 當前匯率 (1日幣 = ?台幣)</label>
+        <input type="number" id="exRate" step="0.0001" onchange="updateRate()">
+        <label style="font-size:0.85rem; margin-top:10px; display:block;">👥 朋友名單</label>
+        <textarea id="friendListInput" rows="2"></textarea>
+        <button class="btn-main" onclick="saveFriends()">儲存設定</button>
+        <hr style="margin:15px 0; border:none; border-top:1px solid #eee;">
+        <div style="display:flex; gap:10px;">
+            <button class="btn-main" style="background:#bbb; box-shadow:0 4px 0 #999; font-size:0.85rem;" onclick="exportData()">📤 備份</button>
+            <button class="btn-main" style="background:#bbb; box-shadow:0 4px 0 #999; font-size:0.85rem;" onclick="document.getElementById('importFile').click()">📥 還原</button>
+        </div>
+        <input type="file" id="importFile" style="display:none" accept=".json" onchange="importData(this)">
+        <button onclick="closeModal('settingModal')" style="width:100%; background:none; border:none; margin-top:10px; color:#aaa; cursor:pointer;">關閉</button>
+    </div>
+</div>
+
+<div id="imgModal" class="modal" onclick="this.style.display='none'"><img id="zoomedImg" style="max-width:95%; max-height:85%; border-radius:15px; border:3px solid white;"></div>
+
+<script>
+let buyData = JSON.parse(localStorage.getItem('pika_v13_data')) || [];
+let friends = JSON.parse(localStorage.getItem('pika_v13_friends')) || ["未分類"];
+let rate = parseFloat(localStorage.getItem('pika_v13_rate')) || 0.21;
+let openGroups = JSON.parse(localStorage.getItem('pika_v13_open')) || {};
+let currentImg = "";
+
+window.onload = () => {
+    document.getElementById('exRate').value = rate;
+    document.getElementById('friendListInput').value = friends.join('\n');
+    updateFriendSelect();
+    renderList();
+};
+
+function saveFriends() {
+    const input = document.getElementById('friendListInput').value;
+    friends = input.split('\n').map(s => s.trim()).filter(s => s !== "");
+    if (friends.length === 0) friends = ["未分類"];
+    localStorage.setItem('pika_v13_friends', JSON.stringify(friends));
+    updateFriendSelect();
+    alert("設定已儲存！");
+    closeModal('settingModal');
+}
+
+function updateFriendSelect() {
+    const select = document.getElementById('friendSelect');
+    select.innerHTML = friends.map(f => `<option value="${f}">${f}</option>`).join('');
+}
+
+function handleImg(input) {
+    const file = input.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+            const canvas = document.createElement('canvas');
+            let w = img.width, h = img.height, max = 400;
+            if (w > h) { if (w > max) { h *= max / w; w = max; } }
+            else { if (h > max) { w *= max / h; h = max; } }
+            canvas.width = w; canvas.height = h;
+            canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+            currentImg = canvas.toDataURL('image/jpeg', 0.6);
+            document.getElementById('previewImg').src = currentImg;
+            document.getElementById('previewImg').style.display = 'block';
+            document.getElementById('imgTip').style.display = 'none';
+        };
+        img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+}
+
+function saveItem() {
+    const name = document.getElementById('itemName').value.trim();
+    const price = parseFloat(document.getElementById('itemPrice').value) || 0;
+    if (!name) return alert("要填寫商品名稱哦！");
+    buyData.push({
+        id: Date.now(),
+        friend: document.getElementById('friendSelect').value,
+        name: name, price: price,
+        note: document.getElementById('itemNote').value,
+        img: currentImg, isTaxFree: false, isPacked: false
+    });
+    saveLocal();
+    alert("新增完成！");
+    resetInput();
+}
+
+function resetInput() {
+    document.getElementById('itemName').value = "";
+    document.getElementById('itemPrice').value = "";
+    document.getElementById('itemNote').value = "";
+    document.getElementById('previewImg').style.display = 'none';
+    document.getElementById('imgTip').style.display = 'block';
+    currentImg = "";
+}
+
+function renderList() {
+    const listDiv = document.getElementById('friendList');
+    listDiv.innerHTML = "";
+    const groups = {};
+    buyData.forEach(i => {
+        if (!groups[i.friend]) groups[i.friend] = { items: [], totalTWD: 0 };
+        const p = i.isTaxFree ? Math.round(i.price / 1.1) : i.price;
+        i.actualPrice = p;
+        groups[i.friend].items.push(i);
+        groups[i.friend].totalTWD += p * rate;
+    });
+
+    for (let f in groups) {
+        const div = document.createElement('div');
+        div.className = 'friend-group' + (openGroups[f] ? ' open' : '');
+        let itemsHtml = groups[f].items.map(i => `
+            <div class="item-row">
+                <div class="check-circle ${i.isPacked?'is-packed':''}" onclick="togglePack(${i.id})">${i.isPacked?'✓':''}</div>
+                ${i.img ? `<img src="${i.img}" class="list-img" onclick="zoom('${i.img}')">` : `<div class="list-img" style="background:#f9f9f9; display:flex; align-items:center; justify-content:center; font-size:0.7rem; color:#ccc;">無圖</div>`}
+                <div style="flex:1">
+                    <div class="${i.isPacked?'packed-name':''}" style="font-size:1rem;">${i.name}</div>
+                    <div style="display:flex; align-items:center; gap:6px; margin-top:3px;">
+                        <span style="color:#d35400; font-size:0.9rem;">${i.actualPrice}円</span>
+                        <button class="btn-tax ${i.isTaxFree?'tax-active':''}" onclick="toggleTax(${i.id})">${i.isTaxFree?'已退':'退稅'}</button>
+                    </div>
+                </div>
+                <span onclick="delItem(${i.id})" style="color:#eee; cursor:pointer; padding:5px; font-size:1.1rem;">✕</span>
+            </div>
+        `).join('');
+
+        div.innerHTML = `
+            <div class="friend-header" onclick="toggleAccordion('${f}', this)">
+                <div style="flex:1;">
+                    ${f}：<span style="color:var(--btn-active); font-size:0.9rem; margin-left:5px;">NT$ ${Math.round(groups[f].totalTWD)} ▾</span>
+                </div>
+                <button class="btn-copy" onclick="event.stopPropagation(); copyBill('${f}')">📋 複製</button>
+            </div>
+            <div class="friend-content">${itemsHtml}</div>
+        `;
+        listDiv.appendChild(div);
+    }
+}
+
+function toggleAccordion(friend, el) {
+    const group = el.parentElement;
+    group.classList.toggle('open');
+    openGroups[friend] = group.classList.contains('open');
+    localStorage.setItem('pika_v13_open', JSON.stringify(openGroups));
+}
+
+function togglePack(id) {
+    const i = buyData.find(x => x.id === id);
+    if(i) { 
+        i.isPacked = !i.isPacked; 
+        saveLocal(); 
+        renderList(); // 渲染後，因為 openGroups 的記錄，清單不會收起來
+    }
+}
+
+function toggleTax(id) {
+    const i = buyData.find(x => x.id === id);
+    if(i) { i.isTaxFree = !i.isTaxFree; saveLocal(); renderList(); }
+}
+
+function copyBill(friendName) {
+    const group = buyData.filter(i => i.friend === friendName);
+    let total = 0;
+    let text = `${friendName}：\n`;
+    group.forEach(i => {
+        const p = i.isTaxFree ? Math.round(i.price / 1.1) : i.price;
+        text += `- ${i.name}：${p}円\n`;
+        total += p * rate;
+    });
+    text += `總計：NT$ ${Math.round(total)}`;
+    navigator.clipboard.writeText(text).then(() => alert("格式已複製！"));
+}
+
+function updateRate() {
+    rate = parseFloat(document.getElementById('exRate').value) || 0.21;
+    localStorage.setItem('pika_v13_rate', rate);
+    renderList();
+}
+
+function exportData() {
+    const b = new Blob([JSON.stringify({buyData, friends, rate})], {type:"application/json"});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(b);
+    a.download = `PikaBackup.json`;
+    a.click();
+}
+
+function importData(input) {
+    const f = input.files[0];
+    if(!f) return;
+    const r = new FileReader();
+    r.onload = (e) => {
+        const d = JSON.parse(e.target.result);
+        buyData = d.buyData; friends = d.friends; rate = d.rate;
+        saveLocal(); localStorage.setItem('pika_v13_friends', JSON.stringify(friends)); localStorage.setItem('pika_v13_rate', rate);
+        location.reload();
+    };
+    r.readAsText(f);
+}
+
+function saveLocal() { localStorage.setItem('pika_v13_data', JSON.stringify(buyData)); }
+function openModal(id) { document.getElementById(id).style.display='flex'; }
+function closeModal(id) { document.getElementById(id).style.display='none'; }
+function switchTab(t, el) {
+    document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active'));
+    document.getElementById(t+'View').classList.add('active');
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    el.classList.add('active');
+    if(t==='list') renderList();
+}
+function zoom(s) { document.getElementById('zoomedImg').src = s; document.getElementById('imgModal').style.display='flex'; }
+function delItem(id) { if(confirm("確定刪除這筆嗎？")) { buyData = buyData.filter(x => x.id !== id); saveLocal(); renderList(); } }
+</script>
+</body>
+</html>
