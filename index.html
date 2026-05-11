@@ -51,12 +51,13 @@
         .top-nav {
             display: flex; justify-content: space-around; align-items: center;
             height: 60px; background-color: var(--nav-bg); z-index: 100;
+            padding: 0 10px;
         }
 
         .tab-btn {
             background: rgba(255, 255, 255, 0.5); border: none;
-            padding: 8px 12px; border-radius: 12px; color: var(--text-color);
-            font-size: 0.85rem;
+            padding: 8px 8px; border-radius: 10px; color: var(--text-color);
+            font-size: 0.75rem; white-space: nowrap;
         }
 
         .tab-btn.active { background: var(--white); color: var(--accent-pink); font-weight: bold; }
@@ -67,7 +68,7 @@
         iframe.active { display: block; }
 
         /* 登出按鈕 */
-        .logout-btn { font-size: 0.7rem; opacity: 0.6; margin-top: 10px; cursor: pointer; text-decoration: underline; }
+        .logout-btn { font-size: 0.65rem; opacity: 0.6; cursor: pointer; text-decoration: underline; margin-left: 5px; }
     </style>
 </head>
 <body>
@@ -84,10 +85,11 @@
 
     <div id="main-content" class="main-wrapper">
         <div class="top-nav">
-            <button class="tab-btn active" onclick="showApp(1, this)">交通行程</button>
-            <button class="tab-btn" onclick="showApp(2, this)">地圖導航</button>
-            <button class="tab-btn" onclick="showApp(3, this)">購物清單</button>
-            <button class="tab-btn" onclick="showApp(4, this)">隨手筆記</button>
+            <button class="tab-btn active" onclick="showApp(1, this)">交通</button>
+            <button class="tab-btn" onclick="showApp(2, this)">地圖</button>
+            <button class="tab-btn" onclick="showApp(3, this)">購物</button>
+            <button class="tab-btn" onclick="showApp(5, this)">代買</button> <!-- 新增的按鈕 -->
+            <button class="tab-btn" onclick="showApp(4, this)">筆記</button>
             <div class="logout-btn" onclick="logout()">登出</div>
         </div>
 
@@ -95,6 +97,7 @@
             <iframe id="app1" src="" class="active"></iframe>
             <iframe id="app2" src=""></iframe>
             <iframe id="app3" src=""></iframe>
+            <iframe id="app5" src=""></iframe> <!-- 新增的內容區 -->
             <iframe id="app4" src=""></iframe>
         </div>
     </div>
@@ -104,7 +107,8 @@
             1: "transportation.html",
             2: "map.html",
             3: "shoppinglist.html",
-            4: "pikanote.html"
+            4: "pikanote.html",
+            5: "daimai.html" // 新增對應的檔案名稱
         };
 
         function handleLogin() {
@@ -137,11 +141,13 @@
             document.getElementById('login-overlay').style.display = 'none';
             document.getElementById('main-content').style.display = 'flex';
             
-            for (let i = 1; i <= 4; i++) {
+            // 更新循環範圍為 5，確保加載所有 iframe
+            [1, 2, 3, 4, 5].forEach(i => {
                 const frame = document.getElementById('app' + i);
-                // 傳遞 user 參數
-                frame.src = `${apps[i]}?user=${encodeURIComponent(username)}`;
-            }
+                if (frame) {
+                    frame.src = `${apps[i]}?user=${encodeURIComponent(username)}`;
+                }
+            });
         }
 
         function showApp(index, btn) {
