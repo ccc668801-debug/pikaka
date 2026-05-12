@@ -49,26 +49,81 @@
         .main-wrapper { display: none; height: 100%; flex-direction: column; }
 
         .top-nav {
-            display: flex; justify-content: space-around; align-items: center;
-            height: 60px; background-color: var(--nav-bg); z-index: 100;
-            padding: 0 10px;
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center;
+            height: 70px; /* 稍微加高，讓間距更好看 */
+            background-color: var(--nav-bg); 
+            z-index: 100;
+            padding: 0 12px;
+            gap: 8px; /* 按鈕之間的間距 */
+        }
+
+        /* 讓按鈕區域自動填滿 */
+        .nav-tabs-container {
+            display: flex;
+            flex: 1;
+            gap: 6px;
+            align-items: center;
         }
 
         .tab-btn {
-            background: rgba(255, 255, 255, 0.5); border: none;
-            padding: 8px 8px; border-radius: 10px; color: var(--text-color);
-            font-size: 0.75rem; white-space: nowrap;
+            flex: 1; /* 重要：讓按鈕自動平分空間 */
+            max-width: 80px; /* 限制最大寬度防止太扁 */
+            background: rgba(255, 255, 255, 0.4); 
+            border: none;
+            padding: 10px 4px; /* 增加上下高度，減少左右內距 */
+            border-radius: 14px; 
+            color: var(--text-color);
+            font-size: 0.85rem; /* 字體稍微加大 */
+            font-weight: 500;
+            white-space: nowrap;
+            display: none; 
+            text-align: center;
+            transition: all 0.3s ease;
         }
 
-        .tab-btn.active { background: var(--white); color: var(--accent-pink); font-weight: bold; }
+        .tab-btn.active { 
+            background: var(--white); 
+            color: var(--accent-pink); 
+            font-weight: bold;
+            box-shadow: 0 4px 10px rgba(255, 183, 178, 0.2);
+        }
 
         .content-area { flex: 1; width: 100%; padding-bottom: env(safe-area-inset-bottom); }
 
         iframe { width: 100%; height: 100%; border: none; display: none; }
         iframe.active { display: block; }
 
-        /* 登出按鈕 */
-        .logout-btn { font-size: 0.65rem; opacity: 0.6; cursor: pointer; text-decoration: underline; margin-left: 5px; }
+        /* 設定與登出 */
+        .nav-tools { 
+            display: flex; 
+            align-items: center; 
+            gap: 10px; 
+            margin-left: 5px;
+            padding-left: 5px;
+            border-left: 1px solid rgba(255,255,255,0.5);
+        }
+        .tool-btn { font-size: 1rem; cursor: pointer; opacity: 0.7; }
+        .logout-btn { font-size: 0.65rem; text-decoration: underline; color: var(--text-color); }
+
+        /* 設定彈窗樣式保持不變 */
+        #settings-modal {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+            display: none; justify-content: center; align-items: center; z-index: 10000;
+            backdrop-filter: blur(2px);
+        }
+        .settings-box {
+            background: white; padding: 25px; border-radius: 25px; width: 85%; max-width: 300px;
+            border: 3px solid var(--nav-bg);
+        }
+        .settings-box h3 { color: var(--accent-pink); margin-bottom: 20px; text-align: center; }
+        .setting-item { display: flex; align-items: center; margin: 15px 0; font-size: 1rem; }
+        .setting-item input { margin-right: 12px; width: 20px; height: 20px; accent-color: var(--accent-pink); }
+        .save-settings-btn {
+            width: 100%; padding: 12px; background: var(--accent-pink); color: white;
+            border: none; border-radius: 15px; margin-top: 10px; font-weight: bold; cursor: pointer;
+        }
     </style>
 </head>
 <body>
@@ -85,31 +140,47 @@
 
     <div id="main-content" class="main-wrapper">
         <div class="top-nav">
-            <button class="tab-btn active" onclick="showApp(1, this)">交通</button>
-            <button class="tab-btn" onclick="showApp(2, this)">地圖</button>
-            <button class="tab-btn" onclick="showApp(3, this)">購物</button>
-            <button class="tab-btn" onclick="showApp(5, this)">代買</button> <!-- 新增的按鈕 -->
-            <button class="tab-btn" onclick="showApp(4, this)">筆記</button>
-            <div class="logout-btn" onclick="logout()">登出</div>
+            <div class="nav-tabs-container" id="tabs-container">
+                <button class="tab-btn" id="btn-1" onclick="showApp(1, this)">交通</button>
+                <button class="tab-btn" id="btn-2" onclick="showApp(2, this)">地圖</button>
+                <button class="tab-btn" id="btn-3" onclick="showApp(3, this)">購物</button>
+                <button class="tab-btn" id="btn-5" onclick="showApp(5, this)">代買</button>
+                <button class="tab-btn" id="btn-4" onclick="showApp(4, this)">筆記</button>
+            </div>
+            
+            <div class="nav-tools">
+                <div class="tool-btn" onclick="toggleSettings()">⚙️</div>
+                <div class="tool-btn logout-btn" onclick="logout()">登出</div>
+            </div>
         </div>
 
         <div class="content-area">
-            <iframe id="app1" src="" class="active"></iframe>
+            <iframe id="app1" src=""></iframe>
             <iframe id="app2" src=""></iframe>
             <iframe id="app3" src=""></iframe>
-            <iframe id="app5" src=""></iframe> <!-- 新增的內容區 -->
+            <iframe id="app5" src=""></iframe>
             <iframe id="app4" src=""></iframe>
+        </div>
+    </div>
+
+    <div id="settings-modal">
+        <div class="settings-box">
+            <h3>介面顯示設定</h3>
+            <div id="settings-list"></div>
+            <button class="save-settings-btn" onclick="saveSettings()">儲存並更新</button>
         </div>
     </div>
 
     <script>
         const apps = {
-            1: "transportation.html",
-            2: "map.html",
-            3: "shoppinglist.html",
-            4: "pikanote.html",
-            5: "daimai.html" // 新增對應的檔案名稱
+            1: { name: "交通", file: "transportation.html" },
+            2: { name: "地圖", file: "map.html" },
+            3: { name: "購物", file: "shoppinglist.html" },
+            5: { name: "代買", file: "daimai.html" },
+            4: { name: "筆記", file: "pikanote.html" }
         };
+
+        let visibleApps = JSON.parse(localStorage.getItem('pika_visible_apps')) || [1, 2, 3, 5, 4];
 
         function handleLogin() {
             const u = document.getElementById('username').value.trim();
@@ -123,12 +194,11 @@
             }
 
             let users = JSON.parse(localStorage.getItem('pika_users') || '{}');
-            
             if (!users[u]) {
                 users[u] = p;
                 localStorage.setItem('pika_users', JSON.stringify(users));
             } else if (users[u] !== p) {
-                error.innerText = "密碼錯誤！此帳號已被註冊過。";
+                error.innerText = "密碼錯誤！";
                 error.style.display = 'block';
                 return;
             }
@@ -141,20 +211,73 @@
             document.getElementById('login-overlay').style.display = 'none';
             document.getElementById('main-content').style.display = 'flex';
             
-            // 更新循環範圍為 5，確保加載所有 iframe
-            [1, 2, 3, 4, 5].forEach(i => {
-                const frame = document.getElementById('app' + i);
+            applyVisibility();
+
+            Object.keys(apps).forEach(id => {
+                const frame = document.getElementById('app' + id);
                 if (frame) {
-                    frame.src = `${apps[i]}?user=${encodeURIComponent(username)}`;
+                    frame.src = `${apps[id].file}?user=${encodeURIComponent(username)}`;
                 }
+            });
+
+            const firstId = visibleApps[0];
+            if (firstId) {
+                showApp(firstId, document.getElementById('btn-' + firstId));
+            }
+        }
+
+        function applyVisibility() {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.style.display = 'none');
+            visibleApps.forEach(id => {
+                const btn = document.getElementById('btn-' + id);
+                if (btn) btn.style.display = 'block';
             });
         }
 
         function showApp(index, btn) {
             document.querySelectorAll('iframe').forEach(f => f.classList.remove('active'));
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById('app' + index).classList.add('active');
-            btn.classList.add('active');
+            
+            const targetFrame = document.getElementById('app' + index);
+            if (targetFrame) targetFrame.classList.add('active');
+            if (btn) btn.classList.add('active');
+        }
+
+        function toggleSettings() {
+            const modal = document.getElementById('settings-modal');
+            const list = document.getElementById('settings-list');
+            
+            if (modal.style.display === 'flex') {
+                modal.style.display = 'none';
+            } else {
+                list.innerHTML = Object.keys(apps).map(id => `
+                    <div class="setting-item">
+                        <input type="checkbox" id="chk-${id}" ${visibleApps.includes(parseInt(id)) ? 'checked' : ''}>
+                        <label for="chk-${id}">${apps[id].name}</label>
+                    </div>
+                `).join('');
+                modal.style.display = 'flex';
+            }
+        }
+
+        function saveSettings() {
+            const newVisible = [];
+            Object.keys(apps).forEach(id => {
+                if (document.getElementById('chk-' + id).checked) {
+                    newVisible.push(parseInt(id));
+                }
+            });
+
+            if (newVisible.length === 0) {
+                alert("請至少保留一個功能唷！");
+                return;
+            }
+
+            visibleApps = newVisible;
+            localStorage.setItem('pika_visible_apps', JSON.stringify(visibleApps));
+            applyVisibility();
+            showApp(visibleApps[0], document.getElementById('btn-' + visibleApps[0]));
+            toggleSettings();
         }
 
         function logout() {
