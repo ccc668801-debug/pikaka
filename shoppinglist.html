@@ -46,9 +46,14 @@ body{background:var(--bg-color);color:var(--pika-brown);margin:0;padding-bottom:
 input,select,textarea{width:100%;padding:10px;margin:5px 0;border:2px solid #eee;border-radius:12px;font-size:0.9rem;}
 .btn-main{width:100%;padding:12px;background:var(--btn-active);border-radius:20px;margin-top:10px;border:none;color:white;font-weight:bold;cursor:pointer;font-size:1rem;}
 .btn-outline{width:100%;padding:10px;background:#fff;border:2px solid #eee;border-radius:15px;margin-top:5px;cursor:pointer;font-size:0.85rem;color:#666;}
+
+/* 新增的成功提示樣式 */
+.toast-msg{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,0.75);color:#fff;padding:12px 24px;border-radius:50px;font-size:0.95rem;z-index:9999;display:none;font-weight:bold;box-shadow:0 4px 15px rgba(0,0,0,0.25);animation:toastFadeIn 0.2s ease-out;}
+@keyframes toastFadeIn{from{opacity:0;transform:translate(-50%,-40%);}to{opacity:1;transform:translate(-50%,-50%);}}
 </style>
 </head>
 <body>
+<div id="toastMessage" class="toast-msg">✨ 新增成功！</div>
 <div id="appInterface" style="width:100%;max-width:420px">
 <div class="top-bar">
 <div class="trip-selector">
@@ -60,13 +65,13 @@ input,select,textarea{width:100%;padding:10px;margin:5px 0;border:2px solid #eee
 </div>
 <div id="addView" class="view-section"><h2 class="pika-header">PikaBuy</h2><div class="panel"><input type="hidden" id="editId"><input type="text" id="shopLoc" placeholder="地點"><input type="text" id="itemName" placeholder="品名"><input type="number" id="itemPrice" placeholder="預估單價 (円)"><textarea id="itemNote" placeholder="備註..." rows="2"></textarea><div class="img-preview-box" onclick="document.getElementById('imgInput').click()" style="width:100%;height:100px;border:2px dashed #ccc;border-radius:12px;display:flex;align-items:center;justify-content:center;margin:10px 0;background:#fafafa;overflow:hidden;"><img id="previewImg" style="display:none;width:100%;height:100%;object-fit:cover;"><span id="imgTip" style="font-size:0.8rem">📸 上傳圖片</span></div><input type="file" id="imgInput" accept="image/*" style="display:none" onchange="handleImg(this)"><button class="btn-main" id="saveBtn" onclick="saveShopping()">新增到清單</button></div></div>
 <div id="listView" class="view-section active"><h2 class="pika-header">Pika List</h2><div id="listItemsGrouped"></div></div>
-<div id="ledgerView" class="view-section"><div class="panel" style="margin-top:20px;padding:12px;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><input type="date" id="ledgerDate" style="width:130px;margin:0;padding:5px;font-size:0.8rem;"><span style="font-size:0.75rem;color:#999;">Quick Pay</span></div><div class="calc-display" id="calcDisplay">0</div><select id="payMethod" style="padding:8px;"><option value="Cash">💴 現金 (JPY)</option><option value="Suica">🍉 西瓜卡 (JPY)</option><option value="Credit">💳 信用卡 (JPY)</option><option value="TWD">🇹🇼 台幣 (TWD)</option></select><input type="text" id="ledgerNote" placeholder="備註..." style="padding:8px;"><div class="cat-grid" id="catGrid"></div><div class="calc-grid"><button class="calc-btn" onclick="pressNum('7')">7</button><button class="calc-btn" onclick="pressNum('8')">8</button><button class="calc-btn" onclick="pressNum('9')">9</button><button class="calc-btn" onclick="pressNum('4')">4</button><button class="calc-btn" onclick="pressNum('5')">5</button><button class="calc-btn" onclick="pressNum('6')">6</button><button class="calc-btn" onclick="pressNum('1')">1</button><button class="calc-btn" onclick="pressNum('2')">2</button><button class="calc-btn" onclick="pressNum('3')">3</button><button class="calc-btn" onclick="pressNum('C')" style="color:red">C</button><button class="calc-btn" onclick="pressNum('0')">0</button><button class="calc-btn btn-ok" onclick="saveLedger()">OK</button></div></div></div>
-<div id="historyView" class="view-section"><h2 class="pika-header">MoneyByebye</h2><div class="total-banner" id="grandTotalBanner">總支出: 0 円</div><div id="walletSummary" style="display:flex;gap:5px;margin-bottom:15px"></div><div id="ledgerHistoryGroups"></div></div>
+<div id="ledgerView" class="view-section"><div class="panel" style="margin-top:20px;padding:12px;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><input type="date" id="ledgerDate" style="width:130px;margin:0;padding:5px;font-size:0.8rem;"><div style="display:flex;align-items:center;gap:6px;"><span id="twdCalcRealtime" style="font-size:0.85rem;color:#2980B9;font-weight:bold;"></span><span style="font-size:0.75rem;color:#999;">Quick Pay</span></div></div><div class="calc-display" id="calcDisplay">0</div><select id="payMethod" style="padding:8px;" onchange="updateRealtimeCalc()"><option value="Cash">💴 現金 (JPY)</option><option value="Suica">🍉 西瓜卡 (JPY)</option><option value="Credit">💳 信用卡 (JPY)</option><option value="TWD">🇹🇼 台幣 (TWD)</option></select><input type="text" id="ledgerNote" placeholder="備註..." style="padding:8px;"><div class="cat-grid" id="catGrid"></div><div class="calc-grid"><button class="calc-btn" onclick="pressNum('7')">7</button><button class="calc-btn" onclick="pressNum('8')">8</button><button class="calc-btn" onclick="pressNum('9')">9</button><button class="calc-btn" onclick="pressNum('4')">4</button><button class="calc-btn" onclick="pressNum('5')">5</button><button class="calc-btn" onclick="pressNum('6')">6</button><button class="calc-btn" onclick="pressNum('1')">1</button><button class="calc-btn" onclick="pressNum('2')">2</button><button class="calc-btn" onclick="pressNum('3')">3</button><button class="calc-btn" onclick="pressNum('C')" style="color:red">C</button><button class="calc-btn" onclick="pressNum('0')">0</button><button class="calc-btn btn-ok" onclick="saveLedger()">OK</button></div></div></div>
+<div id="historyView" class="view-section"><h2 class="pika-header">MoneyByebye</h2><div class="total-banner" style="display:flex;justify-content:space-between;align-items:center;padding:10px 15px;"><div id="grandTotalBanner" style="display:flex;flex-direction:column;align-items:flex-start;gap:2px;font-size:1rem;"><span>總支出: 0 円</span><span style="font-size:0.8rem;color:#666;font-weight:normal;">(約 0 元 TWD)</span></div><button id="toggleTotalBtn" onclick="toggleTotalVisibility()" style="background:var(--maca-yellow);border:none;border-radius:10px;padding:6px 12px;cursor:pointer;font-size:0.75rem;color:var(--pika-brown);font-weight:bold;">👁️ 隱藏</button></div><div id="walletSummary" style="display:flex;gap:5px;margin-bottom:15px"></div><div id="ledgerHistoryGroups"></div></div>
 <div id="analysisView" class="view-section"><h2 class="pika-header">Pika Analysis</h2><div class="panel" id="analysisContent"></div></div>
 <nav class="bottom-nav"><div class="nav-item" onclick="switchTab('add',this)"><div>＋</div><span>新增</span></div><div class="nav-item active" onclick="switchTab('list',this)"><div>📋</div><span>清單</span></div><div class="nav-item" onclick="switchTab('ledger',this)"><div>👛</div><span>記帳</span></div><div class="nav-item" onclick="switchTab('history',this)"><div>💰</div><span>明細</span></div><div class="nav-item" onclick="switchTab('analysis',this)"><div>📊</div><span>分析</span></div></nav>
 </div>
 
-<!-- 修改後的設定 Modal -->
+<!-- 設定 Modal -->
 <div id="setModal" class="modal"><div class="modal-content"><h3 style="margin-top:0;display:flex;justify-content:space-between;">⚙️ 設定<span onclick="closeModal('setModal')" style="cursor:pointer;color:#ccc;font-size:1.2rem">×</span></h3>
 <label>匯率 (1 JPY = ? TWD)</label><input type="number" id="setRate" step="0.001">
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
@@ -88,12 +93,12 @@ input,select,textarea{width:100%;padding:10px;margin:5px 0;border:2px solid #eee
 </div></div>
 
 <div id="imgZoomModal" class="modal" onclick="this.style.display='none'" style="background:rgba(0,0,0,0.9);"><img id="zoomedImg" style="max-width:95%;max-height:90%;border-radius:10px;border:2px solid #fff;"></div>
-
 <script>
 const getAccount=()=>localStorage.getItem('pika_current_user')||'guest',getDBKey=()=>`pika_${getAccount()}_money_v1`;
 let currentTripId="default",wallet={suica:0,cash:0,credit:0,rate:0.203,twd:0},shoppingItems=[],ledgerItems=[],trips={},currentCat="🍱 飲食",calcInput="0",tempImgBase64="";
 const categories=['🍱 飲食','💊 藥妝','🚌 交通','🛍️ 購物','👕 衣服','🍰 甜點','😎 皮卡丘','🍹 飲料','💰 儲值','🏷️ 其他'];
 let openedShops=new Set();
+let isTotalHidden=false;
 
 function getWeekday(d){if(!d)return "";const days=['日','一','二','三','四','五','六'],dt=new Date(d);return isNaN(dt.getTime())?"":` 週${days[dt.getDay()]}`;}
 
@@ -109,6 +114,14 @@ window.onload=function(){
     document.getElementById('ledgerDate').value=new Date().toISOString().split('T')[0];
     renderAll();
 };
+
+function showToast() {
+    const toast = document.getElementById('toastMessage');
+    toast.style.display = 'block';
+    setTimeout(() => {
+        toast.style.display = 'none';
+    }, 1500);
+}
 
 function toggleTripMenu(e){e.stopPropagation();const d=document.getElementById('tripDropdown');d.classList.toggle('show');if(d.classList.contains('show'))renderTripListMenu();}
 
@@ -167,7 +180,6 @@ function sync(){
     localStorage.setItem(getDBKey(),JSON.stringify(db));
 }
 
-// 優化後的匯出功能
 function exportData(){
     const dbRaw = localStorage.getItem(getDBKey());
     if(!dbRaw) return alert("尚無資料可匯出");
@@ -182,7 +194,6 @@ function exportData(){
     URL.revokeObjectURL(url);
 }
 
-// 優化後的匯入功能
 function importData(input){
     const file = input.files[0];
     if(!file) return;
@@ -208,7 +219,6 @@ function importData(input){
     reader.readAsText(file);
 }
 
-// 新增：清空當前旅程資料
 function clearCurrentTripData() {
     if(confirm(`確定要清空「${trips[currentTripId]}」的所有記帳與清單嗎？\n餘額也會歸零且無法復原！`)) {
         shoppingItems = [];
@@ -263,6 +273,23 @@ function editShopping(id){
     switchTab('add',document.querySelectorAll('.nav-item')[0]);
 }
 
+function updateRealtimeCalc() {
+    const m = document.getElementById('payMethod').value;
+    const amt = parseInt(calcInput) || 0;
+    const label = document.getElementById('twdCalcRealtime');
+    if (m === 'TWD' && amt > 0) {
+        let jpy = Math.round(amt / (wallet.rate || 0.203));
+        label.innerText = `≈ ${jpy} 円`;
+    } else {
+        label.innerText = "";
+    }
+}
+
+function toggleTotalVisibility() {
+    isTotalHidden = !isTotalHidden;
+    renderAll();
+}
+
 function renderAll(){
     const l=document.getElementById('listItemsGrouped');l.innerHTML="";const gs={};
     shoppingItems.forEach(i=>{if(!gs[i.shop])gs[i.shop]=[];gs[i.shop].push(i)});
@@ -288,7 +315,16 @@ function renderAll(){
             hG[i.date].total+=v;gT+=v;
         }
     });
-    document.getElementById('grandTotalBanner').innerText=`總支出: ${gT} 円`;
+    
+    let twdTotal = Math.round(gT * (wallet.rate || 0.203));
+    
+    if (isTotalHidden) {
+        document.getElementById('grandTotalBanner').innerHTML = `<span>總支出: **** 円</span><span style="font-size:0.8rem;color:#666;font-weight:normal;">(約 **** 元 TWD)</span>`;
+    } else {
+        document.getElementById('grandTotalBanner').innerHTML = `<span>總支出: ${gT} 円</span><span style="font-size:0.8rem;color:#666;font-weight:normal;">(約 ${twdTotal} 元 TWD)</span>`;
+    }
+    document.getElementById('toggleTotalBtn').innerText = isTotalHidden ? "👁️ 顯示" : "👁️ 隱藏";
+
     document.getElementById('walletSummary').innerHTML=`<div class="summary-box">🍉 Suica<br>${wallet.suica}円</div><div class="summary-box">💴 現金<br>${wallet.cash}円</div><div class="summary-box">💳 刷卡<br>${wallet.credit||0}円</div><div class="summary-box">🇹🇼 台幣<br>${wallet.twd||0}元</div>`;
     Object.keys(hG).sort((a,b)=>new Date(b)-new Date(a)).forEach(dt=>{
         const d=document.createElement('div');
@@ -319,7 +355,27 @@ function toggleShop(s,e){if(e.classList.contains('open')){openedShops.delete(s);
 function zoomImg(s){document.getElementById('zoomedImg').src=s;document.getElementById('imgZoomModal').style.display='flex';}
 function toggleBought(id){const i=shoppingItems.find(x=>x.id===id);if(i)i.bought=!i.bought;sync();renderAll();}
 function delShopping(id){if(confirm("確定刪除？")){shoppingItems=shoppingItems.filter(x=>x.id!==id);sync();renderAll();}}
-function delLedger(id){if(confirm("刪除帳目？")){ledgerItems=ledgerItems.filter(x=>x.id!==id);sync();renderAll();}}
+
+function delLedger(id){
+    if(confirm("刪除帳目？")){
+        const i = ledgerItems.find(x => x.id === id);
+        if(i) {
+            const a = i.amount;
+            if(i.cat === '💰 儲值') {
+                wallet.cash += a;
+                wallet.suica -= a;
+            } else {
+                if(i.method === 'Suica') wallet.suica += a;
+                else if(i.method === 'Cash') wallet.cash += a;
+                else if(i.method === 'TWD') wallet.twd += a;
+                else if(i.method === 'Credit') wallet.credit = Math.max(0, (wallet.credit || 0) - a);
+            }
+        }
+        ledgerItems=ledgerItems.filter(x=>x.id!==id);
+        sync();
+        renderAll();
+    }
+}
 
 function initCats(){
     const g=document.getElementById('catGrid');g.innerHTML="";
@@ -332,7 +388,13 @@ function initCats(){
     });
 }
 
-function pressNum(n){if(n==='C')calcInput="0";else if(calcInput==="0")calcInput=n;else calcInput+=n;document.getElementById('calcDisplay').innerText=calcInput;}
+function pressNum(n){
+    if(n==='C')calcInput="0";
+    else if(calcInput==="0")calcInput=n;
+    else calcInput+=n;
+    document.getElementById('calcDisplay').innerText=calcInput;
+    updateRealtimeCalc();
+}
 function closeModal(id){document.getElementById(id).style.display='none';}
 
 function saveShopping(){
@@ -361,6 +423,11 @@ function saveLedger(){
     }
     ledgerItems.unshift({id:Date.now(),name:n,amount:a,method:m,date:d,cat:currentCat});
     calcInput="0";document.getElementById('calcDisplay').innerText="0";document.getElementById('ledgerNote').value="";
+    document.getElementById('twdCalcRealtime').innerText="";
+    
+    // 儲存完畢後顯示成功提示
+    showToast();
+    
     sync();renderAll();
 }
 
