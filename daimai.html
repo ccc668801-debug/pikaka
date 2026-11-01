@@ -6,256 +6,401 @@
 <title>Pika 買買助手</title>
 <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700&display=swap" rel="stylesheet">
 <style>
-:root {
-    --maca-yellow: #FFF2CC; --pika-brown: #5C4033; --bg-color: #FEF9EF;
-    --btn-active: #F3A05F; --tax-red: #FFADAD; --check-green: #A8D5BA;
-    --deduct-bg: #E8F5E9;
-}
-
-* { 
-    font-family: 'Zen Maru Gothic', sans-serif !important; 
-    box-sizing: border-box; 
-    -webkit-font-smoothing: antialiased;
-    font-weight: 700;
-}
-
-body { background: var(--bg-color); color: var(--pika-brown); margin: 0; padding-bottom: 90px; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
-
-.top-bar { background: #fff; padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--maca-yellow); position: sticky; top: 0; z-index: 1000; width: 100%; max-width: 420px; }
-.view-section { width: 100%; max-width: 420px; display: none; padding: 0 10px; }
-.active { display: block; }
-.pika-header { font-size: 1.5rem; color: var(--btn-active); text-align: center; margin: 15px 0; }
-
-.panel { background: #fff; padding: 15px; border-radius: 25px; border: 3px solid var(--maca-yellow); margin-bottom: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
-
-input, textarea, select, button { 
-    width: 100%; padding: 12px; margin: 8px 0; border: 2px solid #eee; border-radius: 15px; 
-    font-size: 1rem; outline: none; background: #fff; color: var(--pika-brown);
-}
-
-.btn-main { background: var(--btn-active); border-radius: 20px; border: none; color: white; cursor: pointer; font-size: 1.1rem; margin-top: 10px; box-shadow: 0 4px 0 #d38446; }
-.btn-main:active { transform: translateY(2px); box-shadow: 0 2px 0 #d38446; }
-
-.friend-group { margin-bottom: 12px; border-radius: 20px; border: 2.5px solid var(--maca-yellow); background: #fff; overflow: hidden; }
-.friend-header { background: var(--maca-yellow); padding: 12px 15px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
-.friend-content { display: none; padding: 10px; background: #fff; }
-.friend-group.open .friend-content { display: block; }
-
-.deduct-box { background: #fffbf0; padding: 10px; border-radius: 18px; border: 2px dashed var(--btn-active); margin-bottom: 12px; display: flex; align-items: center; gap: 8px; transition: 0.3s; }
-.has-deduct { background: var(--deduct-bg); border-style: solid; border-color: var(--check-green); }
-.deduct-input { flex: 1; padding: 8px !important; margin: 0 !important; border-radius: 10px !important; text-align: center; border: 1px solid #ddd !important; }
-.deduct-btn { width: 35px !important; height: 35px !important; padding: 0 !important; margin: 0 !important; border-radius: 50% !important; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; flex-shrink: 0; border: none; cursor: pointer; }
-.btn-apply { background: var(--check-green); color: white; }
-.btn-clear { background: #eee; color: #999; }
-
-.item-row { display: flex; align-items: center; padding: 12px 10px; border-bottom: 1px solid #eee; }
-.check-circle { width: 30px; height: 30px; border-radius: 50%; border: 2.5px solid #ddd; margin-right: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 1.1rem; }
-.is-packed { background: var(--check-green); border-color: var(--check-green); color: white; }
-.packed-name { text-decoration: line-through; color: #bbb; opacity: 0.7; }
-
-.list-img { width: 65px; height: 65px; border-radius: 12px; object-fit: cover; margin-right: 12px; border: 1px solid #eee; }
-
-.btn-tax { width: auto !important; padding: 3px 10px !important; margin: 0 !important; border-radius: 10px !important; border: 1.5px solid var(--tax-red) !important; font-size: 0.8rem !important; color: var(--tax-red) !important; cursor: pointer; }
-.tax-active { background: var(--tax-red) !important; color: #fff !important; }
-
-.btn-copy { width: auto; background: #f5f5f5; border: none; padding: 6px 12px; border-radius: 12px; font-size: 0.85rem; color: #666; cursor: pointer; }
-
-.bottom-nav { position: fixed; bottom: 0; width: 100%; max-width: 420px; background: #fff; display: flex; justify-content: space-around; padding: 10px 10px calc(10px + env(safe-area-inset-bottom)); border-top: 3px solid var(--maca-yellow); z-index: 1000; }
-.nav-item { font-size: .9rem; cursor: pointer; text-align: center; color: #aaa; flex: 1; }
-.nav-item.active { color: var(--btn-active); }
-
-.modal { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; z-index: 3000; }
-.modal-content { background: #fff; width: 88%; max-width: 360px; padding: 20px; border-radius: 25px; border: 4px solid var(--maca-yellow); }
+:root{--maca-yellow:#FFF2CC;--pika-brown:#5C4033;--bg-color:#FEF9EF;--btn-active:#F3A05F;--tax-red:#FFADAD;--check-green:#A8D5BA;--deduct-bg:#E8F5E9;}
+*{font-family:'Zen Maru Gothic',sans-serif !important;box-sizing:border-box;-webkit-font-smoothing:antialiased;font-weight:700;}
+body{background:var(--bg-color);color:var(--pika-brown);margin:0;padding-bottom:90px;display:flex;flex-direction:column;align-items:center;min-height:100vh;}
+.top-bar{background:#fff;padding:10px 15px;display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid var(--maca-yellow);position:sticky;top:0;z-index:1000;width:100%;max-width:420px;}
+.view-section{width:100%;max-width:420px;display:none;padding:0 10px;}
+.active{display:block;}
+.pika-header{font-size:1.5rem;color:var(--btn-active);text-align:center;margin:15px 0;}
+.panel{background:#fff;padding:15px;border-radius:25px;border:3px solid var(--maca-yellow);margin-bottom:15px;box-shadow:0 4px 10px rgba(0,0,0,0.05);}
+input,textarea,select,button{width:100%;padding:12px;margin:8px 0;border:2px solid #eee;border-radius:15px;font-size:1rem;outline:none;background:#fff;color:var(--pika-brown);}
+.btn-main{background:var(--btn-active);border-radius:20px;border:none;color:white;cursor:pointer;font-size:1.1rem;margin-top:10px;box-shadow:0 4px 0 #d38446;}
+.btn-main:active{transform:translateY(2px);box-shadow:0 2px 0 #d38446;}
+.friend-group{margin-bottom:12px;border-radius:20px;border:2.5px solid var(--maca-yellow);background:#fff;overflow:hidden;}
+.friend-header{background:var(--maca-yellow);padding:12px 15px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;}
+.friend-content{display:none;padding:10px;background:#fff;}
+.friend-group.open .friend-content{display:block;}
+.deduct-box{background:#fffbf0;padding:10px;border-radius:18px;border:2.5px dashed var(--btn-active);margin-bottom:12px;display:none;flex-direction:column;gap:8px;transition:0.3s;}
+.deduct-box.show{display:flex;}
+.has-deduct{background:var(--deduct-bg);border-style:solid;border-color:var(--check-green);}
+.item-row{display:flex;align-items:center;padding:12px 10px;border-bottom:1px solid #eee;gap:8px;transition:0.2s;background:#fff;}
+.row-packed{background:#f4fbf7 !important;opacity:0.75;}
+.row-unpacked{background:#fff5f5 !important;opacity:0.65;}
+.row-normal{background:#fff !important;opacity:1;}
+.check-circle{width:26px;height:26px;border-radius:50%;border:2px solid #ddd;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:0.9rem;}
+.is-packed{background:var(--check-green);border-color:var(--check-green);color:white;}
+.cross-circle{width:26px;height:26px;border-radius:50%;border:2px solid #ddd;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:0.8rem;color:#aaa;}
+.is-unpacked{background:var(--tax-red);border-color:var(--tax-red);color:white;}
+.reset-circle{width:26px;height:26px;border-radius:50%;border:2px solid #ddd;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:0.75rem;background:#f9f9f9;color:#666;}
+.packed-name{text-decoration:line-through;color:#aaa;}
+.stat-row-packed{background:#f2f2f2 !important;opacity:0.4;}
+.list-img{width:55px;height:55px;border-radius:12px;object-fit:cover;border:1px solid #eee;flex-shrink:0;cursor:pointer;}
+.btn-tax{width:auto !important;padding:3px 8px !important;margin:0 !important;border-radius:8px !important;border:1.5px solid var(--tax-red) !important;font-size:0.75rem !important;color:var(--tax-red) !important;cursor:pointer;}
+.tax-active{background:var(--tax-red) !important;color:#fff !important;}
+.btn-sm-action{width:auto !important;padding:3px 8px !important;margin:0 !important;border-radius:8px !important;font-size:0.75rem !important;cursor:pointer;border:1.5px solid #ddd !important;background:#f9f9f9 !important;color:#666 !important;}
+.btn-copy{width:auto;background:#f5f5f5;border:none;padding:6px 12px;border-radius:12px;font-size:0.85rem;color:#666;cursor:pointer;}
+.bottom-nav{position:fixed;bottom:0;width:100%;max-width:420px;background:#fff;display:flex;justify-content:space-around;padding:10px 10px calc(10px + env(safe-area-inset-bottom));border-top:3px solid var(--maca-yellow);z-index:1000;}
+.nav-item{font-size:.8rem;cursor:pointer;text-align:center;color:#aaa;flex:1;}
+.nav-item.active{color:var(--btn-active);}
+.modal{position:fixed;inset:0;background:rgba(254,249,239,0.85);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;z-index:3000;}
+.modal-content{background:#fff;width:88%;max-width:360px;padding:20px;border-radius:25px;border:4px solid var(--maca-yellow);max-height:90vh;overflow-y:auto;box-shadow:0 10px 25px rgba(92,64,51,0.15);}
 </style>
 </head>
 <body>
-
 <div class="top-bar">
-    <div style="color: var(--btn-active); font-size: 1.3rem;">Hi! </div>
-    <span onclick="openModal('settingModal')" style="cursor:pointer; font-size:1.5rem">⚙️</span>
+    <div style="color:var(--btn-active);font-size:1.3rem;">Hi!</div>
+    <span onclick="openModal('settingModal')" style="cursor:pointer;font-size:1.5rem">⚙️</span>
 </div>
-
 <div id="addView" class="view-section active">
-    <h2 class="pika-header">買了什麼呢？</h2>
+    <h2 class="pika-header">代購商品</h2>
     <div class="panel">
         <select id="friendSelect"></select>
         <input type="text" id="itemName" placeholder="商品名稱">
-        <input type="number" id="itemPrice" placeholder="日幣含稅價 (円)">
-        <textarea id="itemNote" placeholder="備註..." rows="2"></textarea>
-        <div onclick="document.getElementById('imgInput').click()" style="width:100%; height:110px; border:2.5px dashed #ddd; border-radius:20px; display:flex; align-items:center; justify-content:center; margin:10px 0; background:#fafafa; overflow:hidden;">
-            <img id="previewImg" style="display:none; width:100%; height:100%; object-fit:cover;">
-            <span id="imgTip" style="font-size:0.9rem; color:#aaa;">📸 拍照記錄</span>
+        <div style="display:flex;gap:8px;">
+            <input type="number" id="itemPrice" placeholder="日幣含稅 (円)" style="flex:2;">
+            <input type="number" id="itemQty" value="1" placeholder="數量" style="flex:1;">
         </div>
-        <input type="file" id="imgInput" accept="image/*" style="display:none" onchange="handleImg(this)">
+        <input type="number" id="itemCustomRate" placeholder="此商品匯率 (留空用預設)">
+        <textarea id="itemNote" placeholder="備註 ." rows="2"></textarea>
+        <div onclick="document.getElementById('imgInput').click()" style="width:100%;height:110px;border:2.5px dashed #ddd;border-radius:20px;display:flex;align-items:center;justify-content:center;margin:10px 0;background:#fafafa;overflow:hidden;">
+            <img id="previewImg" style="display:none;width:100%;height:100%;object-fit:cover;">
+            <span id="imgTip" style="font-size:0.9rem;color:#aaa;">📸 拍照記錄</span>
+        </div>
+        <input type="file" id="imgInput" accept="image/*" style="display:none" onchange="handleImg(this,'previewImg')">
         <button class="btn-main" onclick="saveItem()">加入清單</button>
     </div>
 </div>
-
 <div id="listView" class="view-section">
     <h2 class="pika-header">買買清單</h2>
     <div id="friendList"></div>
 </div>
-
+<div id="statsView" class="view-section">
+    <h2 class="pika-header">商品統計與採購</h2>
+    <div id="profitDashboard" class="panel" style="background:#fff9e6;border-color:#f3a05f;display:none;padding:12px;font-size:0.85rem;line-height:1.5;">
+        <b>💰 代購利潤估算：</b><br>
+        預估總營收：<span id="statRev">NT$ 0</span> | 實際成本：<span id="statCost">NT$ 0</span><br>
+        預估總利潤：<span id="statProfit" style="color:#d35400;font-size:1.05rem;">NT$ 0</span>
+    </div>
+    <div class="panel" style="padding:10px;">
+        <input type="text" id="statSearch" placeholder="🔍 搜尋統計商品..." oninput="renderStats()" style="margin:0 0 10px 0;padding:8px;">
+        <div id="statsList"></div>
+    </div>
+</div>
 <nav class="bottom-nav">
     <div class="nav-item active" onclick="switchTab('add',this)"><div>🛍️</div><span>記錄</span></div>
     <div class="nav-item" onclick="switchTab('list',this)"><div>📖</div><span>清單</span></div>
+    <div class="nav-item" onclick="switchTab('stats',this)"><div>📊</div><span>統計</span></div>
 </nav>
-
 <div id="settingModal" class="modal">
     <div class="modal-content">
         <h3 class="pika-header" style="margin-top:0;">設定與工具</h3>
-        <label style="font-size:0.85rem;">💰 當前匯率 (1日幣 = ?台幣)</label>
-        <input type="number" id="exRate" step="0.0001" onchange="updateRate()">
-        <label style="font-size:0.85rem; margin-top:10px; display:block;">👥 朋友名單</label>
-        <textarea id="friendListInput" rows="2"></textarea>
-        <button class="btn-main" onclick="saveFriends()">儲存設定</button>
-        <hr style="margin:15px 0; border:none; border-top:1px solid #eee;">
-        <div style="display:flex; gap:10px;">
-            <button class="btn-main" style="background:#bbb; box-shadow:0 4px 0 #999; font-size:0.85rem;" onclick="exportData()">📤 備份</button>
-            <button class="btn-main" style="background:#bbb; box-shadow:0 4px 0 #999; font-size:0.85rem;" onclick="document.getElementById('importFile').click()">📥 還原</button>
+        <label style="font-size:0.85rem;">💱 預設客戶收費匯率</label>
+        <input type="number" id="exRate" step="0.0001">
+        <label style="font-size:0.85rem;margin-top:5px;display:block;">📉 實際換匯成本匯率 </label>
+        <input type="number" id="costRate" step="0.0001" placeholder="例如 0.215">
+        <label style="font-size:0.85rem;margin-top:5px;display:block;">👁️ 顯示利潤估算 Dashboard</label>
+        <select id="showProfitDash">
+            <option value="yes">顯示</option>
+            <option value="no">隱藏</option>
+        </select>
+        <label style="font-size:0.85rem;margin-top:5px;display:block;">🔢 小數點取整模式</label>
+        <select id="roundMode">
+            <option value="floor">無條件捨去 (例: 7120.5 ➔ 7120)</option>
+            <option value="round">四捨五入</option>
+            <option value="ceil">無條件進位</option>
+        </select>
+        <label style="font-size:0.85rem;margin-top:10px;display:block;">👥 名單 (一行一個)</label>
+        <textarea id="friendListInput" rows="3"></textarea>
+        <button class="btn-main" onclick="saveSettings()">儲存設定</button>
+        <hr style="margin:15px 0;border:none;border-top:1px solid #eee;">
+        <div style="display:flex;gap:10px;">
+            <button class="btn-main" style="background:#bbb;box-shadow:0 4px 0 #999;font-size:0.85rem;" onclick="exportData()">📤 備份</button>
+            <button class="btn-main" style="background:#bbb;box-shadow:0 4px 0 #999;font-size:0.85rem;" onclick="document.getElementById('importFile').click()">📥 還原</button>
         </div>
         <input type="file" id="importFile" style="display:none" accept=".json" onchange="importData(this)">
-        <button onclick="closeModal('settingModal')" style="width:100%; background:none; border:none; margin-top:10px; color:#aaa; cursor:pointer;">關閉</button>
+        <button onclick="closeModal('settingModal')" style="width:100%;background:none;border:none;margin-top:10px;color:#aaa;cursor:pointer;">關閉</button>
     </div>
 </div>
-
-<div id="imgModal" class="modal" onclick="this.style.display='none'"><img id="zoomedImg" style="max-width:95%; max-height:85%; border-radius:15px; border:3px solid white;"></div>
-
+<div id="copyModal" class="modal">
+    <div class="modal-content">
+        <h3 class="pika-header" style="margin-top:0;">📋 複製帳單設定</h3>
+        <div style="font-size:0.9rem;margin-bottom:10px;color:#666;">請勾選欄位：</div>
+        <label style="display:flex;align-items:center;gap:8px;margin:8px 0;font-weight:normal;"><input type="checkbox" id="cpNote" checked style="width:auto;margin:0;"> 顯示商品備註</label>
+        <label style="display:flex;align-items:center;gap:8px;margin:8px 0;font-weight:normal;"><input type="checkbox" id="cpTax" checked style="width:auto;margin:0;"> 顯示退稅標記</label>
+        <label style="display:flex;align-items:center;gap:8px;margin:8px 0;font-weight:normal;"><input type="checkbox" id="cpPrice" checked style="width:auto;margin:0;"> 顯示單價與總計</label>
+        <label style="display:flex;align-items:center;gap:8px;margin:8px 0;font-weight:normal;"><input type="checkbox" id="cpDeduct" checked style="width:auto;margin:0;"> 顯示已付訂金/抵扣明細</label>
+        <label style="display:flex;align-items:center;gap:8px;margin:8px 0;font-weight:normal;"><input type="checkbox" id="cpRate" checked style="width:auto;margin:0;"> 顯示適用匯率與尾款金額</label>
+        <button class="btn-main" onclick="executeCopy()">確認複製文字</button>
+        <button onclick="closeModal('copyModal')" style="width:100%;background:none;border:none;margin-top:10px;color:#aaa;cursor:pointer;">取消</button>
+    </div>
+</div>
+<div id="editModal" class="modal">
+    <div class="modal-content">
+        <h3 class="pika-header" style="margin-top:0;">✏️ 編輯商品</h3>
+        <input type="hidden" id="editId">
+        <label style="font-size:0.8rem;">購買人</label>
+        <select id="editFriend"></select>
+        <label style="font-size:0.8rem;margin-top:5px;display:block;">商品名稱</label>
+        <input type="text" id="editName">
+        <div style="display:flex;gap:8px;">
+            <div style="flex:2;"><label style="font-size:0.8rem;">日幣含稅價</label><input type="number" id="editPrice"></div>
+            <div style="flex:1;"><label style="font-size:0.8rem;">數量</label><input type="number" id="editQty"></div>
+        </div>
+        <label style="font-size:0.8rem;margin-top:5px;display:block;">專屬匯率 (留空用預設)</label>
+        <input type="number" id="editCustomRate">
+        <label style="font-size:0.8rem;margin-top:5px;display:block;">備註</label>
+        <textarea id="editNote" rows="2"></textarea>
+        <div onclick="document.getElementById('editImgInput').click()" style="width:100%;height:90px;border:2.5px dashed #ddd;border-radius:15px;display:flex;align-items:center;justify-content:center;margin:8px 0;background:#fafafa;overflow:hidden;">
+            <img id="editPreviewImg" style="width:100%;height:100%;object-fit:cover;">
+        </div>
+        <input type="file" id="editImgInput" accept="image/*" style="display:none" onchange="handleImg(this,'editPreviewImg')">
+        <button class="btn-main" onclick="updateItem()">儲存修改</button>
+        <button onclick="closeModal('editModal')" style="width:100%;background:none;border:none;margin-top:10px;color:#aaa;cursor:pointer;">取消</button>
+    </div>
+</div>
+<div id="imgModal" class="modal" onclick="this.style.display='none'"><img id="zoomedImg" style="max-width:95%;max-height:85%;border-radius:15px;border:3px solid white;"></div>
 <script>
-let buyData = JSON.parse(localStorage.getItem('pika_v16_data')) || [];
-let friends = JSON.parse(localStorage.getItem('pika_v16_friends')) || ["未分類"];
-let rate = parseFloat(localStorage.getItem('pika_v16_rate')) || 0.21;
-let openGroups = JSON.parse(localStorage.getItem('pika_v16_open')) || {};
-let paidJPY = JSON.parse(localStorage.getItem('pika_v16_paid')) || {};
-let currentImg = "";
+function loadStorage(key,legacyKeys,defaultVal){
+    let val=localStorage.getItem(key);
+    if(val!==null){try{return JSON.parse(val);}catch(e){}}
+    for(let lKey of legacyKeys){
+        let lVal=localStorage.getItem(lKey);
+        if(lVal!==null){try{return JSON.parse(lVal);}catch(e){}}
+    }
+    return defaultVal;
+}
+let buyData=loadStorage('pika_v17_data',['pika_v16_data','pika_v15_data'],[]);
+let friends=loadStorage('pika_v17_friends',['pika_v16_friends','pika_v15_friends'],["未分類"]);
+let rate=parseFloat(localStorage.getItem('pika_v17_rate'))||parseFloat(localStorage.getItem('pika_v16_rate'))||0.21;
+let costRate=parseFloat(localStorage.getItem('pika_v17_costRate'))||0;
+let roundMode=localStorage.getItem('pika_v17_roundMode')||'floor';
+let showProfitDash=localStorage.getItem('pika_v17_showProfitDash')||'yes';
+let openGroups=loadStorage('pika_v17_open',['pika_v16_open'],{});
+let paidData=loadStorage('pika_v17_paid',['pika_v16_paid'],{});
+let currentImg="";
+let editCurrentImg="";
+let targetCopyFriend="";
 
-window.onload = () => {
-    document.getElementById('exRate').value = rate;
-    document.getElementById('friendListInput').value = friends.join('\n');
-    updateFriendSelect(); renderList();
+window.onload=()=>{
+    document.getElementById('exRate').value=rate;
+    document.getElementById('costRate').value=costRate;
+    document.getElementById('roundMode').value=roundMode;
+    document.getElementById('showProfitDash').value=showProfitDash;
+    document.getElementById('friendListInput').value=friends.join('\n');
+    updateFriendSelect();renderList();renderStats();
 };
 
-function saveFriends() {
-    const input = document.getElementById('friendListInput').value;
-    friends = input.split('\n').map(s => s.trim()).filter(s => s !== "");
-    if (friends.length === 0) friends = ["未分類"];
-    localStorage.setItem('pika_v16_friends', JSON.stringify(friends));
-    updateFriendSelect(); renderList(); closeModal('settingModal');
+function saveSettings(){
+    const input=document.getElementById('friendListInput').value;
+    friends=input.split('\n').map(s=>s.trim()).filter(s=>s!=="");
+    if(friends.length===0)friends=["未分類"];
+    rate=parseFloat(document.getElementById('exRate').value)||0.21;
+    costRate=parseFloat(document.getElementById('costRate').value)||0;
+    roundMode=document.getElementById('roundMode').value;
+    showProfitDash=document.getElementById('showProfitDash').value;
+    localStorage.setItem('pika_v17_friends',JSON.stringify(friends));
+    localStorage.setItem('pika_v17_rate',rate);
+    localStorage.setItem('pika_v17_costRate',costRate);
+    localStorage.setItem('pika_v17_roundMode',roundMode);
+    localStorage.setItem('pika_v17_showProfitDash',showProfitDash);
+    updateFriendSelect();renderList();renderStats();closeModal('settingModal');
+    alert("設定已儲存！");
 }
 
-function updateFriendSelect() {
-    const select = document.getElementById('friendSelect');
-    select.innerHTML = friends.map(f => `<option value="${f}">${f}</option>`).join('');
+function updateFriendSelect(){
+    const select=document.getElementById('friendSelect');
+    select.innerHTML=friends.map(f=>`<option value="${f}">${f}</option>`).join('');
+    const editSelect=document.getElementById('editFriend');
+    editSelect.innerHTML=friends.map(f=>`<option value="${f}">${f}</option>`).join('');
 }
 
-function handleImg(input) {
-    const file = input.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (e) => {
-        const img = new Image();
-        img.onload = () => {
-            const canvas = document.createElement('canvas');
-            let w = img.width, h = img.height, max = 400;
-            if (w > h) { if (w > max) { h *= max / w; w = max; } }
-            else { if (h > max) { w *= max / h; h = max; } }
-            canvas.width = w; canvas.height = h;
-            canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-            currentImg = canvas.toDataURL('image/jpeg', 0.6);
-            document.getElementById('previewImg').src = currentImg;
-            document.getElementById('previewImg').style.display = 'block';
-            document.getElementById('imgTip').style.display = 'none';
+function handleImg(input,targetImgId){
+    const file=input.files[0];
+    if(!file)return;
+    const reader=new FileReader();
+    reader.onload=(e)=>{
+        const img=new Image();
+        img.onload=()=>{
+            const canvas=document.createElement('canvas');
+            let w=img.width,h=img.height,max=400;
+            if(w>h){if(w>max){h*=max/w;w=max;}}
+            else{if(h>max){w*=max/h;h=max;}}
+            canvas.width=w;canvas.height=h;
+            canvas.getContext('2d').drawImage(img,0,0,w,h);
+            const base64=canvas.toDataURL('image/jpeg',0.6);
+            document.getElementById(targetImgId).src=base64;
+            document.getElementById(targetImgId).style.display='block';
+            if(targetImgId==='previewImg'){
+                currentImg=base64;
+                document.getElementById('imgTip').style.display='none';
+            }else{
+                editCurrentImg=base64;
+            }
         };
-        img.src = e.target.result;
+        img.src=e.target.result;
     };
     reader.readAsDataURL(file);
 }
 
-function saveItem() {
-    const name = document.getElementById('itemName').value.trim();
-    const price = parseFloat(document.getElementById('itemPrice').value) || 0;
-    if (!name) return alert("要寫名字唷！");
+function saveItem(){
+    const name=document.getElementById('itemName').value.trim();
+    const price=parseFloat(document.getElementById('itemPrice').value)||0;
+    const qty=parseInt(document.getElementById('itemQty').value)||1;
+    const customRate=parseFloat(document.getElementById('itemCustomRate').value)||"";
+    if(!name)return alert("要寫商品名稱唷！");
     buyData.push({
-        id: Date.now(),
-        friend: document.getElementById('friendSelect').value,
-        name: name, price: price,
-        note: document.getElementById('itemNote').value,
-        img: currentImg, isTaxFree: false, isPacked: false
+        id:Date.now(),
+        friend:document.getElementById('friendSelect').value,
+        name:name,price:price,qty:qty,boughtQty:qty,customRate:customRate,
+        note:document.getElementById('itemNote').value,
+        img:currentImg,isTaxFree:false,status:'normal',
+        boughtCount:0,statNote:"",isStatPacked:true
     });
-    saveLocal(); alert("成功加入清單！"); resetInput();
+    saveLocal();alert("✅ 新增完成！商品已成功加入清單。");
+    resetInput();renderList();renderStats();
 }
 
-function resetInput() {
-    document.getElementById('itemName').value = "";
-    document.getElementById('itemPrice').value = "";
-    document.getElementById('itemNote').value = "";
-    document.getElementById('previewImg').style.display = 'none';
-    document.getElementById('imgTip').style.display = 'block';
-    currentImg = "";
+function resetInput(){
+    document.getElementById('itemName').value="";
+    document.getElementById('itemPrice').value="";
+    document.getElementById('itemQty').value="1";
+    document.getElementById('itemCustomRate').value="";
+    document.getElementById('itemNote').value="";
+    document.getElementById('previewImg').style.display='none';
+    document.getElementById('imgTip').style.display='block';
+    currentImg="";
 }
 
-function applyDeduct(friend) {
-    const val = document.getElementById(`deduct-${friend}`).value;
-    paidJPY[friend] = parseFloat(val) || 0;
-    localStorage.setItem('pika_v16_paid', JSON.stringify(paidJPY));
+function calcMath(val){function getFriendPayInfo(f){
+    if(!paidData[f]){
+        let legacyPaid=JSON.parse(localStorage.getItem('pika_v16_paid')||'{}');
+        let oldJpy=legacyPaid[f]||0;
+        paidData[f]={jpy:oldJpy,twd:0,mode:'jpy'};
+    }
+    return paidData[f];
+}
+
+function toggleDeductBox(f){document.getElementById(`deductBox-${f}`).classList.toggle('show');}
+
+function setDeductMode(f,mode){
+    let info=getFriendPayInfo(f);
+    info.mode=mode;
+    ['both','jpy','twd'].forEach(m=>{
+        const btn=document.getElementById(`btnMode-${f}-${m}`);
+        if(btn){
+            btn.style.background=(m===mode)?'var(--btn-active)':'#eee';
+            btn.style.color=(m===mode)?'white':'#666';
+        }
+    });
+    document.getElementById(`inputJpyWrap-${f}`).style.display=(mode==='twd')?'none':'block';
+    document.getElementById(`inputTwdWrap-${f}`).style.display=(mode==='jpy')?'none':'block';
+}
+
+function applyDeduct(f){
+    let info=getFriendPayInfo(f);
+    info.jpy=parseFloat(document.getElementById(`deductJpy-${f}`).value)||0;
+    info.twd=parseFloat(document.getElementById(`deductTwd-${f}`).value)||0;
+    paidData[f]=info;
+    localStorage.setItem('pika_v17_paid',JSON.stringify(paidData));
     renderList();
 }
 
-function clearDeduct(friend) {
-    paidJPY[friend] = 0;
-    localStorage.setItem('pika_v16_paid', JSON.stringify(paidJPY));
+function clearDeduct(f){
+    paidData[f]={jpy:0,twd:0,mode:'jpy'};
+    localStorage.setItem('pika_v17_paid',JSON.stringify(paidData));
     renderList();
 }
 
-function renderList() {
-    const listDiv = document.getElementById('friendList');
-    listDiv.innerHTML = "";
-    const groups = {};
-    
-    buyData.forEach(i => {
-        if (!groups[i.friend]) groups[i.friend] = { items: [], totalJPY: 0 };
-        const p = i.isTaxFree ? Math.round(i.price / 1.1) : i.price;
-        i.actualPrice = p;
+function renderList(){
+    const listDiv=document.getElementById('friendList');
+    listDiv.innerHTML="";
+    const groups={};
+    buyData.forEach(i=>{
+        if(i.status===undefined)i.status='normal';
+        if(i.boughtQty===undefined)i.boughtQty=i.status==='unpacked'?0:(i.qty||1);
+        if(!groups[i.friend])groups[i.friend]={items:[],totalJPY:0};
+        const unitP=i.isTaxFree?Math.round(i.price/1.1):i.price;
+        i.actualPrice=unitP;
         groups[i.friend].items.push(i);
-        groups[i.friend].totalJPY += p;
+        if(i.status!=='unpacked')groups[i.friend].totalJPY+=(unitP*(i.boughtQty||0));
     });
 
-    for (let f in groups) {
-        const deduct = paidJPY[f] || 0;
-        const totalTWD = Math.max(0, (groups[f].totalJPY - deduct) * rate);
-        const hasDeduct = deduct > 0;
-
-        const div = document.createElement('div');
-        div.className = 'friend-group' + (openGroups[f] ? ' open' : '');
+    for(let f in groups){
+        const payInfo=getFriendPayInfo(f);
+        const itemTotalJPY=groups[f].totalJPY;
+        let effectiveJPY=Math.max(0,itemTotalJPY-(payInfo.jpy||0));
+        let finalTWD=calcMath(effectiveJPY*rate)-(payInfo.twd||0);
+        if(finalTWD<0)finalTWD=0;
+        const hasDeduct=(payInfo.jpy>0||payInfo.twd>0);
+        const div=document.createElement('div');
+        div.className='friend-group'+(openGroups[f]?' open':'');
         
-        let itemsHtml = groups[f].items.map(i => `
-            <div class="item-row">
-                <div class="check-circle ${i.isPacked?'is-packed':''}" onclick="togglePack(${i.id})">${i.isPacked?'✓':''}</div>
-                ${i.img ? `<img src="${i.img}" class="list-img" onclick="zoom('${i.img}')">` : `<div class="list-img" style="background:#f9f9f9; display:flex; align-items:center; justify-content:center; font-size:0.7rem; color:#ccc;">無圖</div>`}
-                <div style="flex:1">
-                    <div class="${i.isPacked?'packed-name':''}" style="font-size:1rem;">${i.name}</div>
-                    <div style="display:flex; align-items:center; gap:6px; margin-top:3px;">
-                        <span style="color:#d35400; font-size:0.9rem;">${i.actualPrice}円</span>
+        let allFriendItems=buyData.filter(x=>x.friend===f);
+        let itemsHtml=allFriendItems.map(i=>{
+            const totalQ=i.qty||1;
+            const bQ=i.boughtQty!==undefined?i.boughtQty:totalQ;
+            const status=i.status||'normal';
+            const isUnpacked=(status==='unpacked'||bQ===0);
+            const isPacked=(status==='packed');
+            const isPartial=(status==='normal'&&bQ>0&&bQ<totalQ);
+            
+            let rowClass='item-row row-normal';
+            if(isPacked)rowClass='item-row row-packed';
+            if(isUnpacked)rowClass='item-row row-unpacked';
+
+            return `
+            <div class="${rowClass}">
+                <div style="display:flex;gap:4px;align-items:center;flex-shrink:0;">
+                    <div class="check-circle ${isPacked?'is-packed':''}" onclick="setStatus(${i.id},'packed')" title="已買到">✓</div>
+                    <div class="cross-circle ${isUnpacked?'is-unpacked':''}" onclick="setStatus(${i.id},'unpacked')" title="未買到">✕</div>
+                    <div class="reset-circle" onclick="setStatus(${i.id},'normal')" title="還原白背景">🔄</div>
+                </div>
+                ${i.img?`<img src="${i.img}" class="list-img" onclick="zoom('${i.img}')">`:`<div class="list-img" style="background:#f9f9f9;display:flex;align-items:center;justify-content:center;font-size:0.65rem;color:#ccc;">無圖</div>`}
+                <div style="flex:1;min-width:0;">
+                    <div class="${isUnpacked?'packed-name':''}" style="font-size:0.95rem;word-break:break-all;">
+                        ${i.name} 
+                        ${totalQ>1?`<span style="font-size:0.8rem;color:#d35400;">(需${totalQ}/已買</span><input type="number" value="${bQ}" min="0" max="${totalQ}" onchange="updateBoughtQty(${i.id},this.value)" style="width:40px;padding:2px;text-align:center;font-size:0.8rem;border-radius:6px;border:1px solid #ddd;display:inline-block;margin:0;"><span style="font-size:0.8rem;color:#d35400;">)</span>`:``}
+                        ${isUnpacked?'<span style="color:#e74c3c;font-size:0.75rem;">(未買到)</span>':isPartial?'<span style="color:#e67e22;font-size:0.75rem;">(部分買到)</span>':''}
+                    </div>
+                    <div style="font-size:0.75rem;color:#888;">${i.note?'備註: '+i.note:''}</div>
+                    <div style="display:flex;align-items:center;gap:5px;margin-top:3px;flex-wrap:wrap;">
+                        <span style="color:#d35400;font-size:0.85rem;">${i.actualPrice*(isUnpacked?0:bQ)}円 (單價:${i.actualPrice})</span>
                         <button class="btn-tax ${i.isTaxFree?'tax-active':''}" onclick="toggleTax(${i.id})">${i.isTaxFree?'已退':'退稅'}</button>
+                        <button class="btn-sm-action" onclick="openEditModal(${i.id})">✏️ 編輯</button>
                     </div>
                 </div>
-                <span onclick="delItem(${i.id})" style="color:#eee; cursor:pointer; padding:5px; font-size:1.1rem;">✕</span>
+                <span onclick="delItem(${i.id})" style="color:#ddd;cursor:pointer;padding:5px;font-size:1.1rem;">✕</span>
             </div>
-        `).join('');
+        `;}).join('');
 
-        div.innerHTML = `
-            <div class="friend-header" onclick="toggleAccordion('${f}', this)">
-                <div style="flex:1;">
-                    ${f}：<span style="color:var(--btn-active); font-size:0.9rem; margin-left:5px;">NT$ ${Math.round(totalTWD)} ▾</span>
+        div.innerHTML=`
+            <div class="friend-header" onclick="toggleAccordion('${f}',this)">
+                <div style="flex:1;font-size:0.95rem;">${f}：<span style="color:var(--btn-active);margin-left:3px;">NT$ ${finalTWD} ▾</span></div>
+                <div style="display:flex;gap:6px;">
+                    <button class="btn-sm-action" onclick="event.stopPropagation();toggleDeductBox('${f}')">💳 抵扣/訂金</button>
+                    <button class="btn-copy" onclick="event.stopPropagation();openCopyModal('${f}')">📋 複製</button>
                 </div>
-                <button class="btn-copy" onclick="event.stopPropagation(); copyBill('${f}')">📋 複製</button>
             </div>
             <div class="friend-content">
-                <div class="deduct-box ${hasDeduct ? 'has-deduct' : ''}">
-                    <span style="font-size:0.8rem; flex-shrink:0;">抵扣日幣:</span>
-                    <input type="number" id="deduct-${f}" class="deduct-input" value="${deduct}" placeholder="0">
-                    <button class="deduct-btn btn-apply" onclick="applyDeduct('${f}')">✓</button>
-                    <button class="deduct-btn btn-clear" onclick="clearDeduct('${f}')">✕</button>
+                <div id="deductBox-${f}" class="deduct-box ${hasDeduct?'has-deduct':''}">
+                    <div style="display:flex;gap:4px;font-size:0.8rem;">
+                        <button id="btnMode-${f}-both" onclick="setDeductMode('${f}','both')" style="flex:1;padding:4px;border-radius:8px;border:none;background:${payInfo.mode==='both'?'var(--btn-active)':'#eee'};color:${payInfo.mode==='both'?'white':'#666'};">全抵扣</button>
+                        <button id="btnMode-${f}-jpy" onclick="setDeductMode('${f}','jpy')" style="flex:1;padding:4px;border-radius:8px;border:none;background:${payInfo.mode==='jpy'?'var(--btn-active)':'#eee'};color:${payInfo.mode==='jpy'?'white':'#666'};">僅日幣抵扣</button>
+                        <button id="btnMode-${f}-twd" onclick="setDeductMode('${f}','twd')" style="flex:1;padding:4px;border-radius:8px;border:none;background:${payInfo.mode==='twd'?'var(--btn-active)':'#eee'};color:${payInfo.mode==='twd'?'white':'#666'};">僅台幣訂金</button>
+                    </div>
+                    <div id="inputJpyWrap-${f}" style="display:${payInfo.mode==='twd'?'none':'block'};">
+                        <span style="font-size:0.75rem;color:#666;">已付/抵扣日幣：</span>
+                        <input type="number" id="deductJpy-${f}" class="deduct-input" value="${payInfo.jpy||0}" placeholder="0" style="padding:6px;width:100%;border-radius:8px;border:1px solid #ddd;">
+                    </div>
+                    <div id="inputTwdWrap-${f}" style="display:${payInfo.mode==='jpy'?'none':'block'};">
+                        <span style="font-size:0.75rem;color:#666;">已付/訂金台幣：</span>
+                        <input type="number" id="deductTwd-${f}" class="deduct-input" value="${payInfo.twd||0}" placeholder="0" style="padding:6px;width:100%;border-radius:8px;border:1px solid #ddd;">
+                    </div>
+                    <div style="display:flex;gap:6px;">
+                        <button class="btn-main" style="margin:0;padding:6px;font-size:0.9rem;" onclick="applyDeduct('${f}')">套用抵扣</button>
+                        <button class="btn-main" style="margin:0;padding:6px;font-size:0.9rem;background:#bbb;box-shadow:0 3px 0 #999;" onclick="clearDeduct('${f}')">清除</button>
+                    </div>
                 </div>
                 ${itemsHtml}
             </div>
@@ -264,86 +409,308 @@ function renderList() {
     }
 }
 
-function toggleAccordion(friend, el) {
-    const group = el.parentElement;
+    if(roundMode==='ceil')return Math.ceil(val);
+    if(roundMode==='round')return Math.round(val);
+    return Math.floor(val);
+}
+function toggleAccordion(friend,el){
+    const group=el.parentElement;
     group.classList.toggle('open');
-    openGroups[friend] = group.classList.contains('open');
-    localStorage.setItem('pika_v16_open', JSON.stringify(openGroups));
+    openGroups[friend]=group.classList.contains('open');
+    localStorage.setItem('pika_v17_open',JSON.stringify(openGroups));
 }
 
-function togglePack(id) {
-    const i = buyData.find(x => x.id === id);
-    if(i) { i.isPacked = !i.isPacked; saveLocal(); renderList(); }
+function setStatus(id,st){
+    const i=buyData.find(x=>x.id===id);
+    if(i){
+        i.status=st;
+        if(st==='packed')i.boughtQty=i.qty||1;
+        if(st==='unpacked')i.boughtQty=0;
+        if(st==='normal')i.boughtQty=i.qty||1;
+        saveLocal();renderList();renderStats();
+    }
 }
 
-function toggleTax(id) {
-    const i = buyData.find(x => x.id === id);
-    if(i) { i.isTaxFree = !i.isTaxFree; saveLocal(); renderList(); }
+function updateBoughtQty(id,val){
+    const i=buyData.find(x=>x.id===id);
+    if(i){
+        let q=parseInt(val);
+        if(isNaN(q))q=0;
+        if(q<0)q=0;
+        if(q>(i.qty||1))q=i.qty||1;
+        i.boughtQty=q;
+        i.status=q===0?'unpacked':'normal';
+        saveLocal();renderList();
+    }
 }
 
-function copyBill(friendName) {
-    const group = buyData.filter(i => i.friend === friendName);
-    const deduct = paidJPY[friendName] || 0;
-    let jpyTotal = 0;
-    let text = `${friendName} ：\n`;
-    
-    group.forEach(i => {
-        const p = i.isTaxFree ? Math.round(i.price / 1.1) : i.price;
-        // 如果有退稅，在名稱後面加標註
-        const taxLabel = i.isTaxFree ? " (已退稅)" : "";
-        text += `- ${i.name}${taxLabel}：${p}円\n`;
-        jpyTotal += p;
+function toggleTax(id){
+    const i=buyData.find(x=>x.id===id);
+    if(i){i.isTaxFree=!i.isTaxFree;saveLocal();renderList();renderStats();}
+}
+
+function openCopyModal(friendName){
+    targetCopyFriend=friendName;
+    openModal('copyModal');
+}
+
+function executeCopy(){
+    const friendName=targetCopyFriend;
+    closeModal('copyModal');
+    const group=buyData.filter(i=>i.friend===friendName);
+    const payInfo=getFriendPayInfo(friendName);
+    let jpyTotal=0;
+    let text=`${friendName} 代購明細：\n`;
+    const showNote=document.getElementById('cpNote').checked;
+    const showTax=document.getElementById('cpTax').checked;
+    const showPrice=document.getElementById('cpPrice').checked;
+    const showDeduct=document.getElementById('cpDeduct').checked;
+    const showRate=document.getElementById('cpRate').checked;
+
+    group.forEach(i=>{
+        const p=i.isTaxFree?Math.round(i.price/1.1):i.price;
+        const taxLabel=(showTax&&i.isTaxFree)?" (已退稅)":"";
+        const noteStr=(showNote&&i.note)?` [${i.note}]`:"";
+        const status=i.status||'normal';
+        const bQ=i.boughtQty!==undefined?i.boughtQty:(i.qty||1);
+        const totalQ=i.qty||1;
+        
+        if(status!=='unpacked'&&bQ>0){
+            const qtyStr=totalQ>1?` x ${bQ}`:(totalQ>1&&bQ<totalQ?` x ${bQ}/${totalQ}`:` x ${totalQ}`);
+            text+=`- ${i.name}${qtyStr}${taxLabel}${noteStr}`;
+            text+=showPrice?`：${p*bQ}円\n`:`\n`;
+            jpyTotal+=(p*bQ);
+        }
+        if(status==='unpacked'||bQ===0){
+            text+=`- ${i.name} x ${totalQ}${taxLabel}${noteStr} (未買到)\n`;
+        }
     });
-    
-    const finalTWD = Math.max(0, (jpyTotal - deduct) * rate);
-    text += `------------------\n`;
-    text += `商品總計：${jpyTotal}円\n`;
-    if(deduct > 0) text += `已付日幣抵扣：-${deduct}円 (已扣除)\n`;
-    text += `台幣：NT$ ${Math.round(finalTWD)} (匯率${rate})`;
-    
-    navigator.clipboard.writeText(text).then(() => alert("清單複製！"));
+
+    let effectiveJPY=Math.max(0,jpyTotal-(payInfo.jpy||0));
+    let finalTWD=calcMath(effectiveJPY*rate)-(payInfo.twd||0);
+    if(finalTWD<0)finalTWD=0;
+    let jpyTotalTwdEquivalent=calcMath(jpyTotal*rate);
+
+    text+=`------------------\n商品總計：${jpyTotal}円 (NT$ ${jpyTotalTwdEquivalent})\n`;
+    if(showDeduct&&(payInfo.jpy>0||payInfo.twd>0)){
+        if(payInfo.jpy>0)text+=`已付日幣抵扣：-${payInfo.jpy}円\n`;
+        if(payInfo.twd>0)text+=`已付台幣訂金：-NT$ ${payInfo.twd}\n`;
+    }
+    if(showRate)text+=`適用匯率：${rate}\n`;
+    text+=`👉 尾款：NT$ ${finalTWD}`;
+
+    if(navigator.clipboard&&navigator.clipboard.writeText){
+        navigator.clipboard.writeText(text).then(()=>alert("帳單文字已複製！")).catch(()=>fallbackCopyText(text));
+    }else{
+        fallbackCopyText(text);
+    }
 }
 
-function updateRate() {
-    rate = parseFloat(document.getElementById('exRate').value) || 0.21;
-    localStorage.setItem('pika_v16_rate', rate);
-    renderList();
+function fallbackCopyText(text){
+    const textArea=document.createElement("textarea");
+    textArea.value=text;
+    textArea.style.position="fixed";
+    document.body.appendChild(textArea);
+    textArea.focus();textArea.select();
+    try{
+        if(document.execCommand('copy'))alert("帳單文字已複製！");
+        else alert("複製失敗，請手動長按複製。");
+    }catch(err){
+        alert("複製失敗，請手動長按複製。");
+    }
+    document.body.removeChild(textArea);
 }
 
-function exportData() {
-    const b = new Blob([JSON.stringify({buyData, friends, rate, paidJPY})], {type:"application/json"});
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(b); a.download = `PikaBackup.json`; a.click();
+function renderStats(){
+    const keyword=document.getElementById('statSearch').value.toLowerCase();
+    const statsDiv=document.getElementById('statsList');
+    statsDiv.innerHTML="";
+    const map={};
+    let totalRevenueTWD=0,totalCostTWD=0;
+
+    buyData.forEach(i=>{
+        const unitP=i.isTaxFree?Math.round(i.price/1.1):i.price;
+        const itemEffectiveRate=i.customRate?i.customRate:rate;
+        const status=i.status||'normal';
+        const bQ=status==='unpacked'?0:(i.boughtQty!==undefined?i.boughtQty:(i.qty||1));
+        
+        totalRevenueTWD+=calcMath(unitP*bQ*itemEffectiveRate);
+        totalCostTWD+=costRate>0?calcMath(unitP*bQ*costRate):0;
+
+        if(!map[i.name]){
+            map[i.name]={name:i.name,price:unitP,img:i.img,totalNeedQty:0,totalBoughtQty:0,isStatPacked:true,notes:new Set(),ids:[]};
+        }
+        map[i.name].totalNeedQty+=(i.qty||1);
+        map[i.name].totalBoughtQty+=bQ;
+        if(bQ<(i.qty||1))map[i.name].isStatPacked=false;
+        if(i.statNote)map[i.name].notes.add(i.statNote);
+        map[i.name].ids.push(i.id);
+    });
+
+    const dash=document.getElementById('profitDashboard');
+    if(showProfitDash==='yes'&&costRate>0){
+        dash.style.display='block';
+        document.getElementById('statRev').innerText=`NT$ ${totalRevenueTWD}`;
+        document.getElementById('statCost').innerText=`NT$ ${totalCostTWD}`;
+        document.getElementById('statProfit').innerText=`NT$ ${totalRevenueTWD-totalCostTWD}`;
+    }else{
+        dash.style.display='none';
+    }
+
+    for(let key in map){
+        let item=map[key];
+        if(keyword&&!item.name.toLowerCase().includes(keyword))continue;
+        let notesArr=Array.from(item.notes).join(', ');
+        const card=document.createElement('div');
+        card.className=`item-row ${item.isStatPacked?'stat-row-packed':''}`;
+        card.style.borderRadius='12px';
+        card.style.margin='8px 0';
+        card.style.border='1px solid #eee';
+
+        card.innerHTML=`
+            <div class="check-circle ${item.isStatPacked?'is-packed':''}" onclick="toggleStatPackByName('${item.name}')">${item.isStatPacked?'✓':''}</div>
+            ${item.img?`<img src="${item.img}" class="list-img" onclick="zoom('${item.img}')">`:`<div class="list-img" style="background:#f9f9f9;display:flex;align-items:center;justify-content:center;font-size:0.65rem;color:#ccc;">無圖</div>`}
+            <div style="flex:1;min-width:0;">
+                <div class="${item.isStatPacked?'packed-name':''}" style="font-size:0.95rem;word-break:break-all;font-weight:700;">${item.name}</div>
+                <div style="font-size:0.8rem;color:#d35400;">單價: ${item.price}円</div>
+                <div style="display:flex;align-items:center;gap:6px;margin-top:4px;">
+                    <span style="font-size:0.75rem;color:#666;">已買/需要:</span>
+                    <input type="number" value="${item.totalBoughtQty}" onchange="updateStatQty('${item.name}',this.value)" style="width:55px;padding:3px;text-align:center;font-size:0.85rem;border-radius:6px;border:1px solid #ddd;margin:0;">
+                    <span style="font-size:0.8rem;color:#888;">/ ${item.totalNeedQty} 個</span>
+                </div>
+                <input type="text" value="${notesArr}" placeholder="採購備註..." onchange="updateStatNote('${item.name}',this.value)" style="margin:4px 0 0 0;padding:4px 8px;font-size:0.8rem;border-radius:8px;border:1px solid #ddd;">
+            </div>
+        `;
+        statsDiv.appendChild(card);
+    }
 }
 
-function importData(input) {
-    const f = input.files[0];
-    if(!f) return;
-    const r = new FileReader();
-    r.onload = (e) => {
-        const d = JSON.parse(e.target.result);
-        buyData = d.buyData; friends = d.friends; rate = d.rate; paidJPY = d.paidJPY || {};
-        saveLocal(); 
-        localStorage.setItem('pika_v16_friends', JSON.stringify(friends)); 
-        localStorage.setItem('pika_v16_rate', rate); 
-        localStorage.setItem('pika_v16_paid', JSON.stringify(paidJPY));
-        location.reload();
+function updateStatQty(itemName,val){
+    let newVal=parseInt(val)||0;
+    let matched=buyData.filter(x=>x.name===itemName);
+    if(matched.length>0){
+        let assign=Math.floor(newVal/matched.length);
+        matched.forEach((m,idx)=>{
+            m.boughtQty=(idx===0)?(newVal-assign*(matched.length-1)):assign;
+        });
+        saveLocal();renderStats();
+    }
+}
+
+function updateStatNote(itemName,val){
+    buyData.forEach(x=>{if(x.name===itemName)x.statNote=val;});
+    saveLocal();
+}
+
+function toggleStatPackByName(itemName){
+    let matched=buyData.filter(x=>x.name===itemName);
+    let allFull=matched.every(x=>x.boughtQty===(x.qty||1));
+    matched.forEach(x=>{
+        x.boughtQty=allFull?0:(x.qty||1);
+        x.status=allFull?'unpacked':'packed';
+    });
+    saveLocal();renderStats();
+}
+
+function openEditModal(id){
+    const i=buyData.find(x=>x.id===id);
+    if(!i)return;
+    document.getElementById('editId').value=i.id;
+    document.getElementById('editFriend').value=i.friend;
+    document.getElementById('editName').value=i.name;
+    document.getElementById('editPrice').value=i.price;
+    document.getElementById('editQty').value=i.qty||1;
+    document.getElementById('editCustomRate').value=i.customRate||"";
+    document.getElementById('editNote').value=i.note||"";
+    editCurrentImg=i.img||"";
+    if(editCurrentImg){
+        document.getElementById('editPreviewImg').src=editCurrentImg;
+        document.getElementById('editPreviewImg').style.display='block';
+    }else{
+        document.getElementById('editPreviewImg').style.display='none';
+    }
+    openModal('editModal');
+}
+
+function updateItem(){
+    const id=parseInt(document.getElementById('editId').value);
+    const i=buyData.find(x=>x.id===id);
+    if(!i)return;
+    i.friend=document.getElementById('editFriend').value;
+    i.name=document.getElementById('editName').value.trim();
+    i.price=parseFloat(document.getElementById('editPrice').value)||0;
+    const newQ=parseInt(document.getElementById('editQty').value)||1;
+    if(newQ<i.boughtQty)i.boughtQty=newQ;
+    i.qty=newQ;
+    i.customRate=parseFloat(document.getElementById('editCustomRate').value)||"";
+    i.note=document.getElementById('editNote').value;
+    i.img=editCurrentImg;
+    saveLocal();closeModal('editModal');renderList();renderStats();
+    alert("修改成功！");
+}
+
+function delItem(id){
+    if(confirm("確定要刪除這件商品嗎？")){
+        buyData=buyData.filter(x=>x.id!==id);
+        saveLocal();renderList();renderStats();
+    }
+}
+
+function exportData(){
+    const backupObj={buyData,friends,rate,costRate,roundMode,showProfitDash,paidData};
+    const b=new Blob([JSON.stringify(backupObj)],{type:"application/json"});
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(b);
+    a.download=`PikaBackup_v17.json`;
+    a.click();
+}
+
+function importData(input){
+    const f=input.files[0];
+    if(!f)return;
+    const r=new FileReader();
+    r.onload=(e)=>{
+        try{
+            const d=JSON.parse(e.target.result);
+            buyData=d.buyData||[];
+            friends=d.friends||["未分類"];
+            rate=d.rate||0.21;
+            costRate=d.costRate||0;
+            roundMode=d.roundMode||'floor';
+            showProfitDash=d.showProfitDash||'yes';
+            paidData=d.paidData||{};
+            saveLocal();
+            localStorage.setItem('pika_v17_friends',JSON.stringify(friends));
+            localStorage.setItem('pika_v17_rate',rate);
+            localStorage.setItem('pika_v17_costRate',costRate);
+            localStorage.setItem('pika_v17_roundMode',roundMode);
+            localStorage.setItem('pika_v17_showProfitDash',showProfitDash);
+            localStorage.setItem('pika_v17_paid',JSON.stringify(paidData));
+            alert("資料還原成功！");location.reload();
+        }catch(err){
+            alert("檔案格式錯誤，還原失敗！");
+        }
     };
     r.readAsText(f);
 }
 
-function saveLocal() { localStorage.setItem('pika_v16_data', JSON.stringify(buyData)); }
-function openModal(id) { document.getElementById(id).style.display='flex'; }
-function closeModal(id) { document.getElementById(id).style.display='none'; }
-function switchTab(t, el) {
-    document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active'));
+function saveLocal(){localStorage.setItem('pika_v17_data',JSON.stringify(buyData));}
+function openModal(id){document.getElementById(id).style.display='flex';}
+function closeModal(id){document.getElementById(id).style.display='none';}
+
+function switchTab(t,el){
+    document.querySelectorAll('.view-section').forEach(v=>v.classList.remove('active'));
     document.getElementById(t+'View').classList.add('active');
-    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
     el.classList.add('active');
-    if(t==='list') renderList();
+    if(t==='list')renderList();
+    if(t==='stats')renderStats();
 }
-function zoom(s) { document.getElementById('zoomedImg').src = s; document.getElementById('imgModal').style.display='flex'; }
-function delItem(id) { if(confirm("要刪除嗎？")) { buyData = buyData.filter(x => x.id !== id); saveLocal(); renderList(); } }
+
+function zoom(s){
+    document.getElementById('zoomedImg').src=s;
+    document.getElementById('imgModal').style.display='flex';
+}
 </script>
 </body>
 </html>
