@@ -44,6 +44,7 @@
         .dir-val { color: var(--pika-purple); font-size: 13px; font-weight: 500; margin: 2px 0; }
         .pay-val { font-size: 12px; font-weight: 700; color: var(--text-gray); margin-top: 2px; }
         .exit-val { font-size: 13px; color: #E67E22; font-weight: bold; margin-top: 2px; }
+        .platform-val { font-size: 13px; color: var(--pika-brown); font-weight: bold; margin-top: 2px; }
         .note-val { font-size: 13px; color: #888; margin-top: 8px; }
         .tool-btn { font-size: 12px; padding: 6px 10px; border-radius: 10px; border: 2px solid var(--pika-brown); background: #fff; cursor: pointer }
         .io-container { background: #fff; padding: 20px; border-radius: 30px; border: 3px dashed var(--pika-orange); margin: 30px 0; text-align: center }
@@ -88,220 +89,226 @@
                 </div>
                 <input type="file" id="importFile" style="display:none" accept=".json" onchange="importData(event)">
             </div>
-            <script>
-        const DB_KEY = 'PikaTravel_Stable_v1';
-        let currentTrip = "預設旅程", allTrips = {}, myFavColors = ["#FF9500", "#F62E36", "#009BDB", "#99CC00", "#9530B0"], expandedDates = new Set();
-
-        window.onload = function() { initApp(); };
-
-        function initApp() {
-            let db = JSON.parse(localStorage.getItem(DB_KEY)) || {
-                trips: {"預設旅程": []},
-                favColors: myFavColors,
-                lastTrip: "預設旅程"
-            };
-            allTrips = db.trips;
-            currentTrip = db.lastTrip || Object.keys(allTrips)[0];
-            myFavColors = db.favColors;
-            document.getElementById("dateInp").valueAsDate = new Date();
-            updateTripDropdown();
-            if (document.getElementById('stepContainer').children.length === 0) addStep();
-            render();
-        }
-
-        function updateTripDropdown() {
-            document.getElementById('tripSelect').innerHTML = Object.keys(allTrips).map(t => `<option value="${t}" ${t === currentTrip ? 'selected' : ''}>${t}</option>`).join('')
-        }
-
-        function switchTrip() {
-            currentTrip = document.getElementById('tripSelect').value;
-            sync(); render()
-        }
-
-        function addNewTrip() {
-            const n = prompt("新旅程名稱：");
-            if (n && !allTrips[n]) {
-                allTrips[n] = []; currentTrip = n;
-                updateTripDropdown(); sync(); render()
-            }
-        }
-
-        function renameTrip() {
-            const n = prompt("修改旅程名稱：", currentTrip);
-            if (n && n !== currentTrip) {
-                allTrips[n] = allTrips[currentTrip];
-                delete allTrips[currentTrip]; currentTrip = n;
-                updateTripDropdown(); sync()
-            }
-        }
-
-        function deleteTrip() {
-            if (Object.keys(allTrips).length <= 1) return alert("至少要保留一個旅程喔！");
-            if (confirm(`確定要刪除「${currentTrip}」整份旅程嗎？`)) {
-                delete allTrips[currentTrip];
-                currentTrip = Object.keys(allTrips)[0];
-                updateTripDropdown(); sync(); render()
-            }
-        }
-
-        function handleTimeInput(el) {
-            let val = el.value.replace(/分/g, '').trim();
-            if (val && !isNaN(val)) { el.value = val + "分"; }
-        }
-
-        function addStep(v = {}) {
-            const c = document.getElementById('stepContainer'), d = document.createElement('div');
-            d.className = 'step-box';
-            d.innerHTML = `
-                <div class="color-fav">${myFavColors.map(clr => `<div class="fav-dot" style="background:${clr}" onclick="this.parentElement.nextElementSibling.querySelector('.s-color').value='${clr}'"></div>`).join('')} <button class="tool-btn" onclick="saveColor(this)">存色</button></div>
-                <div style="display:flex;gap:5px">
-                    <input type="text" class="s-line" placeholder="路線" value="${v.line || ''}" style="flex:2">
-                    <input type="color" class="s-color" value="${v.color || myFavColors[0]}" style="flex:0.5;height:45px">
-                </div>
-                <input type="text" class="s-dir" placeholder="方向" value="${v.dir || ''}" style="margin-bottom:8px">
-                <div style="display:flex;gap:5px">
-                    <input type="text" class="s-start" placeholder="起站" value="${v.start || ''}" style="flex:1">
-                    <input type="text" class="s-end" placeholder="訖站" value="${v.end || ''}" style="flex:1">
-                </div>
-                <div style="display:flex;gap:5px">
-                    <input type="text" class="s-time" placeholder="時間" value="${v.time || ''}" style="flex:1" onblur="handleTimeInput(this)">
-                    <input type="number" class="s-price" placeholder="票價" value="${v.price || ''}" style="flex:1">
-                </div>
-                <div style="display:flex;gap:5px">
-                    <input type="text" class="s-exit" placeholder="出口" value="${v.exit || ''}" style="flex:1">
-                    <select class="s-pay" style="flex:1">
-                        <option value="Suica/IC卡" ${v.pay === 'Suica/IC卡' ? 'selected' : ''}>Suica/IC卡</option>
-                        <option value="JR券" ${v.pay === 'JR券' ? 'selected' : ''}>JR券</option>
-                        <option value="地鐵券" ${v.pay === '地鐵券' ? 'selected' : ''}>地鐵券</option>
-                        <option value="現金" ${v.pay === '現金' ? 'selected' : ''}>現金</option>
-                    </select>
-                </div>
-                <button style="position:absolute;top:5px;right:8px;border:none;background:none;color:red;font-size:18px" onclick="this.parentElement.remove()">✖</button>
-            `;
-            c.appendChild(d)
-        }
-
-        function saveColor(b) {
-            const clr = b.closest('.step-box').querySelector('.s-color').value;
-            if (!myFavColors.includes(clr)) {
-                myFavColors.unshift(clr); if (myFavColors.length > 5) myFavColors.pop();
-                sync();
-                document.querySelectorAll('.color-fav').forEach(div => {
-                    div.innerHTML = myFavColors.map(c => `<div class="fav-dot" style="background:${c}" onclick="this.parentElement.nextElementSibling.querySelector('.s-color').value='${c}'"></div>`).join('') + ' <button class="tool-btn" onclick="saveColor(this)">存色</button>'
-                })
-            }
-        }
-                function saveData() {
-            const dest = document.getElementById("destInp").value, eid = document.getElementById("editId").value, steps = [];
-            if (!dest) return alert("目的地呢？");
-            document.querySelectorAll('.step-box').forEach(b => {
-                steps.push({
-                    line: b.querySelector('.s-line').value, color: b.querySelector('.s-color').value,
-                    dir: b.querySelector('.s-dir').value, start: b.querySelector('.s-start').value,
-                    end: b.querySelector('.s-end').value, time: b.querySelector('.s-time').value,
-                    price: b.querySelector('.s-price').value, exit: b.querySelector('.s-exit').value,
-                    pay: b.querySelector('.s-pay').value, checked: false
-                })
-            });
-            const id = eid || Date.now().toString(), item = {
-                id, date: document.getElementById("dateInp").value, dest, steps,
-                note: document.getElementById("noteInp").value, visited: false
-            };
-            const idx = allTrips[currentTrip].findIndex(e => e.id === id);
-            if (idx > -1) allTrips[currentTrip][idx] = item; else allTrips[currentTrip].push(item);
-            sync(); render(); alert("已儲存！"); clearForm(); showList();
-        }
-
-        function sync() { localStorage.setItem(DB_KEY, JSON.stringify({trips: allTrips, favColors: myFavColors, lastTrip: currentTrip})) }
-
-        function clearForm() {
-            document.getElementById("destInp").value = ""; document.getElementById("noteInp").value = "";
-            document.getElementById("editId").value = ""; document.getElementById('stepContainer').innerHTML = "";
-            addStep(); document.getElementById("dateInp").valueAsDate = new Date();
-        }
-
-        function getWeekday(dateString) { return ['週日', '週一', '週二', '週三', '週四', '週五', '週六'][new Date(dateString).getDay()]; }
-
-        function render() {
-            const c = document.getElementById("listItems"); c.innerHTML = "";
-            const d = allTrips[currentTrip] || [], g = {};
-            d.forEach(i => { if (!g[i.date]) g[i.date] = []; g[i.date].push(i) });
-            Object.keys(g).sort().forEach(dt => {
-                let total = 0; g[dt].forEach(i => i.steps.forEach(s => total += Number(s.price) || 0));
-                const gd = document.createElement('div'), hd = document.createElement('div');
-                hd.className = 'date-group-header';
-                hd.innerHTML = `<div>📅 ${dt} (${getWeekday(dt)})</div><div class="total-orange">小計：${total}円 <span>▼</span></div>`;
-                const lt = document.createElement('div');
-                lt.style.display = expandedDates.has(dt) ? 'block' : 'none';
-                hd.onclick = () => {
-                    lt.style.display = lt.style.display === 'none' ? 'block' : 'none';
-                    lt.style.display === 'none' ? expandedDates.delete(dt) : expandedDates.add(dt)
-                };
-                g[dt].forEach(i => {
-                    let tp = 0, sh = "";
-                    i.steps.forEach((s, si) => {
-                        tp += Number(s.price) || 0;
-                        sh += `<div class="route-item ${s.checked ? 'checked' : ''}" style="border-left-color:${s.color}" ondblclick="event.stopPropagation();toggleStep('${i.id}',${si})">
-                            <div class="badge" style="background:${s.color}">${s.line}</div>
-                            <div class="station-text">${s.start} → ${s.end} <span class="time-val">${s.time}</span></div>
-                            ${s.dir ? `<div class="dir-val">往 ${s.dir}</div>` : ''}
-                            <div class="pay-val">${s.pay}</div>
-                            ${s.exit ? `<div class="exit-val">出口：${s.exit}</div>` : ''}
-                        </div>`;
-                    });
-                    const card = document.createElement('div');
-                    card.className = 'loc-card' + (i.visited ? ' checked-all' : '');
-                    card.ondblclick = () => { i.visited = !i.visited; sync(); render() };
-                    card.innerHTML = `<div class="card-header-row"><h3 class="dest-title">${i.dest}</h3><div class="price-label">${tp}円</div><div><button class="tool-btn" onclick="event.stopPropagation();moveItem('${i.id}',-1)">↑</button><button class="tool-btn" onclick="event.stopPropagation();moveItem('${i.id}',1)">↓</button></div></div><div class="route-bundle">${sh}</div><div class="note-val">備註：${i.note}</div><div style="text-align:right;margin-top:12px"><button class="tool-btn" onclick="event.stopPropagation();editItem('${i.id}')">修改</button><button class="tool-btn" style="color:red;margin-left:8px" onclick="event.stopPropagation();deleteItem('${i.id}')">刪除</button></div>`;
-                    lt.appendChild(card)
-                });
-                gd.appendChild(hd); gd.appendChild(lt); c.appendChild(gd)
-            })
-        }
-
-        function moveItem(id, dir) {
-            const d = allTrips[currentTrip], idx = d.findIndex(e => e.id === id);
-            if (idx === -1) return;
-            const td = d[idx].date, sd = d.filter(e => e.date === td), idxD = sd.findIndex(e => e.id === id), newD = idxD + dir;
-            if (newD < 0 || newD >= sd.length) return;
-            const tI = sd[newD], gT = d.findIndex(e => e.id === tI.id);
-            [d[idx], d[gT]] = [d[gT], d[idx]]; sync(); render()
-        }
-
-        function toggleStep(id, si) { const i = allTrips[currentTrip].find(e => e.id === id); if (i && i.steps[si]) { i.steps[si].checked = !i.steps[si].checked; sync(); render() } }
-
-        function editItem(id) {
-            const i = allTrips[currentTrip].find(e => e.id === id); if (!i) return;
-            document.getElementById("dateInp").value = i.date; document.getElementById("destInp").value = i.dest;
-            document.getElementById("noteInp").value = i.note; document.getElementById("editId").value = i.id;
-            document.getElementById('stepContainer').innerHTML = ""; i.steps.forEach(s => addStep(s)); showAdd()
-        }
-
-        function deleteItem(id) { if (confirm("確定刪除？")) { allTrips[currentTrip] = allTrips[currentTrip].filter(e => e.id !== id); sync(); render() } }
-
-        function showList() { document.getElementById("addView").classList.remove("active"); document.getElementById("listView").classList.add("active"); render() }
-
-        function showAdd() { if (!document.getElementById("editId").value) { clearForm(); } document.getElementById("addView").classList.add("active"); document.getElementById("listView").classList.remove("active") }
-
-        function exportData() {
-            const a = document.createElement("a");
-            a.href = URL.createObjectURL(new Blob([JSON.stringify(allTrips[currentTrip])], {type: "application/json"}));
-            a.download = `PikaTrip_${currentTrip}.json`; a.click()
-        }
-
-        function importData(e) {
-            const f = e.target.files[0]; if (!f) return;
-            const r = new FileReader();
-            r.onload = function(e) {
-                try {
-                    const d = JSON.parse(e.target.result), n = prompt("請為這份旅程命名：", "匯入的旅程");
-                    if (n) { allTrips[n] = d; currentTrip = n; updateTripDropdown(); sync(); render(); alert("匯入完成！") }
-                } catch (err) { alert("匯入失敗") }
-            };
-            r.readAsText(f); e.target.value = ""
-        }
-    </script>
-</body>
-</html>
         </div>
     </div>
+</body>
+</html>
+
+<script>
+    const DB_KEY = 'PikaTravel_Stable_v1';
+    let currentTrip = "預設旅程", allTrips = {}, myFavColors = ["#FF9500", "#F62E36", "#009BDB", "#99CC00", "#9530B0"], expandedDates = new Set();
+
+    window.onload = function() { initApp(); };
+
+    function initApp() {
+        let db = JSON.parse(localStorage.getItem(DB_KEY)) || {
+            trips: {"預設旅程": []},
+            favColors: myFavColors,
+            lastTrip: "預設旅程"
+        };
+        allTrips = db.trips;
+        currentTrip = db.lastTrip || Object.keys(allTrips)[0];
+        myFavColors = db.favColors;
+        document.getElementById("dateInp").valueAsDate = new Date();
+        updateTripDropdown();
+        if (document.getElementById('stepContainer').children.length === 0) addStep();
+        render();
+    }
+
+    function updateTripDropdown() {
+        document.getElementById('tripSelect').innerHTML = Object.keys(allTrips).map(t => `<option value="${t}" ${t === currentTrip ? 'selected' : ''}>${t}</option>`).join('')
+    }
+
+    function switchTrip() {
+        currentTrip = document.getElementById('tripSelect').value;
+        sync(); render()
+    }
+
+    function addNewTrip() {
+        const n = prompt("新旅程名稱：");
+        if (n && !allTrips[n]) {
+            allTrips[n] = []; currentTrip = n;
+            updateTripDropdown(); sync(); render()
+        }
+    }
+
+    function renameTrip() {
+        const n = prompt("修改旅程名稱：", currentTrip);
+        if (n && n !== currentTrip) {
+            allTrips[n] = allTrips[currentTrip];
+            delete allTrips[currentTrip]; currentTrip = n;
+            updateTripDropdown(); sync()
+        }
+    }
+
+    function deleteTrip() {
+        if (Object.keys(allTrips).length <= 1) return alert("至少要保留一個旅程喔！");
+        if (confirm(`確定要刪除「${currentTrip}」整份旅程嗎？`)) {
+            delete allTrips[currentTrip];
+            currentTrip = Object.keys(allTrips)[0];
+            updateTripDropdown(); sync(); render()
+        }
+    }
+
+    function handleTimeInput(el) {
+        let val = el.value.replace(/分/g, '').trim();
+        if (val && !isNaN(val)) { el.value = val + "分"; }
+    }
+
+    function addStep(v = {}) {
+        const c = document.getElementById('stepContainer'), d = document.createElement('div');
+        d.className = 'step-box';
+        d.innerHTML = `
+            <div class="color-fav">${myFavColors.map(clr => `<div class="fav-dot" style="background:${clr}" onclick="this.parentElement.nextElementSibling.querySelector('.s-color').value='${clr}'"></div>`).join('')} <button class="tool-btn" onclick="saveColor(this)">存色</button></div>
+            <div style="display:flex;gap:5px">
+                <input type="text" class="s-line" placeholder="路線" value="${v.line || ''}" style="flex:2">
+                <input type="color" class="s-color" value="${v.color || myFavColors[0]}" style="flex:0.5;height:45px">
+            </div>
+            <div style="display:flex;gap:5px">
+                <input type="text" class="s-dir" placeholder="方向" value="${v.dir || ''}" style="flex:1">
+                <input type="text" class="s-platform" placeholder="月台 (例如: 3月台)" value="${v.platform || ''}" style="flex:1">
+            </div>
+            <div style="display:flex;gap:5px">
+                <input type="text" class="s-start" placeholder="起站" value="${v.start || ''}" style="flex:1">
+                <input type="text" class="s-end" placeholder="訖站" value="${v.end || ''}" style="flex:1">
+            </div>
+            <div style="display:flex;gap:5px">
+                <input type="text" class="s-time" placeholder="時間" value="${v.time || ''}" style="flex:1" onblur="handleTimeInput(this)">
+                <input type="number" class="s-price" placeholder="票價" value="${v.price || ''}" style="flex:1">
+            </div>
+            <div style="display:flex;gap:5px">
+                <input type="text" class="s-exit" placeholder="出口" value="${v.exit || ''}" style="flex:1">
+                <select class="s-pay" style="flex:1">
+                    <option value="Suica/IC卡" ${v.pay === 'Suica/IC卡' ? 'selected' : ''}>Suica/IC卡</option>
+                    <option value="JR券" ${v.pay === 'JR券' ? 'selected' : ''}>JR券</option>
+                    <option value="地鐵券" ${v.pay === '地鐵券' ? 'selected' : ''}>地鐵券</option>
+                    <option value="現金" ${v.pay === '現金' ? 'selected' : ''}>現金</option>
+                </select>
+            </div>
+            <button style="position:absolute;top:5px;right:8px;border:none;background:none;color:red;font-size:18px" onclick="this.parentElement.remove()">✖</button>
+        `;
+        c.appendChild(d)
+    }
+
+    function saveColor(b) {
+        const clr = b.closest('.step-box').querySelector('.s-color').value;
+        if (!myFavColors.includes(clr)) {
+            myFavColors.unshift(clr); if (myFavColors.length > 5) myFavColors.pop();
+            sync();
+            document.querySelectorAll('.color-fav').forEach(div => {
+                div.innerHTML = myFavColors.map(c => `<div class="fav-dot" style="background:${c}" onclick="this.parentElement.nextElementSibling.querySelector('.s-color').value='${c}'"></div>`).join('') + ' <button class="tool-btn" onclick="saveColor(this)">存色</button>'
+            })
+        }
+    }
+
+    function saveData() {
+        const dest = document.getElementById("destInp").value, eid = document.getElementById("editId").value, steps = [];
+        if (!dest) return alert("目的地呢？");
+        document.querySelectorAll('.step-box').forEach(b => {
+            steps.push({
+                line: b.querySelector('.s-line').value, color: b.querySelector('.s-color').value,
+                dir: b.querySelector('.s-dir').value, platform: b.querySelector('.s-platform').value,
+                start: b.querySelector('.s-start').value, end: b.querySelector('.s-end').value, 
+                time: b.querySelector('.s-time').value, price: b.querySelector('.s-price').value, 
+                exit: b.querySelector('.s-exit').value, pay: b.querySelector('.s-pay').value, checked: false
+            })
+        });
+        const id = eid || Date.now().toString(), item = {
+            id, date: document.getElementById("dateInp").value, dest, steps,
+            note: document.getElementById("noteInp").value, visited: false
+        };
+        const idx = allTrips[currentTrip].findIndex(e => e.id === id);
+        if (idx > -1) allTrips[currentTrip][idx] = item; else allTrips[currentTrip].push(item);
+        sync(); render(); alert("已儲存！"); clearForm(); showList();
+    }
+
+    function sync() { localStorage.setItem(DB_KEY, JSON.stringify({trips: allTrips, favColors: myFavColors, lastTrip: currentTrip})) }
+
+    function clearForm() {
+        document.getElementById("destInp").value = ""; document.getElementById("noteInp").value = "";
+        document.getElementById("editId").value = ""; document.getElementById('stepContainer').innerHTML = "";
+        addStep(); document.getElementById("dateInp").valueAsDate = new Date();
+    }
+
+    function getWeekday(dateString) { return ['週日', '週一', '週二', '週三', '週四', '週五', '週六'][new Date(dateString).getDay()]; }
+
+    function render() {
+        const c = document.getElementById("listItems"); c.innerHTML = "";
+        const d = allTrips[currentTrip] || [], g = {};
+        d.forEach(i => { if (!g[i.date]) g[i.date] = []; g[i.date].push(i) });
+        Object.keys(g).sort().forEach(dt => {
+            let total = 0; g[dt].forEach(i => i.steps.forEach(s => total += Number(s.price) || 0));
+            const gd = document.createElement('div'), hd = document.createElement('div');
+            hd.className = 'date-group-header';
+            hd.innerHTML = `<div>📅 ${dt} (${getWeekday(dt)})</div><div class="total-orange">小計：${total}円 <span>▼</span></div>`;
+            const lt = document.createElement('div');
+            lt.style.display = expandedDates.has(dt) ? 'block' : 'none';
+            hd.onclick = () => {
+                lt.style.display = lt.style.display === 'none' ? 'block' : 'none';
+                lt.style.display === 'none' ? expandedDates.delete(dt) : expandedDates.add(dt)
+            };
+            g[dt].forEach(i => {
+                let tp = 0, sh = "";
+                i.steps.forEach((s, si) => {
+                    tp += Number(s.price) || 0;
+                    sh += `<div class="route-item ${s.checked ? 'checked' : ''}" style="border-left-color:${s.color}" ondblclick="event.stopPropagation();toggleStep('${i.id}',${si})">
+                        <div class="badge" style="background:${s.color}">${s.line}</div>
+                        <div class="station-text">${s.start} → ${s.end} <span class="time-val">${s.time}</span></div>
+                        ${s.dir ? `<div class="dir-val">往 ${s.dir}</div>` : ''}
+                        <div class="pay-val">${s.pay}</div>
+                        ${s.exit ? `<div class="exit-val">出口：${s.exit}</div>` : ''}
+                        ${s.platform ? `<div class="platform-val">月台：${s.platform}</div>` : ''}
+                    </div>`;
+                });
+                const card = document.createElement('div');
+                card.className = 'loc-card' + (i.visited ? ' checked-all' : '');
+                card.ondblclick = () => { i.visited = !i.visited; sync(); render() };
+                card.innerHTML = `<div class="card-header-row"><h3 class="dest-title">${i.dest}</h3><div class="price-label">${tp}円</div><div><button class="tool-btn" onclick="event.stopPropagation();moveItem('${i.id}',-1)">↑</button><button class="tool-btn" onclick="event.stopPropagation();moveItem('${i.id}',1)">↓</button></div></div><div class="route-bundle">${sh}</div><div class="note-val">備註：${i.note}</div><div style="text-align:right;margin-top:12px"><button class="tool-btn" onclick="event.stopPropagation();editItem('${i.id}')">修改</button><button class="tool-btn" style="color:red;margin-left:8px" onclick="event.stopPropagation();deleteItem('${i.id}')">刪除</button></div>`;
+                lt.appendChild(card)
+            });
+            gd.appendChild(hd); gd.appendChild(lt); c.appendChild(gd)
+        })
+    }
+
+    function moveItem(id, dir) {
+        const d = allTrips[currentTrip], idx = d.findIndex(e => e.id === id);
+        if (idx === -1) return;
+        const td = d[idx].date, sd = d.filter(e => e.date === td), idxD = sd.findIndex(e => e.id === id), newD = idxD + dir;
+        if (newD < 0 || newD >= sd.length) return;
+        const tI = sd[newD], gT = d.findIndex(e => e.id === tI.id);
+        [d[idx], d[gT]] = [d[gT], d[idx]]; sync(); render()
+    }
+
+    function toggleStep(id, si) { const i = allTrips[currentTrip].find(e => e.id === id); if (i && i.steps[si]) { i.steps[si].checked = !i.steps[si].checked; sync(); render() } }
+
+    function editItem(id) {
+        const i = allTrips[currentTrip].find(e => e.id === id); if (!i) return;
+        document.getElementById("dateInp").value = i.date; document.getElementById("destInp").value = i.dest;
+        document.getElementById("noteInp").value = i.note; document.getElementById("editId").value = i.id;
+        document.getElementById('stepContainer').innerHTML = ""; i.steps.forEach(s => addStep(s)); showAdd()
+    }
+
+    function deleteItem(id) { if (confirm("確定刪除？")) { allTrips[currentTrip] = allTrips[currentTrip].filter(e => e.id !== id); sync(); render() } }
+
+    function showList() { document.getElementById("addView").classList.remove("active"); document.getElementById("listView").classList.add("active"); render() }
+
+    function showAdd() { if (!document.getElementById("editId").value) { clearForm(); } document.getElementById("addView").classList.add("active"); document.getElementById("listView").classList.remove("active") }
+
+    function exportData() {
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(new Blob([JSON.stringify(allTrips[currentTrip])], {type: "application/json"}));
+        a.download = `PikaTrip_${currentTrip}.json`; a.click()
+    }
+
+    function importData(e) {
+        const f = e.target.files[0]; if (!f) return;
+        const r = new FileReader();
+        r.onload = function(e) {
+            try {
+                const d = JSON.parse(e.target.result), n = prompt("請為這份旅程命名：", "匯入的旅程");
+                if (n) { allTrips[n] = d; currentTrip = n; updateTripDropdown(); sync(); render(); alert("匯入完成！") }
+            } catch (err) { alert("匯入失敗") }
+        };
+        r.readAsText(f); e.target.value = ""
+    }
+</script>
