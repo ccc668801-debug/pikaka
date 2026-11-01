@@ -6,7 +6,7 @@
 <title>Pika 買買助手</title>
 <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700&display=swap" rel="stylesheet">
 <style>
-:root{--maca-yellow:#FFF2CC;--pika-brown:#5C4033;--bg-color:#FEF9EF;--btn-active:#F3A05F;--tax-red:#FFADAD;--check-green:#A8D5BA;--deduct-bg:#E8F5E9;}
+:root{--maca-yellow:#FFF2CC;--pika-brown:#5C4033;--bg-color:#FEF9EF;--btn-active:#F3A05F;--tax-red:#FFADAD;--check-green:#A8D5BA;--ship-purple:#E1BEE7;--deduct-bg:#E8F5E9;}
 *{font-family:'Zen Maru Gothic',sans-serif !important;box-sizing:border-box;-webkit-font-smoothing:antialiased;font-weight:700;}
 body{background:var(--bg-color);color:var(--pika-brown);margin:0;padding-bottom:90px;display:flex;flex-direction:column;align-items:center;min-height:100vh;}
 .top-bar{background:#fff;padding:10px 15px;display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid var(--maca-yellow);position:sticky;top:0;z-index:1000;width:100%;max-width:420px;}
@@ -27,11 +27,14 @@ input,textarea,select,button{width:100%;padding:12px;margin:8px 0;border:2px sol
 .item-row{display:flex;align-items:center;padding:12px 10px;border-bottom:1px solid #eee;gap:8px;transition:0.2s;background:#fff;}
 .row-packed{background:#f4fbf7 !important;opacity:0.75;}
 .row-unpacked{background:#fff5f5 !important;opacity:0.65;}
+.row-shipped{background:#f3e5f5 !important;opacity:0.85;}
 .row-normal{background:#fff !important;opacity:1;}
 .check-circle{width:26px;height:26px;border-radius:50%;border:2px solid #ddd;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:0.9rem;}
 .is-packed{background:var(--check-green);border-color:var(--check-green);color:white;}
 .cross-circle{width:26px;height:26px;border-radius:50%;border:2px solid #ddd;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:0.8rem;color:#aaa;}
 .is-unpacked{background:var(--tax-red);border-color:var(--tax-red);color:white;}
+.ship-circle{width:26px;height:26px;border-radius:50%;border:2px solid #ddd;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:0.75rem;background:#f3e5f5;color:#8e24aa;}
+.is-shipped{background:#8e24aa;border-color:#8e24aa;color:white;}
 .reset-circle{width:26px;height:26px;border-radius:50%;border:2px solid #ddd;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:0.75rem;background:#f9f9f9;color:#666;}
 .packed-name{text-decoration:line-through;color:#aaa;}
 .stat-row-packed{background:#f2f2f2 !important;opacity:0.4;}
@@ -45,6 +48,13 @@ input,textarea,select,button{width:100%;padding:12px;margin:8px 0;border:2px sol
 .nav-item.active{color:var(--btn-active);}
 .modal{position:fixed;inset:0;background:rgba(254,249,239,0.85);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;z-index:3000;}
 .modal-content{background:#fff;width:88%;max-width:360px;padding:20px;border-radius:25px;border:4px solid var(--maca-yellow);max-height:90vh;overflow-y:auto;box-shadow:0 10px 25px rgba(92,64,51,0.15);}
+.trip-dropdown{position:relative;display:inline-block;margin:10px 15px 0 15px;width:calc(100% - 30px);max-width:420px;}
+.trip-btn{background:#fff;padding:8px 15px;border-radius:15px;border:2px solid var(--maca-yellow);display:flex;justify-content:space-between;align-items:center;cursor:pointer;font-size:0.95rem;color:var(--btn-active);}
+.trip-menu{position:absolute;top:100%;left:0;width:100%;background:#fff;border-radius:15px;border:3px solid var(--maca-yellow);box-shadow:0 8px 20px rgba(0,0,0,0.1);display:none;z-index:500;margin-top:5px;max-height:250px;overflow-y:auto;padding:5px;}
+.trip-menu.show{display:block;}
+.trip-item{padding:10px 12px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;border-bottom:1px solid #f9f9f9;border-radius:10px;}
+.trip-item:hover{background:#fffbf0;}
+.trip-item.active-trip{background:var(--maca-yellow);font-weight:700;}
 </style>
 </head>
 <body>
@@ -52,7 +62,16 @@ input,textarea,select,button{width:100%;padding:12px;margin:8px 0;border:2px sol
     <div style="color:var(--btn-active);font-size:1.3rem;">Hi!</div>
     <span onclick="openModal('settingModal')" style="cursor:pointer;font-size:1.5rem">⚙️</span>
 </div>
-<div id="addView" class="view-section active">
+<div class="trip-dropdown">
+    <div class="trip-btn" onclick="toggleTripMenu()">
+        <span id="currentTripTitle">✈️ 我的日本之旅</span>
+        <span>▾</span>
+    </div>
+    <div id="tripMenuBox" class="trip-menu">
+        <div id="tripListContainer"></div>
+        <div onclick="openNewTripModal()" style="padding:12px;text-align:center;color:var(--btn-active);cursor:pointer;background:#f9f9f9;border-radius:12px;margin-top:5px;">+ 新增</div>
+    </div>
+    <div id="addView" class="view-section active">
     <h2 class="pika-header">代購商品</h2>
     <div class="panel">
         <select id="friendSelect"></select>
@@ -114,7 +133,8 @@ input,textarea,select,button{width:100%;padding:12px;margin:8px 0;border:2px sol
         <textarea id="friendListInput" rows="3"></textarea>
         <button class="btn-main" onclick="saveSettings()">儲存設定</button>
         <hr style="margin:15px 0;border:none;border-top:1px solid #eee;">
-        <div style="display:flex;gap:10px;">
+        <button class="btn-main" style="background:#e74c3c;box-shadow:0 4px 0 #c0392b;" onclick="clearAllData()">🗑️ 一鍵刪除所有商品</button>
+        <div style="display:flex;gap:10px;margin-top:10px;">
             <button class="btn-main" style="background:#bbb;box-shadow:0 4px 0 #999;font-size:0.85rem;" onclick="exportData()">📤 備份</button>
             <button class="btn-main" style="background:#bbb;box-shadow:0 4px 0 #999;font-size:0.85rem;" onclick="document.getElementById('importFile').click()">📥 還原</button>
         </div>
@@ -159,7 +179,16 @@ input,textarea,select,button{width:100%;padding:12px;margin:8px 0;border:2px sol
         <button onclick="closeModal('editModal')" style="width:100%;background:none;border:none;margin-top:10px;color:#aaa;cursor:pointer;">取消</button>
     </div>
 </div>
+<div id="newTripModal" class="modal">
+    <div class="modal-content">
+        <h3 class="pika-header" style="margin-top:0;">✈️ 新增旅程</h3>
+        <input type="text" id="newTripNameInput" placeholder="請輸入旅程名稱，例如：26年12月大阪代購">
+        <button class="btn-main" onclick="createTrip()">建立旅程</button>
+        <button onclick="closeModal('newTripModal')" style="width:100%;background:none;border:none;margin-top:10px;color:#aaa;cursor:pointer;">取消</button>
+    </div>
+</div>
 <div id="imgModal" class="modal" onclick="this.style.display='none'"><img id="zoomedImg" style="max-width:95%;max-height:85%;border-radius:15px;border:3px solid white;"></div>
+</div>
 <script>
 function loadStorage(key,legacyKeys,defaultVal){
     let val=localStorage.getItem(key);
@@ -170,14 +199,25 @@ function loadStorage(key,legacyKeys,defaultVal){
     }
     return defaultVal;
 }
-let buyData=loadStorage('pika_v17_data',['pika_v16_data','pika_v15_data'],[]);
-let friends=loadStorage('pika_v17_friends',['pika_v16_friends','pika_v15_friends'],["未分類"]);
-let rate=parseFloat(localStorage.getItem('pika_v17_rate'))||parseFloat(localStorage.getItem('pika_v16_rate'))||0.21;
-let costRate=parseFloat(localStorage.getItem('pika_v17_costRate'))||0;
-let roundMode=localStorage.getItem('pika_v17_roundMode')||'floor';
-let showProfitDash=localStorage.getItem('pika_v17_showProfitDash')||'yes';
-let openGroups=loadStorage('pika_v17_open',['pika_v16_open'],{});
-let paidData=loadStorage('pika_v17_paid',['pika_v16_paid'],{});
+let trips=loadStorage('pika_v19_trips',['pika_v18_trips','pika_v17_trips'],["我的日本之旅"]);
+let currentTrip=localStorage.getItem('pika_v19_currentTrip')||trips[0];
+let masterData=loadStorage('pika_v19_master',['pika_v18_master','pika_v17_data'],{});
+
+function getBuyData(){
+    if(!masterData[currentTrip])masterData[currentTrip]=[];
+    return masterData[currentTrip];
+}
+function saveMaster(){
+    localStorage.setItem('pika_v19_master',JSON.stringify(masterData));
+}
+
+let friends=loadStorage('pika_v19_friends',['pika_v18_friends'],["未分類"]);
+let rate=parseFloat(localStorage.getItem('pika_v19_rate'))||0.21;
+let costRate=parseFloat(localStorage.getItem('pika_v19_costRate'))||0;
+let roundMode=localStorage.getItem('pika_v19_roundMode')||'floor';
+let showProfitDash=localStorage.getItem('pika_v19_showProfitDash')||'yes';
+let openGroups=loadStorage('pika_v19_open',{});
+let paidData=loadStorage('pika_v19_paid',{});
 let currentImg="";
 let editCurrentImg="";
 let targetCopyFriend="";
@@ -188,8 +228,72 @@ window.onload=()=>{
     document.getElementById('roundMode').value=roundMode;
     document.getElementById('showProfitDash').value=showProfitDash;
     document.getElementById('friendListInput').value=friends.join('\n');
+    updateTripUI();
     updateFriendSelect();renderList();renderStats();
 };
+
+function toggleTripMenu(){
+    document.getElementById('tripMenuBox').classList.toggle('show');
+}
+
+function updateTripUI(){
+    document.getElementById('currentTripTitle').innerText=`✈️ ${currentTrip}`;
+    const container=document.getElementById('tripListContainer');
+    container.innerHTML=trips.map(t=>`
+        <div class="trip-item ${t===currentTrip?'active-trip':''}" onclick="switchTrip('${t}')">
+            <span>✈️ ${t}</span>
+            ${trips.length>1?`<span onclick="event.stopPropagation();deleteTrip('${t}')" style="color:#aaa;padding:2px 6px;">✕</span>`:''}
+        </div>
+    `).join('');
+}
+
+function switchTrip(t){
+    currentTrip=t;
+    localStorage.setItem('pika_v19_currentTrip',currentTrip);
+    toggleTripMenu();
+    updateTripUI();
+    renderList();renderStats();
+}
+
+function openNewTripModal(){
+    toggleTripMenu();
+    openModal('newTripModal');
+}
+
+function createTrip(){
+    const name=document.getElementById('newTripNameInput').value.trim();
+    if(!name)return alert("請輸入旅程名稱！");
+    if(trips.includes(name))return alert("此旅程名稱已存在！");
+    trips.push(name);
+    localStorage.setItem('pika_v19_trips',JSON.stringify(trips));
+    document.getElementById('newTripNameInput').value="";
+    closeModal('newTripModal');
+    switchTrip(name);
+}
+
+function deleteTrip(t){
+    if(confirm(`確定要刪除旅程「${t}」及其所有商品嗎？`)){
+        trips=trips.filter(x=>x!==t);
+        delete masterData[t];
+        localStorage.setItem('pika_v19_trips',JSON.stringify(trips));
+        saveMaster();
+        if(currentTrip===t){
+            currentTrip=trips[0];
+            localStorage.setItem('pika_v19_currentTrip',currentTrip);
+        }
+        updateTripUI();renderList();renderStats();
+    }
+}
+
+function clearAllData(){
+    if(confirm("⚠️ 警告：這將會清空目前「"+currentTrip+"」底下的所有商品資料，確定要執行嗎？")){
+        masterData[currentTrip]=[];
+        saveMaster();
+        renderList();renderStats();
+        closeModal('settingModal');
+        alert("已一鍵清空所有商品！");
+    }
+}
 
 function saveSettings(){
     const input=document.getElementById('friendListInput').value;
@@ -199,11 +303,11 @@ function saveSettings(){
     costRate=parseFloat(document.getElementById('costRate').value)||0;
     roundMode=document.getElementById('roundMode').value;
     showProfitDash=document.getElementById('showProfitDash').value;
-    localStorage.setItem('pika_v17_friends',JSON.stringify(friends));
-    localStorage.setItem('pika_v17_rate',rate);
-    localStorage.setItem('pika_v17_costRate',costRate);
-    localStorage.setItem('pika_v17_roundMode',roundMode);
-    localStorage.setItem('pika_v17_showProfitDash',showProfitDash);
+    localStorage.setItem('pika_v19_friends',JSON.stringify(friends));
+    localStorage.setItem('pika_v19_rate',rate);
+    localStorage.setItem('pika_v19_costRate',costRate);
+    localStorage.setItem('pika_v19_roundMode',roundMode);
+    localStorage.setItem('pika_v19_showProfitDash',showProfitDash);
     updateFriendSelect();renderList();renderStats();closeModal('settingModal');
     alert("設定已儲存！");
 }
@@ -249,6 +353,7 @@ function saveItem(){
     const qty=parseInt(document.getElementById('itemQty').value)||1;
     const customRate=parseFloat(document.getElementById('itemCustomRate').value)||"";
     if(!name)return alert("要寫商品名稱唷！");
+    let buyData=getBuyData();
     buyData.push({
         id:Date.now(),
         friend:document.getElementById('friendSelect').value,
@@ -257,7 +362,7 @@ function saveItem(){
         img:currentImg,isTaxFree:false,status:'normal',
         boughtCount:0,statNote:"",isStatPacked:true
     });
-    saveLocal();alert("✅ 新增完成！商品已成功加入清單。");
+    saveMaster();alert("✅ 新增完成！商品已成功加入清單。");
     resetInput();renderList();renderStats();
 }
 
@@ -272,13 +377,18 @@ function resetInput(){
     currentImg="";
 }
 
-function calcMath(val){function getFriendPayInfo(f){
-    if(!paidData[f]){
-        let legacyPaid=JSON.parse(localStorage.getItem('pika_v16_paid')||'{}');
-        let oldJpy=legacyPaid[f]||0;
-        paidData[f]={jpy:oldJpy,twd:0,mode:'jpy'};
+function calcMath(val){
+    if(roundMode==='ceil')return Math.ceil(val);
+    if(roundMode==='round')return Math.round(val);
+    return Math.floor(val);
+}
+
+function getFriendPayInfo(f){
+    if(!paidData[currentTrip])paidData[currentTrip]={};
+    if(!paidData[currentTrip][f]){
+        paidData[currentTrip][f]={jpy:0,twd:0,mode:'jpy'};
     }
-    return paidData[f];
+    return paidData[currentTrip][f];
 }
 
 function toggleDeductBox(f){document.getElementById(`deductBox-${f}`).classList.toggle('show');}
@@ -301,14 +411,13 @@ function applyDeduct(f){
     let info=getFriendPayInfo(f);
     info.jpy=parseFloat(document.getElementById(`deductJpy-${f}`).value)||0;
     info.twd=parseFloat(document.getElementById(`deductTwd-${f}`).value)||0;
-    paidData[f]=info;
-    localStorage.setItem('pika_v17_paid',JSON.stringify(paidData));
+    localStorage.setItem('pika_v19_paid',JSON.stringify(paidData));
     renderList();
 }
 
 function clearDeduct(f){
-    paidData[f]={jpy:0,twd:0,mode:'jpy'};
-    localStorage.setItem('pika_v17_paid',JSON.stringify(paidData));
+    paidData[currentTrip][f]={jpy:0,twd:0,mode:'jpy'};
+    localStorage.setItem('pika_v19_paid',JSON.stringify(paidData));
     renderList();
 }
 
@@ -316,6 +425,7 @@ function renderList(){
     const listDiv=document.getElementById('friendList');
     listDiv.innerHTML="";
     const groups={};
+    let buyData=getBuyData();
     buyData.forEach(i=>{
         if(i.status===undefined)i.status='normal';
         if(i.boughtQty===undefined)i.boughtQty=i.status==='unpacked'?0:(i.qty||1);
@@ -343,17 +453,20 @@ function renderList(){
             const status=i.status||'normal';
             const isUnpacked=(status==='unpacked'||bQ===0);
             const isPacked=(status==='packed');
+            const isShipped=(status==='shipped');
             const isPartial=(status==='normal'&&bQ>0&&bQ<totalQ);
             
             let rowClass='item-row row-normal';
             if(isPacked)rowClass='item-row row-packed';
             if(isUnpacked)rowClass='item-row row-unpacked';
+            if(isShipped)rowClass='item-row row-shipped';
 
             return `
             <div class="${rowClass}">
                 <div style="display:flex;gap:4px;align-items:center;flex-shrink:0;">
                     <div class="check-circle ${isPacked?'is-packed':''}" onclick="setStatus(${i.id},'packed')" title="已買到">✓</div>
                     <div class="cross-circle ${isUnpacked?'is-unpacked':''}" onclick="setStatus(${i.id},'unpacked')" title="未買到">✕</div>
+                    <div class="ship-circle ${isShipped?'is-shipped':''}" onclick="setStatus(${i.id},'shipped')" title="已出貨">📦</div>
                     <div class="reset-circle" onclick="setStatus(${i.id},'normal')" title="還原白背景">🔄</div>
                 </div>
                 ${i.img?`<img src="${i.img}" class="list-img" onclick="zoom('${i.img}')">`:`<div class="list-img" style="background:#f9f9f9;display:flex;align-items:center;justify-content:center;font-size:0.65rem;color:#ccc;">無圖</div>`}
@@ -361,7 +474,7 @@ function renderList(){
                     <div class="${isUnpacked?'packed-name':''}" style="font-size:0.95rem;word-break:break-all;">
                         ${i.name} 
                         ${totalQ>1?`<span style="font-size:0.8rem;color:#d35400;">(需${totalQ}/已買</span><input type="number" value="${bQ}" min="0" max="${totalQ}" onchange="updateBoughtQty(${i.id},this.value)" style="width:40px;padding:2px;text-align:center;font-size:0.8rem;border-radius:6px;border:1px solid #ddd;display:inline-block;margin:0;"><span style="font-size:0.8rem;color:#d35400;">)</span>`:``}
-                        ${isUnpacked?'<span style="color:#e74c3c;font-size:0.75rem;">(未買到)</span>':isPartial?'<span style="color:#e67e22;font-size:0.75rem;">(部分買到)</span>':''}
+                        ${isUnpacked?'<span style="color:#e74c3c;font-size:0.75rem;">(未買到)</span>':isShipped?'<span style="color:#8e24aa;font-size:0.75rem;">(已出貨)</span>':isPartial?'<span style="color:#e67e22;font-size:0.75rem;">(部分買到)</span>':''}
                     </div>
                     <div style="font-size:0.75rem;color:#888;">${i.note?'備註: '+i.note:''}</div>
                     <div style="display:flex;align-items:center;gap:5px;margin-top:3px;flex-wrap:wrap;">
@@ -409,29 +522,27 @@ function renderList(){
     }
 }
 
-    if(roundMode==='ceil')return Math.ceil(val);
-    if(roundMode==='round')return Math.round(val);
-    return Math.floor(val);
-}
 function toggleAccordion(friend,el){
     const group=el.parentElement;
     group.classList.toggle('open');
     openGroups[friend]=group.classList.contains('open');
-    localStorage.setItem('pika_v17_open',JSON.stringify(openGroups));
+    localStorage.setItem('pika_v19_open',JSON.stringify(openGroups));
 }
 
 function setStatus(id,st){
+    let buyData=getBuyData();
     const i=buyData.find(x=>x.id===id);
     if(i){
         i.status=st;
-        if(st==='packed')i.boughtQty=i.qty||1;
+        if(st==='packed'||st==='shipped')i.boughtQty=i.qty||1;
         if(st==='unpacked')i.boughtQty=0;
         if(st==='normal')i.boughtQty=i.qty||1;
-        saveLocal();renderList();renderStats();
+        saveMaster();renderList();renderStats();
     }
 }
 
 function updateBoughtQty(id,val){
+    let buyData=getBuyData();
     const i=buyData.find(x=>x.id===id);
     if(i){
         let q=parseInt(val);
@@ -440,13 +551,14 @@ function updateBoughtQty(id,val){
         if(q>(i.qty||1))q=i.qty||1;
         i.boughtQty=q;
         i.status=q===0?'unpacked':'normal';
-        saveLocal();renderList();
+        saveMaster();renderList();
     }
 }
 
 function toggleTax(id){
+    let buyData=getBuyData();
     const i=buyData.find(x=>x.id===id);
-    if(i){i.isTaxFree=!i.isTaxFree;saveLocal();renderList();renderStats();}
+    if(i){i.isTaxFree=!i.isTaxFree;saveMaster();renderList();renderStats();}
 }
 
 function openCopyModal(friendName){
@@ -457,6 +569,7 @@ function openCopyModal(friendName){
 function executeCopy(){
     const friendName=targetCopyFriend;
     closeModal('copyModal');
+    let buyData=getBuyData();
     const group=buyData.filter(i=>i.friend===friendName);
     const payInfo=getFriendPayInfo(friendName);
     let jpyTotal=0;
@@ -527,6 +640,7 @@ function renderStats(){
     statsDiv.innerHTML="";
     const map={};
     let totalRevenueTWD=0,totalCostTWD=0;
+    let buyData=getBuyData();
 
     buyData.forEach(i=>{
         const unitP=i.isTaxFree?Math.round(i.price/1.1):i.price;
@@ -587,32 +701,36 @@ function renderStats(){
 
 function updateStatQty(itemName,val){
     let newVal=parseInt(val)||0;
+    let buyData=getBuyData();
     let matched=buyData.filter(x=>x.name===itemName);
     if(matched.length>0){
         let assign=Math.floor(newVal/matched.length);
         matched.forEach((m,idx)=>{
             m.boughtQty=(idx===0)?(newVal-assign*(matched.length-1)):assign;
         });
-        saveLocal();renderStats();
+        saveMaster();renderStats();
     }
 }
 
 function updateStatNote(itemName,val){
+    let buyData=getBuyData();
     buyData.forEach(x=>{if(x.name===itemName)x.statNote=val;});
-    saveLocal();
+    saveMaster();
 }
 
 function toggleStatPackByName(itemName){
+    let buyData=getBuyData();
     let matched=buyData.filter(x=>x.name===itemName);
     let allFull=matched.every(x=>x.boughtQty===(x.qty||1));
     matched.forEach(x=>{
         x.boughtQty=allFull?0:(x.qty||1);
         x.status=allFull?'unpacked':'packed';
     });
-    saveLocal();renderStats();
+    saveMaster();renderStats();
 }
 
 function openEditModal(id){
+    let buyData=getBuyData();
     const i=buyData.find(x=>x.id===id);
     if(!i)return;
     document.getElementById('editId').value=i.id;
@@ -634,6 +752,7 @@ function openEditModal(id){
 
 function updateItem(){
     const id=parseInt(document.getElementById('editId').value);
+    let buyData=getBuyData();
     const i=buyData.find(x=>x.id===id);
     if(!i)return;
     i.friend=document.getElementById('editFriend').value;
@@ -645,23 +764,24 @@ function updateItem(){
     i.customRate=parseFloat(document.getElementById('editCustomRate').value)||"";
     i.note=document.getElementById('editNote').value;
     i.img=editCurrentImg;
-    saveLocal();closeModal('editModal');renderList();renderStats();
+    saveMaster();closeModal('editModal');renderList();renderStats();
     alert("修改成功！");
 }
 
 function delItem(id){
     if(confirm("確定要刪除這件商品嗎？")){
-        buyData=buyData.filter(x=>x.id!==id);
-        saveLocal();renderList();renderStats();
+        let buyData=getBuyData();
+        masterData[currentTrip]=buyData.filter(x=>x.id!==id);
+        saveMaster();renderList();renderStats();
     }
 }
 
 function exportData(){
-    const backupObj={buyData,friends,rate,costRate,roundMode,showProfitDash,paidData};
+    const backupObj={trips,currentTrip,masterData,friends,rate,costRate,roundMode,showProfitDash,paidData};
     const b=new Blob([JSON.stringify(backupObj)],{type:"application/json"});
     const a=document.createElement('a');
     a.href=URL.createObjectURL(b);
-    a.download=`PikaBackup_v17.json`;
+    a.download=`PikaBackup_v19.json`;
     a.click();
 }
 
@@ -672,20 +792,24 @@ function importData(input){
     r.onload=(e)=>{
         try{
             const d=JSON.parse(e.target.result);
-            buyData=d.buyData||[];
+            masterData=d.masterData||{};
+            trips=d.trips||["我的日本之旅"];
+            currentTrip=d.currentTrip||trips[0];
             friends=d.friends||["未分類"];
             rate=d.rate||0.21;
             costRate=d.costRate||0;
             roundMode=d.roundMode||'floor';
             showProfitDash=d.showProfitDash||'yes';
             paidData=d.paidData||{};
-            saveLocal();
-            localStorage.setItem('pika_v17_friends',JSON.stringify(friends));
-            localStorage.setItem('pika_v17_rate',rate);
-            localStorage.setItem('pika_v17_costRate',costRate);
-            localStorage.setItem('pika_v17_roundMode',roundMode);
-            localStorage.setItem('pika_v17_showProfitDash',showProfitDash);
-            localStorage.setItem('pika_v17_paid',JSON.stringify(paidData));
+            saveMaster();
+            localStorage.setItem('pika_v19_trips',JSON.stringify(trips));
+            localStorage.setItem('pika_v19_currentTrip',currentTrip);
+            localStorage.setItem('pika_v19_friends',JSON.stringify(friends));
+            localStorage.setItem('pika_v19_rate',rate);
+            localStorage.setItem('pika_v19_costRate',costRate);
+            localStorage.setItem('pika_v19_roundMode',roundMode);
+            localStorage.setItem('pika_v19_showProfitDash',showProfitDash);
+            localStorage.setItem('pika_v19_paid',JSON.stringify(paidData));
             alert("資料還原成功！");location.reload();
         }catch(err){
             alert("檔案格式錯誤，還原失敗！");
@@ -694,7 +818,6 @@ function importData(input){
     r.readAsText(f);
 }
 
-function saveLocal(){localStorage.setItem('pika_v17_data',JSON.stringify(buyData));}
 function openModal(id){document.getElementById(id).style.display='flex';}
 function closeModal(id){document.getElementById(id).style.display='none';}
 
