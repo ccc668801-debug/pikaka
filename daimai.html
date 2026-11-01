@@ -61,6 +61,7 @@ input,textarea,select,button{width:100%;padding:12px;margin:8px 0;border:2px sol
         <span onclick="openModal('settingModal')" style="cursor:pointer;font-size:1.5rem">⚙️</span>
     </div>
 </div>
+
 <div id="addView" class="view-section active">
     <h2 class="pika-header">代購商品</h2>
     <div class="panel">
@@ -80,10 +81,12 @@ input,textarea,select,button{width:100%;padding:12px;margin:8px 0;border:2px sol
         <button class="btn-main" onclick="saveItem()">加入清單</button>
     </div>
 </div>
+
 <div id="listView" class="view-section">
     <h2 class="pika-header">買買清單</h2>
     <div id="friendList"></div>
 </div>
+
 <div id="statsView" class="view-section">
     <h2 class="pika-header">商品統計與採購</h2>
     <div id="profitDashboard" class="panel" style="background:#fff9e6;border-color:#f3a05f;display:none;padding:12px;font-size:0.85rem;line-height:1.5;">
@@ -96,11 +99,13 @@ input,textarea,select,button{width:100%;padding:12px;margin:8px 0;border:2px sol
         <div id="statsList"></div>
     </div>
 </div>
+
 <nav class="bottom-nav">
     <div class="nav-item active" onclick="switchTab('add',this)"><div>🛍️</div><span>記錄</span></div>
     <div class="nav-item" onclick="switchTab('list',this)"><div>📖</div><span>清單</span></div>
     <div class="nav-item" onclick="switchTab('stats',this)"><div>📊</div><span>統計</span></div>
 </nav>
+
 <div id="campModal" class="modal">
     <div class="modal-content">
         <h3 class="pika-header" style="margin-top:0;">🏷️ 管理代購團</h3>
@@ -113,6 +118,7 @@ input,textarea,select,button{width:100%;padding:12px;margin:8px 0;border:2px sol
         <button onclick="closeModal('campModal')" style="width:100%;background:none;border:none;margin-top:5px;color:#aaa;cursor:pointer;">關閉</button>
     </div>
 </div>
+
 <div id="settingModal" class="modal">
     <div class="modal-content">
         <h3 class="pika-header" style="margin-top:0;">設定與工具</h3>
@@ -143,6 +149,7 @@ input,textarea,select,button{width:100%;padding:12px;margin:8px 0;border:2px sol
         <button onclick="closeModal('settingModal')" style="width:100%;background:none;border:none;margin-top:10px;color:#aaa;cursor:pointer;">關閉</button>
     </div>
 </div>
+
 <div id="copyModal" class="modal">
     <div class="modal-content">
         <h3 class="pika-header" style="margin-top:0;">📋 複製帳單設定</h3>
@@ -156,6 +163,7 @@ input,textarea,select,button{width:100%;padding:12px;margin:8px 0;border:2px sol
         <button onclick="closeModal('copyModal')" style="width:100%;background:none;border:none;margin-top:10px;color:#aaa;cursor:pointer;">取消</button>
     </div>
 </div>
+
 <div id="editModal" class="modal">
     <div class="modal-content">
         <h3 class="pika-header" style="margin-top:0;">✏️ 編輯商品</h3>
@@ -180,50 +188,81 @@ input,textarea,select,button{width:100%;padding:12px;margin:8px 0;border:2px sol
         <button onclick="closeModal('editModal')" style="width:100%;background:none;border:none;margin-top:10px;color:#aaa;cursor:pointer;">取消</button>
     </div>
 </div>
+
 <div id="imgModal" class="modal" onclick="this.style.display='none'"><img id="zoomedImg" style="max-width:95%;max-height:85%;border-radius:15px;border:3px solid white;"></div>
+
 <script>
-function loadStorage(key,defaultVal){
-    let val=localStorage.getItem(key);
-    if(val!==null){try{return JSON.parse(val);}catch(e){}}
+function safeJSONParse(str, fallback){
+    try {
+        let val = JSON.parse(str);
+        return val !== null ? val : fallback;
+    } catch(e) {
+        return fallback;
+    }
+}
+
+function loadStorage(key, defaultVal){
+    let val = localStorage.getItem(key);
+    if(val !== null){
+        let parsed = safeJSONParse(val, null);
+        if(parsed !== null) return parsed;
+    }
     return defaultVal;
 }
-let camps=loadStorage('pika_v17_camps',["預設代購團"]);
-let currentCamp=localStorage.getItem('pika_v17_currentCamp')||camps[0];
 
-function getCampDataKey(camp,type){return `pika_v17_${camp}_${type}`;};
+let camps = loadStorage('pika_v17_camps', ["預設代購團"]);
+if(!Array.isArray(camps) || camps.length === 0) camps = ["預設代購團"];
 
-let buyData=[], friends=[], openGroups={}, paidData={}, statState={};
+let currentCamp = localStorage.getItem('pika_v17_currentCamp') || camps[0];
+if(!camps.includes(currentCamp)) currentCamp = camps[0];
+
+function getCampDataKey(camp, type){ return `pika_v17_${camp}_${type}`; }
+
+let buyData = [], friends = [], openGroups = {}, paidData = {}, statState = {};
 
 function loadCampData(){
-    buyData=loadStorage(getCampDataKey(currentCamp,'data'),[]);
-    friends=loadStorage(getCampDataKey(currentCamp,'friends'),["未分類"]);
-    openGroups=loadStorage(getCampDataKey(currentCamp,'open'),{});
-    paidData=loadStorage(getCampDataKey(currentCamp,'paid'),{});
-    statState=loadStorage(getCampDataKey(currentCamp,'statState'),{});
+    buyData = loadStorage(getCampDataKey(currentCamp, 'data'), []);
+    if(!Array.isArray(buyData)) buyData = [];
+
+    friends = loadStorage(getCampDataKey(currentCamp, 'friends'), ["未分類"]);
+    if(!Array.isArray(friends) || friends.length === 0) friends = ["未分類"];
+
+    openGroups = loadStorage(getCampDataKey(currentCamp, 'open'), {});
+    if(typeof openGroups !== 'object' || openGroups === null) openGroups = {};
+
+    paidData = loadStorage(getCampDataKey(currentCamp, 'paid'), {});
+    if(typeof paidData !== 'object' || paidData === null) paidData = {};
+
+    statState = loadStorage(getCampDataKey(currentCamp, 'statState'), {});
+    if(typeof statState !== 'object' || statState === null) statState = {};
 }
 
-let rate=parseFloat(localStorage.getItem('pika_v17_rate'))||0.21;
-let costRate=parseFloat(localStorage.getItem('pika_v17_costRate'))||0;
-let roundMode=localStorage.getItem('pika_v17_roundMode')||'floor';
-let showProfitDash=localStorage.getItem('pika_v17_showProfitDash')||'yes';
-let currentImg="";
-let editCurrentImg="";
-let targetCopyFriend="";
+let rate = parseFloat(localStorage.getItem('pika_v17_rate')) || 0.21;
+let costRate = parseFloat(localStorage.getItem('pika_v17_costRate')) || 0;
+let roundMode = localStorage.getItem('pika_v17_roundMode') || 'floor';
+let showProfitDash = localStorage.getItem('pika_v17_showProfitDash') || 'yes';
+let currentImg = "";
+let editCurrentImg = "";
+let targetCopyFriend = "";
 
-window.onload=()=>{
+window.onload = () => {
     loadCampData();
     updateCampSelect();
-    document.getElementById('exRate').value=rate;
-    document.getElementById('costRate').value=costRate;
-    document.getElementById('roundMode').value=roundMode;
-    document.getElementById('showProfitDash').value=showProfitDash;
-    document.getElementById('friendListInput').value=friends.join('\n');
-    updateFriendSelect();renderList();renderStats();
+    document.getElementById('exRate').value = rate;
+    document.getElementById('costRate').value = costRate;
+    document.getElementById('roundMode').value = roundMode;
+    document.getElementById('showProfitDash').value = showProfitDash;
+    document.getElementById('friendListInput').value = friends.join('\n');
+    updateFriendSelect();
+    renderList();
+    renderStats();
 };
 
 function updateCampSelect(){
-    const select=document.getElementById('activeCampSelect');
-    select.innerHTML=camps.map(c=>`<option value="${c}" ${c===currentCamp?'selected':''}>${c}</option>`).join('');
+    const select = document.getElementById('activeCampSelect');
+    if(select){
+        select.innerHTML = camps.map(c => `<option value="${c}" ${c === currentCamp ? 'selected' : ''}>${c}</option>`).join('');
+    }
 }
 
 function openCampModal(){
@@ -232,40 +271,43 @@ function openCampModal(){
 }
 
 function renderCampManageList(){
-    const listDiv=document.getElementById('campManageList');
-    listDiv.innerHTML=camps.map(c=>`
+    const listDiv = document.getElementById('campManageList');
+    if(!listDiv) return;
+    listDiv.innerHTML = camps.map(c => `
         <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:#f9f9f9;border-radius:12px;border:1px solid #eee;">
-            <span style="font-size:0.9rem;font-weight:700;">${c} ${c===currentCamp?'(目前使用中)':''}</span>
-            ${camps.length>1?`<button onclick="deleteCamp('${c}')" style="width:auto;padding:4px 10px;margin:0;background:#ffadad;color:white;border:none;border-radius:8px;font-size:0.75rem;cursor:pointer;">刪除</button>`:''}
+            <span style="font-size:0.9rem;font-weight:700;">${c} ${c === currentCamp ? '(目前使用中)' : ''}</span>
+            ${camps.length > 1 ? `<button onclick="deleteCamp('${c}')" style="width:auto;padding:4px 10px;margin:0;background:#ffadad;color:white;border:none;border-radius:8px;font-size:0.75rem;cursor:pointer;">刪除</button>` : ''}
         </div>
     `).join('');
 }
 
 function addNewCamp(){
-    const name=document.getElementById('newCampInput').value.trim();
-    if(!name)return alert("請輸入代購團名稱！");
-    if(camps.includes(name))return alert("這個團名已經存在囉！");
+    const inputEl = document.getElementById('newCampInput');
+    if(!inputEl) return;
+    const name = inputEl.value.trim();
+    if(!name) return alert("請輸入代購團名稱！");
+    if(camps.includes(name)) return alert("這個團名已經存在囉！");
     camps.push(name);
-    localStorage.setItem('pika_v17_camps',JSON.stringify(camps));
-    document.getElementById('newCampInput').value="";
+    localStorage.setItem('pika_v17_camps', JSON.stringify(camps));
+    inputEl.value = "";
     switchCamp(name);
     renderCampManageList();
     alert(`成功新增並切換至「${name}」！`);
 }
 
 function deleteCamp(campName){
-    if(camps.length<=1)return alert("至少需要保留一個代購團！");
+    if(camps.length <= 1) return alert("至少需要保留一個代購團！");
     if(confirm(`確定要刪除「${campName}」及其所有相關資料嗎？`)){
-        localStorage.removeItem(getCampDataKey(campName,'data'));
-        localStorage.removeItem(getCampDataKey(campName,'friends'));
-        localStorage.removeItem(getCampDataKey(campName,'open'));
-        localStorage.removeItem(getCampDataKey(campName,'paid'));
-        localStorage.removeItem(getCampDataKey(campName,'statState'));
-        camps=camps.filter(c=>c!==campName);
-        localStorage.setItem('pika_v17_camps',JSON.stringify(camps));
-        if(currentCamp===campName){
-            currentCamp=camps[0];
-            localStorage.setItem('pika_v17_currentCamp',currentCamp);
+        localStorage.removeItem(getCampDataKey(campName, 'data'));
+        localStorage.removeItem(getCampDataKey(campName, 'friends'));
+        localStorage.removeItem(getCampDataKey(campName, 'open'));
+        localStorage.removeItem(getCampDataKey(campName, 'paid'));
+        localStorage.removeItem(getCampDataKey(campName, 'statState'));
+        camps = camps.filter(c => c !== campName);
+        localStorage.setItem('pika_v17_camps', JSON.stringify(camps));
+        if(currentCamp === campName){
+            currentCamp = camps[0];
+            localStorage.setItem('pika_v17_currentCamp', currentCamp);
             loadCampData();
         }
         updateCampSelect();
@@ -278,10 +320,11 @@ function deleteCamp(campName){
 }
 
 function switchCamp(campName){
-    currentCamp=campName;
-    localStorage.setItem('pika_v17_currentCamp',currentCamp);
+    currentCamp = campName;
+    localStorage.setItem('pika_v17_currentCamp', currentCamp);
     loadCampData();
-    document.getElementById('friendListInput').value=friends.join('\n');
+    const friendInput = document.getElementById('friendListInput');
+    if(friendInput) friendInput.value = friends.join('\n');
     updateCampSelect();
     updateFriendSelect();
     renderList();
@@ -289,192 +332,237 @@ function switchCamp(campName){
 }
 
 function saveSettings(){
-    const input=document.getElementById('friendListInput').value;
-    friends=input.split('\n').map(s=>s.trim()).filter(s=>s!=="");
-    if(friends.length===0)friends=["未分類"];
-    rate=parseFloat(document.getElementById('exRate').value)||0.21;
-    costRate=parseFloat(document.getElementById('costRate').value)||0;
-    roundMode=document.getElementById('roundMode').value;
-    showProfitDash=document.getElementById('showProfitDash').value;
-    localStorage.setItem(getCampDataKey(currentCamp,'friends'),JSON.stringify(friends));
-    localStorage.setItem('pika_v17_rate',rate);
-    localStorage.setItem('pika_v17_costRate',costRate);
-    localStorage.setItem('pika_v17_roundMode',roundMode);
-    localStorage.setItem('pika_v17_showProfitDash',showProfitDash);
-    updateFriendSelect();renderList();renderStats();closeModal('settingModal');
+    const input = document.getElementById('friendListInput').value;
+    friends = input.split('\n').map(s => s.trim()).filter(s => s !== "");
+    if(friends.length === 0) friends = ["未分類"];
+    rate = parseFloat(document.getElementById('exRate').value) || 0.21;
+    costRate = parseFloat(document.getElementById('costRate').value) || 0;
+    roundMode = document.getElementById('roundMode').value;
+    showProfitDash = document.getElementById('showProfitDash').value;
+    localStorage.setItem(getCampDataKey(currentCamp, 'friends'), JSON.stringify(friends));
+    localStorage.setItem('pika_v17_rate', rate);
+    localStorage.setItem('pika_v17_costRate', costRate);
+    localStorage.setItem('pika_v17_roundMode', roundMode);
+    localStorage.setItem('pika_v17_showProfitDash', showProfitDash);
+    updateFriendSelect();
+    renderList();
+    renderStats();
+    closeModal('settingModal');
     alert("設定已儲存！");
 }
 
 function updateFriendSelect(){
-    const select=document.getElementById('friendSelect');
-    select.innerHTML=friends.map(f=>`<option value="${f}">${f}</option>`).join('');
-    const editSelect=document.getElementById('editFriend');
-    editSelect.innerHTML=friends.map(f=>`<option value="${f}">${f}</option>`).join('');
+    const select = document.getElementById('friendSelect');
+    if(select) select.innerHTML = friends.map(f => `<option value="${f}">${f}</option>`).join('');
+    const editSelect = document.getElementById('editFriend');
+    if(editSelect) editSelect.innerHTML = friends.map(f => `<option value="${f}">${f}</option>`).join('');
 }
 
-function handleImg(input,targetImgId){
-    const file=input.files[0];
-    if(!file)return;
-    const reader=new FileReader();
-    reader.onload=(e)=>{
-        const img=new Image();
-        img.onload=()=>{
-            const canvas=document.createElement('canvas');
-            let w=img.width,h=img.height,max=400;
-            if(w>h){if(w>max){h*=max/w;w=max;}}
-            else{if(h>max){w*=max/h;h=max;}}
-            canvas.width=w;canvas.height=h;
-            canvas.getContext('2d').drawImage(img,0,0,w,h);
-            const base64=canvas.toDataURL('image/jpeg',0.6);
-            document.getElementById(targetImgId).src=base64;
-            document.getElementById(targetImgId).style.display='block';
-            if(targetImgId==='previewImg'){
-                currentImg=base64;
-                document.getElementById('imgTip').style.display='none';
-            }else{
-                editCurrentImg=base64;
+function handleImg(input, targetImgId){
+    const file = input.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+            const canvas = document.createElement('canvas');
+            let w = img.width, h = img.height, max = 400;
+            if(w > h){ if(w > max){ h *= max / w; w = max; } }
+            else { if(h > max){ w *= max / h; h = max; } }
+            canvas.width = w; canvas.height = h;
+            canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+            const base64 = canvas.toDataURL('image/jpeg', 0.6);
+            const targetEl = document.getElementById(targetImgId);
+            if(targetEl){
+                targetEl.src = base64;
+                targetEl.style.display = 'block';
+            }
+            if(targetImgId === 'previewImg'){
+                currentImg = base64;
+                const tip = document.getElementById('imgTip');
+                if(tip) tip.style.display = 'none';
+            } else {
+                editCurrentImg = base64;
             }
         };
-        img.src=e.target.result;
+        img.src = e.target.result;
     };
     reader.readAsDataURL(file);
 }
 
 function saveItem(){
-    const name=document.getElementById('itemName').value.trim();
-    const price=parseFloat(document.getElementById('itemPrice').value)||0;
-    const qtyInput=document.getElementById('itemQty').value;
-    const qty=(qtyInput===""||isNaN(parseInt(qtyInput)))?1:parseInt(qtyInput);
-    const customRate=parseFloat(document.getElementById('itemCustomRate').value)||"";
-    if(!name)return alert("要寫商品名稱唷！");
+    const nameEl = document.getElementById('itemName');
+    const priceEl = document.getElementById('itemPrice');
+    const qtyEl = document.getElementById('itemQty');
+    const friendEl = document.getElementById('friendSelect');
+    const customRateEl = document.getElementById('itemCustomRate');
+    const noteEl = document.getElementById('itemNote');
+
+    if(!nameEl || !nameEl.value.trim()) return alert("要寫商品名稱唷！");
+    
+    const name = nameEl.value.trim();
+    const price = priceEl ? (parseFloat(priceEl.value) || 0) : 0;
+    const qtyVal = qtyEl ? qtyEl.value : "1";
+    const qty = (qtyVal === "" || isNaN(parseInt(qtyVal))) ? 1 : parseInt(qtyVal);
+    const customRate = customRateEl && customRateEl.value ? parseFloat(customRateEl.value) : "";
+    const friend = friendEl ? friendEl.value : (friends[0] || "未分類");
+    const note = noteEl ? noteEl.value : "";
+
     buyData.push({
-        id:Date.now(),
-        friend:document.getElementById('friendSelect').value,
-        name:name,price:price,qty:qty,boughtQty:qty,customRate:customRate,
-        note:document.getElementById('itemNote').value,
-        img:currentImg,isTaxFree:false,status:'normal'
+        id: Date.now(),
+        friend: friend,
+        name: name,
+        price: price,
+        qty: qty,
+        boughtQty: qty,
+        customRate: customRate,
+        note: note,
+        img: currentImg,
+        isTaxFree: false,
+        status: 'normal'
     });
-    saveLocal();alert("✅ 新增完成 ! 商品已成功加入清單。");
-    resetInput();renderList();renderStats();
+    saveLocal();
+    alert("✅ 新增完成！商品已成功加入清單。");
+    resetInput();
+    renderList();
+    renderStats();
 }
 
 function resetInput(){
-    document.getElementById('itemName').value="";
-    document.getElementById('itemPrice').value="";
-    document.getElementById('itemQty').value="1";
-    document.getElementById('itemCustomRate').value="";
-    document.getElementById('itemNote').value="";
-    document.getElementById('previewImg').style.display='none';
-    document.getElementById('imgTip').style.display='block';
-    currentImg="";
+    const nameEl = document.getElementById('itemName');
+    const priceEl = document.getElementById('itemPrice');
+    const qtyEl = document.getElementById('itemQty');
+    const rateEl = document.getElementById('itemCustomRate');
+    const noteEl = document.getElementById('itemNote');
+    const prevEl = document.getElementById('previewImg');
+    const tipEl = document.getElementById('imgTip');
+
+    if(nameEl) nameEl.value = "";
+    if(priceEl) priceEl.value = "";
+    if(qtyEl) qtyEl.value = "1";
+    if(rateEl) rateEl.value = "";
+    if(noteEl) noteEl.value = "";
+    if(prevEl) prevEl.style.display = 'none';
+    if(tipEl) tipEl.style.display = 'block';
+    currentImg = "";
 }
 
 function calcMath(val){
-    if(roundMode==='ceil')return Math.ceil(val);
-    if(roundMode==='round')return Math.round(val);
+    if(roundMode === 'ceil') return Math.ceil(val);
+    if(roundMode === 'round') return Math.round(val);
     return Math.floor(val);
 }
-    function getFriendPayInfo(f){
+
+function getFriendPayInfo(f){
     if(!paidData[f]){
-        paidData[f]={jpy:0,twd:0,mode:'jpy'};
+        paidData[f] = {jpy: 0, twd: 0, mode: 'jpy'};
     }
     return paidData[f];
 }
 
-function toggleDeductBox(f){document.getElementById(`deductBox-${f}`).classList.toggle('show');}
+function toggleDeductBox(f){
+    const box = document.getElementById(`deductBox-${f}`);
+    if(box) box.classList.toggle('show');
+}
 
-function setDeductMode(f,mode){
-    let info=getFriendPayInfo(f);
-    info.mode=mode;
-    ['both','jpy','twd'].forEach(m=>{
-        const btn=document.getElementById(`btnMode-${f}-${m}`);
+function setDeductMode(f, mode){
+    let info = getFriendPayInfo(f);
+    info.mode = mode;
+    ['both', 'jpy', 'twd'].forEach(m => {
+        const btn = document.getElementById(`btnMode-${f}-${m}`);
         if(btn){
-            btn.style.background=(m===mode)?'var(--btn-active)':'#eee';
-            btn.style.color=(m===mode)?'white':'#666';
+            btn.style.background = (m === mode) ? 'var(--btn-active)' : '#eee';
+            btn.style.color = (m === mode) ? 'white' : '#666';
         }
     });
-    document.getElementById(`inputJpyWrap-${f}`).style.display=(mode==='twd')?'none':'block';
-    document.getElementById(`inputTwdWrap-${f}`).style.display=(mode==='jpy')?'none':'block';
+    const jpyWrap = document.getElementById(`inputJpyWrap-${f}`);
+    const twdWrap = document.getElementById(`inputTwdWrap-${f}`);
+    if(jpyWrap) jpyWrap.style.display = (mode === 'twd') ? 'none' : 'block';
+    if(twdWrap) twdWrap.style.display = (mode === 'jpy') ? 'none' : 'block';
 }
 
 function applyDeduct(f){
-    let info=getFriendPayInfo(f);
-    info.jpy=parseFloat(document.getElementById(`deductJpy-${f}`).value)||0;
-    info.twd=parseFloat(document.getElementById(`deductTwd-${f}`).value)||0;
-    paidData[f]=info;
-    localStorage.setItem(getCampDataKey(currentCamp,'paid'),JSON.stringify(paidData));
+    let info = getFriendPayInfo(f);
+    const jpyEl = document.getElementById(`deductJpy-${f}`);
+    const twdEl = document.getElementById(`deductTwd-${f}`);
+    info.jpy = jpyEl ? (parseFloat(jpyEl.value) || 0) : 0;
+    info.twd = twdEl ? (parseFloat(twdEl.value) || 0) : 0;
+    paidData[f] = info;
+    localStorage.setItem(getCampDataKey(currentCamp, 'paid'), JSON.stringify(paidData));
     renderList();
 }
 
 function clearDeduct(f){
-    paidData[f]={jpy:0,twd:0,mode:'jpy'};
-    localStorage.setItem(getCampDataKey(currentCamp,'paid'),JSON.stringify(paidData));
+    paidData[f] = {jpy: 0, twd: 0, mode: 'jpy'};
+    localStorage.setItem(getCampDataKey(currentCamp, 'paid'), JSON.stringify(paidData));
     renderList();
 }
 
 function renderList(){
-    const listDiv=document.getElementById('friendList');
-    listDiv.innerHTML="";
-    const groups={};
-    buyData.forEach(i=>{
-        if(i.status===undefined)i.status='normal';
-        if(i.boughtQty===undefined)i.boughtQty=i.status==='unpacked'?0:(i.qty||1);
-        if(!groups[i.friend])groups[i.friend]={items:[],totalJPY:0};
-        const unitP=i.isTaxFree?Math.round(i.price/1.1):i.price;
-        i.actualPrice=unitP;
+    const listDiv = document.getElementById('friendList');
+    if(!listDiv) return;
+    listDiv.innerHTML = "";
+    const groups = {};
+    
+    buyData.forEach(i => {
+        if(i.status === undefined) i.status = 'normal';
+        if(i.boughtQty === undefined) i.boughtQty = (i.status === 'unpacked') ? 0 : (i.qty || 1);
+        if(!groups[i.friend]) groups[i.friend] = {items: [], totalJPY: 0};
+        const unitP = i.isTaxFree ? Math.round(i.price / 1.1) : i.price;
+        i.actualPrice = unitP;
         groups[i.friend].items.push(i);
-        if(i.status!=='unpacked')groups[i.friend].totalJPY+=(unitP*(i.boughtQty||0));
+        if(i.status !== 'unpacked') groups[i.friend].totalJPY += (unitP * (i.boughtQty || 0));
     });
 
     for(let f in groups){
-        const payInfo=getFriendPayInfo(f);
-        const itemTotalJPY=groups[f].totalJPY;
-        let effectiveJPY=Math.max(0,itemTotalJPY-(payInfo.jpy||0));
-        let finalTWD=calcMath(effectiveJPY*rate)-(payInfo.twd||0);
-        if(finalTWD<0)finalTWD=0;
-        const hasDeduct=(payInfo.jpy>0||payInfo.twd>0);
-        const div=document.createElement('div');
-        div.className='friend-group'+(openGroups[f]?' open':'');
+        const payInfo = getFriendPayInfo(f);
+        const itemTotalJPY = groups[f].totalJPY;
+        let effectiveJPY = Math.max(0, itemTotalJPY - (payInfo.jpy || 0));
+        let finalTWD = calcMath(effectiveJPY * rate) - (payInfo.twd || 0);
+        if(finalTWD < 0) finalTWD = 0;
+        const hasDeduct = (payInfo.jpy > 0 || payInfo.twd > 0);
+        const div = document.createElement('div');
+        div.className = 'friend-group' + (openGroups[f] ? ' open' : '');
         
-        let allFriendItems=buyData.filter(x=>x.friend===f);
-        let itemsHtml=allFriendItems.map(i=>{
-            const totalQ=i.qty||1;
-            const bQ=i.boughtQty!==undefined?i.boughtQty:totalQ;
-            const status=i.status||'normal';
-            const isUnpacked=(status==='unpacked'||bQ===0);
-            const isPacked=(status==='packed');
-            const isShipped=(status==='shipped');
-            const isPartial=(status==='normal'&&bQ>0&&bQ<totalQ);
+        let allFriendItems = buyData.filter(x => x.friend === f);
+        let itemsHtml = allFriendItems.map(i => {
+            const totalQ = i.qty || 1;
+            const bQ = i.boughtQty !== undefined ? i.boughtQty : totalQ;
+            const status = i.status || 'normal';
+            const isUnpacked = (status === 'unpacked' || bQ === 0);
+            const isPacked = (status === 'packed');
+            const isShipped = (status === 'shipped');
+            const isPartial = (status === 'normal' && bQ > 0 && bQ < totalQ);
             
-            let rowClass='item-row row-normal';
-            if(isPacked)rowClass='item-row row-packed';
-            if(isShipped)rowClass='item-row row-shipped';
-            if(isUnpacked)rowClass='item-row row-unpacked';
+            let rowClass = 'item-row row-normal';
+            if(isPacked) rowClass = 'item-row row-packed';
+            if(isShipped) rowClass = 'item-row row-shipped';
+            if(isUnpacked) rowClass = 'item-row row-unpacked';
 
             return `
             <div class="${rowClass}">
                 <div style="display:flex;gap:3px;align-items:center;flex-shrink:0;">
-                    <div class="check-circle ${isPacked?'is-packed':''}" onclick="setStatus(${i.id},'packed')" title="已買到">✓</div>
-                    <div class="cross-circle ${isUnpacked?'is-unpacked':''}" onclick="setStatus(${i.id},'unpacked')" title="未買到">✕</div>
-                    <div class="ship-circle ${isShipped?'is-shipped':''}" onclick="setStatus(${i.id},'shipped')" title="已出貨">📦</div>
+                    <div class="check-circle ${isPacked ? 'is-packed' : ''}" onclick="setStatus(${i.id},'packed')" title="已買到">✓</div>
+                    <div class="cross-circle ${isUnpacked ? 'is-unpacked' : ''}" onclick="setStatus(${i.id},'unpacked')" title="未買到">✕</div>
+                    <div class="ship-circle ${isShipped ? 'is-shipped' : ''}" onclick="setStatus(${i.id},'shipped')" title="已出貨">📦</div>
                     <div class="reset-circle" onclick="setStatus(${i.id},'normal')" title="還原白背景">🔄</div>
                 </div>
-                ${i.img?`<img src="${i.img}" class="list-img" onclick="zoom('${i.img}')">`:`<div class="list-img" style="background:#f9f9f9;display:flex;align-items:center;justify-content:center;font-size:0.65rem;color:#ccc;">無圖</div>`}
+                ${i.img ? `<img src="${i.img}" class="list-img" onclick="zoom('${i.img}')">` : `<div class="list-img" style="background:#f9f9f9;display:flex;align-items:center;justify-content:center;font-size:0.65rem;color:#ccc;">無圖</div>`}
                 <div style="flex:1;min-width:0;">
-                    <div class="${isUnpacked?'packed-name':''}" style="font-size:0.95rem;word-break:break-all;">
-                        ${i.name} 
-                        ${isUnpacked?'<span style="color:#e74c3c;font-size:0.75rem;">(未買到)</span>':isShipped?'<span style="color:#8e24aa;font-size:0.75rem;">(已出貨)</span>':isPartial?'<span style="color:#e67e22;font-size:0.75rem;">(部分買到)</span>':''}
+                    <div class="${isUnpacked ? 'packed-name' : ''}" style="font-size:0.95rem;word-break:break-all;display:flex;align-items:center;gap:4px;flex-wrap:wrap;">
+                        <span>${i.name}</span>
+                        ${isUnpacked ? '<span style="color:#e74c3c;font-size:0.75rem;white-space:nowrap;">(未買到)</span>' : isShipped ? '<span style="color:#8e24aa;font-size:0.75rem;white-space:nowrap;">(已出貨)</span>' : isPartial ? '<span style="color:#e67e22;font-size:0.75rem;white-space:nowrap;">(部分買到)</span>' : ''}
                     </div>
-                    ${totalQ>1?`
+                    ${totalQ > 1 ? `
                     <div style="display:flex;align-items:center;gap:3px;margin:3px 0;font-size:0.75rem;color:#d35400;white-space:nowrap;">
                         <span>需${totalQ}/已買</span>
                         <input type="number" value="${bQ}" min="0" max="${totalQ}" onchange="updateBoughtQty(${i.id},this.value)" style="width:38px;padding:1px 2px;text-align:center;font-size:0.75rem;border-radius:5px;border:1px solid #ddd;display:inline-block;margin:0;">
                         <span>個</span>
-                    </div>`:``}
-                    <div style="font-size:0.75rem;color:#888;">${i.note?'備註: '+i.note:''}</div>
+                    </div>` : ``}
+                    <div style="font-size:0.75rem;color:#888;">${i.note ? '備註: ' + i.note : ''}</div>
                     <div style="display:flex;align-items:center;gap:5px;margin-top:3px;flex-wrap:wrap;">
-                        <span style="color:#d35400;font-size:0.85rem;">${i.actualPrice*(isUnpacked?0:bQ)}円 (單價:${i.actualPrice})</span>
-                        <button class="btn-tax ${i.isTaxFree?'tax-active':''}" onclick="toggleTax(${i.id})">${i.isTaxFree?'已退':'退稅'}</button>
+                        <span style="color:#d35400;font-size:0.85rem;">${i.actualPrice * (isUnpacked ? 0 : bQ)}円 (單價:${i.actualPrice})</span>
+                        <button class="btn-tax ${i.isTaxFree ? 'tax-active' : ''}" onclick="toggleTax(${i.id})">${i.isTaxFree ? '已退' : '退稅'}</button>
                         <button class="btn-sm-action" onclick="openEditModal(${i.id})">✏️ 編輯</button>
                     </div>
                 </div>
@@ -482,7 +570,7 @@ function renderList(){
             </div>
         `;}).join('');
 
-        div.innerHTML=`
+        div.innerHTML = `
             <div class="friend-header" onclick="toggleAccordion('${f}',this)">
                 <div style="flex:1;font-size:0.95rem;">${f}：<span style="color:var(--btn-active);margin-left:3px;">NT$ ${finalTWD} ▾</span></div>
                 <div style="display:flex;gap:6px;">
@@ -491,19 +579,19 @@ function renderList(){
                 </div>
             </div>
             <div class="friend-content">
-                <div id="deductBox-${f}" class="deduct-box ${hasDeduct?'has-deduct':''}">
+                <div id="deductBox-${f}" class="deduct-box ${hasDeduct ? 'has-deduct' : ''}">
                     <div style="display:flex;gap:4px;font-size:0.8rem;">
-                        <button id="btnMode-${f}-both" onclick="setDeductMode('${f}','both')" style="flex:1;padding:4px;border-radius:8px;border:none;background:${payInfo.mode==='both'?'var(--btn-active)':'#eee'};color:${payInfo.mode==='both'?'white':'#666'};">全抵扣</button>
-                        <button id="btnMode-${f}-jpy" onclick="setDeductMode('${f}','jpy')" style="flex:1;padding:4px;border-radius:8px;border:none;background:${payInfo.mode==='jpy'?'var(--btn-active)':'#eee'};color:${payInfo.mode==='jpy'?'white':'#666'};">僅日幣抵扣</button>
-                        <button id="btnMode-${f}-twd" onclick="setDeductMode('${f}','twd')" style="flex:1;padding:4px;border-radius:8px;border:none;background:${payInfo.mode==='twd'?'var(--btn-active)':'#eee'};color:${payInfo.mode==='twd'?'white':'#666'};">僅台幣訂金</button>
+                        <button id="btnMode-${f}-both" onclick="setDeductMode('${f}','both')" style="flex:1;padding:4px;border-radius:8px;border:none;background:${payInfo.mode === 'both' ? 'var(--btn-active)' : '#eee'};color:${payInfo.mode === 'both' ? 'white' : '#666'};">全抵扣</button>
+                        <button id="btnMode-${f}-jpy" onclick="setDeductMode('${f}','jpy')" style="flex:1;padding:4px;border-radius:8px;border:none;background:${payInfo.mode === 'jpy' ? 'var(--btn-active)' : '#eee'};color:${payInfo.mode === 'jpy' ? 'white' : '#666'};">僅日幣抵扣</button>
+                        <button id="btnMode-${f}-twd" onclick="setDeductMode('${f}','twd')" style="flex:1;padding:4px;border-radius:8px;border:none;background:${payInfo.mode === 'twd' ? 'var(--btn-active)' : '#eee'};color:${payInfo.mode === 'twd' ? 'white' : '#666'};">僅台幣訂金</button>
                     </div>
-                    <div id="inputJpyWrap-${f}" style="display:${payInfo.mode==='twd'?'none':'block'};">
+                    <div id="inputJpyWrap-${f}" style="display:${payInfo.mode === 'twd' ? 'none' : 'block'};">
                         <span style="font-size:0.75rem;color:#666;">已付/抵扣日幣：</span>
-                        <input type="number" id="deductJpy-${f}" class="deduct-input" value="${payInfo.jpy||0}" placeholder="0" style="padding:6px;width:100%;border-radius:8px;border:1px solid #ddd;">
+                        <input type="number" id="deductJpy-${f}" class="deduct-input" value="${payInfo.jpy || 0}" placeholder="0" style="padding:6px;width:100%;border-radius:8px;border:1px solid #ddd;">
                     </div>
-                    <div id="inputTwdWrap-${f}" style="display:${payInfo.mode==='jpy'?'none':'block'};">
+                    <div id="inputTwdWrap-${f}" style="display:${payInfo.mode === 'jpy' ? 'none' : 'block'};">
                         <span style="font-size:0.75rem;color:#666;">已付/訂金台幣：</span>
-                        <input type="number" id="deductTwd-${f}" class="deduct-input" value="${payInfo.twd||0}" placeholder="0" style="padding:6px;width:100%;border-radius:8px;border:1px solid #ddd;">
+                        <input type="number" id="deductTwd-${f}" class="deduct-input" value="${payInfo.twd || 0}" placeholder="0" style="padding:6px;width:100%;border-radius:8px;border:1px solid #ddd;">
                     </div>
                     <div style="display:flex;gap:6px;">
                         <button class="btn-main" style="margin:0;padding:6px;font-size:0.9rem;" onclick="applyDeduct('${f}')">套用抵扣</button>
@@ -514,171 +602,188 @@ function renderList(){
             </div>
         `;
         listDiv.appendChild(div);
-    }function toggleAccordion(friend,el){
-    const group=el.parentElement;
-    group.classList.toggle('open');
-    openGroups[friend]=group.classList.contains('open');
-    localStorage.setItem(getCampDataKey(currentCamp,'open'),JSON.stringify(openGroups));
-}
-
-function setStatus(id,st){
-    const i=buyData.find(x=>x.id===id);
-    if(i){
-        i.status=st;
-        if(st==='packed'||st==='shipped')i.boughtQty=i.qty||1;
-        if(st==='unpacked')i.boughtQty=0;
-        if(st==='normal')i.boughtQty=i.qty||1;
-        saveLocal();renderList();renderStats();
     }
 }
 
-function updateBoughtQty(id,val){
-    const i=buyData.find(x=>x.id===id);
+function toggleAccordion(friend, el){
+    const group = el.parentElement;
+    group.classList.toggle('open');
+    openGroups[friend] = group.classList.contains('open');
+    localStorage.setItem(getCampDataKey(currentCamp, 'open'), JSON.stringify(openGroups));
+}
+
+function setStatus(id, st){
+    const i = buyData.find(x => x.id === id);
     if(i){
-        let q=parseInt(val);
-        if(isNaN(q))q=0;
-        if(q<0)q=0;
-        if(q>(i.qty||1))q=i.qty||1;
-        i.boughtQty=q;
-        i.status=q===0?'unpacked':'normal';
-        saveLocal();renderList();
+        i.status = st;
+        if(st === 'packed' || st === 'shipped') i.boughtQty = i.qty || 1;
+        if(st === 'unpacked') i.boughtQty = 0;
+        if(st === 'normal') i.boughtQty = i.qty || 1;
+        saveLocal();
+        renderList();
+        renderStats();
+    }
+}
+
+function updateBoughtQty(id, val){
+    const i = buyData.find(x => x.id === id);
+    if(i){
+        let q = parseInt(val);
+        if(isNaN(q)) q = 0;
+        if(q < 0) q = 0;
+        if(q > (i.qty || 1)) q = (i.qty || 1);
+        i.boughtQty = q;
+        i.status = (q === 0) ? 'unpacked' : 'normal';
+        saveLocal();
+        renderList();
     }
 }
 
 function toggleTax(id){
-    const i=buyData.find(x=>x.id===id);
-    if(i){i.isTaxFree=!i.isTaxFree;saveLocal();renderList();renderStats();}
+    const i = buyData.find(x => x.id === id);
+    if(i){
+        i.isTaxFree = !i.isTaxFree;
+        saveLocal();
+        renderList();
+        renderStats();
+    }
 }
 
 function openCopyModal(friendName){
-    targetCopyFriend=friendName;
+    targetCopyFriend = friendName;
     openModal('copyModal');
 }
 
 function executeCopy(){
-    const friendName=targetCopyFriend;
+    const friendName = targetCopyFriend;
     closeModal('copyModal');
-    const group=buyData.filter(i=>i.friend===friendName);
-    const payInfo=getFriendPayInfo(friendName);
-    let jpyTotal=0;
-    let text=`${friendName} 代購明細 (${currentCamp})：\n`;
-    const showNote=document.getElementById('cpNote').checked;
-    const showTax=document.getElementById('cpTax').checked;
-    const showPrice=document.getElementById('cpPrice').checked;
-    const showDeduct=document.getElementById('cpDeduct').checked;
-    const showRate=document.getElementById('cpRate').checked;
+    const group = buyData.filter(i => i.friend === friendName);
+    const payInfo = getFriendPayInfo(friendName);
+    let jpyTotal = 0;
+    let text = `${friendName} 代購明細 (${currentCamp})：\n`;
+    const showNote = document.getElementById('cpNote').checked;
+    const showTax = document.getElementById('cpTax').checked;
+    const showPrice = document.getElementById('cpPrice').checked;
+    const showDeduct = document.getElementById('cpDeduct').checked;
+    const showRate = document.getElementById('cpRate').checked;
 
-    group.forEach(i=>{
-        const p=i.isTaxFree?Math.round(i.price/1.1):i.price;
-        const taxLabel=(showTax&&i.isTaxFree)?" (已退稅)":"";
-        const noteStr=(showNote&&i.note)?` [${i.note}]`:"";
-        const status=i.status||'normal';
-        const bQ=i.boughtQty!==undefined?i.boughtQty:(i.qty||1);
-        const totalQ=i.qty||1;
+    group.forEach(i => {
+        const p = i.isTaxFree ? Math.round(i.price / 1.1) : i.price;
+        const taxLabel = (showTax && i.isTaxFree) ? " (已退稅)" : "";
+        const noteStr = (showNote && i.note) ? ` [${i.note}]` : "";
+        const status = i.status || 'normal';
+        const bQ = i.boughtQty !== undefined ? i.boughtQty : (i.qty || 1);
+        const totalQ = i.qty || 1;
         
-        if(status!=='unpacked'&&bQ>0){
-            const shipLabel=(status==='shipped')?" (已出貨)":"";
-            const qtyStr=totalQ>1?` x ${bQ}`:(totalQ>1&&bQ<totalQ?` x ${bQ}/${totalQ}`:` x ${totalQ}`);
-            text+=`- ${i.name}${qtyStr}${taxLabel}${shipLabel}${noteStr}`;
-            text+=showPrice?`：${p*bQ}円\n`:`\n`;
-            jpyTotal+=(p*bQ);
+        if(status !== 'unpacked' && bQ > 0){
+            const shipLabel = (status === 'shipped') ? " (已出貨)" : "";
+            const qtyStr = totalQ > 1 ? ` x ${bQ}` : "";
+            text += `- ${i.name}${qtyStr}${taxLabel}${shipLabel}${noteStr}`;
+            text += showPrice ? `：${p * bQ}円\n` : `\n`;
+            jpyTotal += (p * bQ);
         }
-        if(status==='unpacked'||bQ===0){
-            text+=`- ${i.name} x ${totalQ}${taxLabel}${noteStr} (未買到)\n`;
+        if(status === 'unpacked' || bQ === 0){
+            text += `- ${i.name}${totalQ > 1 ? ` x ${totalQ}` : ''}${taxLabel}${noteStr} (未買到)\n`;
         }
     });
 
-    let effectiveJPY=Math.max(0,jpyTotal-(payInfo.jpy||0));
-    let finalTWD=calcMath(effectiveJPY*rate)-(payInfo.twd||0);
-    if(finalTWD<0)finalTWD=0;
-    let jpyTotalTwdEquivalent=calcMath(jpyTotal*rate);
+    let effectiveJPY = Math.max(0, jpyTotal - (payInfo.jpy || 0));
+    let finalTWD = calcMath(effectiveJPY * rate) - (payInfo.twd || 0);
+    if(finalTWD < 0) finalTWD = 0;
+    let jpyTotalTwdEquivalent = calcMath(jpyTotal * rate);
 
-    text+=`------------------\n商品總計：${jpyTotal}円 (NT$ ${jpyTotalTwdEquivalent})\n`;
-    if(showDeduct&&(payInfo.jpy>0||payInfo.twd>0)){
-        if(payInfo.jpy>0)text+=`已付日幣抵扣：-${payInfo.jpy}円\n`;
-        if(payInfo.twd>0)text+=`已付台幣訂金：-NT$ ${payInfo.twd}\n`;
+    text += `------------------\n商品總計：${jpyTotal}円 (NT$ ${jpyTotalTwdEquivalent})\n`;
+    if(showDeduct && (payInfo.jpy > 0 || payInfo.twd > 0)){
+        if(payInfo.jpy > 0) text += `已付日幣抵扣：-${payInfo.jpy}円\n`;
+        if(payInfo.twd > 0) text += `已付台幣訂金：-NT$ ${payInfo.twd}\n`;
     }
-    if(showRate)text+=`適用匯率：${rate}\n`;
-    text+=`👉 尾款：NT$ ${finalTWD}`;
+    if(showRate) text += `適用匯率：${rate}\n`;
+    text += `👉 尾款：NT$ ${finalTWD}`;
 
-    if(navigator.clipboard&&navigator.clipboard.writeText){
-        navigator.clipboard.writeText(text).then(()=>alert("帳單文字已複製！")).catch(()=>fallbackCopyText(text));
-    }else{
+    if(navigator.clipboard && navigator.clipboard.writeText){
+        navigator.clipboard.writeText(text).then(() => alert("帳單文字已複製！")).catch(() => fallbackCopyText(text));
+    } else {
         fallbackCopyText(text);
     }
 }
 
 function fallbackCopyText(text){
-    const textArea=document.createElement("textarea");
-    textArea.value=text;
-    textArea.style.position="fixed";
+    const textArea = document.createElement("textarea");
+    textArea.value = text;
+    textArea.style.position = "fixed";
     document.body.appendChild(textArea);
-    textArea.focus();textArea.select();
+    textArea.focus();
+    textArea.select();
     try{
-        if(document.execCommand('copy'))alert("帳單文字已複製！");
+        if(document.execCommand('copy')) alert("帳單文字已複製！");
         else alert("複製失敗，請手動長按複製。");
-    }catch(err){
+    } catch(err){
         alert("複製失敗，請手動長按複製。");
     }
     document.body.removeChild(textArea);
 }
 
 function renderStats(){
-    const keyword=document.getElementById('statSearch').value.toLowerCase();
-    const statsDiv=document.getElementById('statsList');
-    statsDiv.innerHTML="";
-    const map={};
-    let totalRevenueTWD=0,totalCostTWD=0;
+    const searchInput = document.getElementById('statSearch');
+    const keyword = searchInput ? searchInput.value.toLowerCase() : "";
+    const statsDiv = document.getElementById('statsList');
+    if(!statsDiv) return;
+    statsDiv.innerHTML = "";
+    const map = {};
+    let totalRevenueTWD = 0, totalCostTWD = 0;
 
-    buyData.forEach(i=>{
-        const unitP=i.isTaxFree?Math.round(i.price/1.1):i.price;
-        const itemEffectiveRate=i.customRate?i.customRate:rate;
-        const status=i.status||'normal';
-        const bQ=status==='unpacked'?0:(i.boughtQty!==undefined?i.boughtQty:(i.qty||1));
+    buyData.forEach(i => {
+        const unitP = i.isTaxFree ? Math.round(i.price / 1.1) : i.price;
+        const itemEffectiveRate = i.customRate ? i.customRate : rate;
+        const status = i.status || 'normal';
+        const bQ = status === 'unpacked' ? 0 : (i.boughtQty !== undefined ? i.boughtQty : (i.qty || 1));
         
-        totalRevenueTWD+=calcMath(unitP*bQ*itemEffectiveRate);
-        totalCostTWD+=costRate>0?calcMath(unitP*bQ*costRate):0;
+        totalRevenueTWD += calcMath(unitP * bQ * itemEffectiveRate);
+        totalCostTWD += costRate > 0 ? calcMath(unitP * bQ * costRate) : 0;
 
         if(!map[i.name]){
-            map[i.name]={name:i.name,price:unitP,img:i.img,totalNeedQty:0,totalBoughtQty:0,notes:new Set(),ids:[]};
+            map[i.name] = {name: i.name, price: unitP, img: i.img, totalNeedQty: 0, totalBoughtQty: 0, notes: new Set(), ids: []};
         }
-        map[i.name].totalNeedQty+=(i.qty||1);
-        map[i.name].totalBoughtQty+=bQ;
-        if(i.statNote)map[i.name].notes.add(i.statNote);
+        map[i.name].totalNeedQty += (i.qty || 1);
+        map[i.name].totalBoughtQty += bQ;
+        if(i.statNote) map[i.name].notes.add(i.statNote);
         map[i.name].ids.push(i.id);
     });
 
-    const dash=document.getElementById('profitDashboard');
-    if(showProfitDash==='yes'&&costRate>0){
-        dash.style.display='block';
-        document.getElementById('statRev').innerText=`NT$ ${totalRevenueTWD}`;
-        document.getElementById('statCost').innerText=`NT$ ${totalCostTWD}`;
-        document.getElementById('statProfit').innerText=`NT$ ${totalRevenueTWD-totalCostTWD}`;
-    }else{
-        dash.style.display='none';
+    const dash = document.getElementById('profitDashboard');
+    if(showProfitDash === 'yes' && costRate > 0){
+        if(dash) dash.style.display = 'block';
+        const revEl = document.getElementById('statRev');
+        const costEl = document.getElementById('statCost');
+        const profitEl = document.getElementById('statProfit');
+        if(revEl) revEl.innerText = `NT$ ${totalRevenueTWD}`;
+        if(costEl) costEl.innerText = `NT$ ${totalCostTWD}`;
+        if(profitEl) profitEl.innerText = `NT$ ${totalRevenueTWD - totalCostTWD}`;
+    } else {
+        if(dash) dash.style.display = 'none';
     }
 
     for(let key in map){
-        let item=map[key];
-        if(keyword&&!item.name.toLowerCase().includes(keyword))continue;
+        let item = map[key];
+        if(keyword && !item.name.toLowerCase().includes(keyword)) continue;
         
-        if(statState[key]===undefined){
-            statState[key]={packed:item.totalBoughtQty>=item.totalNeedQty, qty:item.totalBoughtQty};
+        if(!statState[key]){
+            statState[key] = {packed: item.totalBoughtQty >= item.totalNeedQty, qty: item.totalBoughtQty};
         }
-        let st=statState[key];
-        let notesArr=Array.from(item.notes).join(', ');
+        let st = statState[key];
+        let notesArr = Array.from(item.notes).join(', ');
         
-        const card=document.createElement('div');
-        card.className=`item-row ${st.packed?'stat-row-packed':''}`;
-        card.style.borderRadius='12px';
-        card.style.margin='8px 0';
-        card.style.border='1px solid #eee';
+        const card = document.createElement('div');
+        card.className = `item-row ${st.packed ? 'stat-row-packed' : ''}`;
+        card.style.borderRadius = '12px';
+        card.style.margin = '8px 0';
+        card.style.border = '1px solid #eee';
 
-        card.innerHTML=`
-            <div class="check-circle ${st.packed?'is-packed':''}" onclick="toggleStatPackByName('${item.name}')">${st.packed?'✓':''}</div>
-            ${item.img?`<img src="${item.img}" class="list-img" onclick="zoom('${item.img}')">`:`<div class="list-img" style="background:#f9f9f9;display:flex;align-items:center;justify-content:center;font-size:0.65rem;color:#ccc;">無圖</div>`}
+        card.innerHTML = `
+            <div class="check-circle ${st.packed ? 'is-packed' : ''}" onclick="toggleStatPackByName('${item.name}')">${st.packed ? '✓' : ''}</div>
+            ${item.img ? `<img src="${item.img}" class="list-img" onclick="zoom('${item.img}')">` : `<div class="list-img" style="background:#f9f9f9;display:flex;align-items:center;justify-content:center;font-size:0.65rem;color:#ccc;">無圖</div>`}
             <div style="flex:1;min-width:0;">
-                <div class="${st.packed?'packed-name':''}" style="font-size:0.95rem;word-break:break-all;font-weight:700;">${item.name}</div>
+                <div class="${st.packed ? 'packed-name' : ''}" style="font-size:0.95rem;word-break:break-all;font-weight:700;">${item.name}</div>
                 <div style="font-size:0.8rem;color:#d35400;">單價: ${item.price}円</div>
                 <div style="display:flex;align-items:center;gap:6px;margin-top:4px;">
                     <span style="font-size:0.75rem;color:#666;">已買/需要:</span>
@@ -692,121 +797,149 @@ function renderStats(){
     }
 }
 
-function updateStatQty(itemName,val){
-    let newVal=parseInt(val)||0;
-    if(!statState[itemName])statState[itemName]={packed:false,qty:newVal};
-    statState[itemName].qty=newVal;
-    localStorage.setItem(getCampDataKey(currentCamp,'statState'),JSON.stringify(statState));
+function updateStatQty(itemName, val){
+    let newVal = parseInt(val) || 0;
+    if(!statState[itemName]) statState[itemName] = {packed: false, qty: newVal};
+    statState[itemName].qty = newVal;
+    localStorage.setItem(getCampDataKey(currentCamp, 'statState'), JSON.stringify(statState));
     renderStats();
 }
 
-function updateStatNote(itemName,val){
-    buyData.forEach(x=>{if(x.name===itemName)x.statNote=val;});
+function updateStatNote(itemName, val){
+    buyData.forEach(x => { if(x.name === itemName) x.statNote = val; });
     saveLocal();
 }
 
 function toggleStatPackByName(itemName){
-    if(!statState[itemName])statState[itemName]={packed:false,qty:0};
-    statState[itemName].packed=!statState[itemName].packed;
-    localStorage.setItem(getCampDataKey(currentCamp,'statState'),JSON.stringify(statState));
+    if(!statState[itemName]) statState[itemName] = {packed: false, qty: 0};
+    statState[itemName].packed = !statState[itemName].packed;
+    localStorage.setItem(getCampDataKey(currentCamp, 'statState'), JSON.stringify(statState));
     renderStats();
 }
 
 function openEditModal(id){
-    const i=buyData.find(x=>x.id===id);
-    if(!i)return;
-    document.getElementById('editId').value=i.id;
-    document.getElementById('editFriend').value=i.friend;
-    document.getElementById('editName').value=i.name;
-    document.getElementById('editPrice').value=i.price;
-    document.getElementById('editQty').value=i.qty||1;
-    document.getElementById('editCustomRate').value=i.customRate||"";
-    document.getElementById('editNote').value=i.note||"";
-    editCurrentImg=i.img||"";
-    if(editCurrentImg){
-        document.getElementById('editPreviewImg').src=editCurrentImg;
-        document.getElementById('editPreviewImg').style.display='block';
-    }else{
-        document.getElementById('editPreviewImg').style.display='none';
+    const i = buyData.find(x => x.id === id);
+    if(!i) return;
+    document.getElementById('editId').value = i.id;
+    document.getElementById('editFriend').value = i.friend;
+    document.getElementById('editName').value = i.name;
+    document.getElementById('editPrice').value = i.price;
+    document.getElementById('editQty').value = i.qty || 1;
+    document.getElementById('editCustomRate').value = i.customRate || "";
+    document.getElementById('editNote').value = i.note || "";
+    editCurrentImg = i.img || "";
+    const editPrev = document.getElementById('editPreviewImg');
+    if(editCurrentImg && editPrev){
+        editPrev.src = editCurrentImg;
+        editPrev.style.display = 'block';
+    } else if(editPrev){
+        editPrev.style.display = 'none';
     }
     openModal('editModal');
 }
 
 function updateItem(){
-    const id=parseInt(document.getElementById('editId').value);
-    const i=buyData.find(x=>x.id===id);
-    if(!i)return;
-    i.friend=document.getElementById('editFriend').value;
-    i.name=document.getElementById('editName').value.trim();
-    i.price=parseFloat(document.getElementById('editPrice').value)||0;
-    const newQInput=document.getElementById('editQty').value;
-    const newQ=(newQInput===""||isNaN(parseInt(newQInput)))?1:parseInt(newQInput);
-    if(newQ<i.boughtQty)i.boughtQty=newQ;
-    i.qty=newQ;
-    i.customRate=parseFloat(document.getElementById('editCustomRate').value)||"";
-    i.note=document.getElementById('editNote').value;
-    i.img=editCurrentImg;
-    saveLocal();closeModal('editModal');renderList();renderStats();
+    const id = parseInt(document.getElementById('editId').value);
+    const i = buyData.find(x => x.id === id);
+    if(!i) return;
+    const friendEl = document.getElementById('editFriend');
+    const nameEl = document.getElementById('editName');
+    const priceEl = document.getElementById('editPrice');
+    const qtyEl = document.getElementById('editQty');
+    const rateEl = document.getElementById('editCustomRate');
+    const noteEl = document.getElementById('editNote');
+
+    if(friendEl) i.friend = friendEl.value;
+    if(nameEl) i.name = nameEl.value.trim();
+    if(priceEl) i.price = parseFloat(priceEl.value) || 0;
+    
+    const newQInput = qtyEl ? qtyEl.value : "1";
+    const newQ = (newQInput === "" || isNaN(parseInt(newQInput))) ? 1 : parseInt(newQInput);
+    if(newQ < i.boughtQty) i.boughtQty = newQ;
+    i.qty = newQ;
+    
+    if(rateEl) i.customRate = rateEl.value ? parseFloat(rateEl.value) : "";
+    if(noteEl) i.note = noteEl.value;
+    i.img = editCurrentImg;
+
+    saveLocal();
+    closeModal('editModal');
+    renderList();
+    renderStats();
     alert("修改成功！");
 }
 
 function delItem(id){
     if(confirm("確定要刪除這件商品嗎？")){
-        buyData=buyData.filter(x=>x.id!==id);
-        saveLocal();renderList();renderStats();
+        buyData = buyData.filter(x => x.id !== id);
+        saveLocal();
+        renderList();
+        renderStats();
     }
 }
 
 function exportData(){
-    const backupObj={camps,currentCamp,buyData,friends,rate,costRate,roundMode,showProfitDash,paidData,statState};
-    const b=new Blob([JSON.stringify(backupObj)],{type:"application/json"});
-    const a=document.createElement('a');
-    a.href=URL.createObjectURL(b);
-    a.download=`PikaBackup_${currentCamp}.json`;
+    const backupObj = {camps, currentCamp, buyData, friends, rate, costRate, roundMode, showProfitDash, paidData, statState};
+    const b = new Blob([JSON.stringify(backupObj)], {type: "application/json"});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(b);
+    a.download = `PikaBackup_${currentCamp}.json`;
     a.click();
 }
 
 function importData(input){
-    const f=input.files[0];
-    if(!f)return;
-    const r=new FileReader();
-    r.onload=(e)=>{
+    const f = input.files[0];
+    if(!f) return;
+    const r = new FileReader();
+    r.onload = (e) => {
         try{
-            const d=JSON.parse(e.target.result);
-            if(d.camps)localStorage.setItem('pika_v17_camps',JSON.stringify(d.camps));
-            if(d.currentCamp)localStorage.setItem('pika_v17_currentCamp',d.currentCamp);
-            if(d.buyData)localStorage.setItem(getCampDataKey(d.currentCamp||currentCamp,'data'),JSON.stringify(d.buyData));
-            if(d.friends)localStorage.setItem(getCampDataKey(d.currentCamp||currentCamp,'friends'),JSON.stringify(d.friends));
-            if(d.paidData)localStorage.setItem(getCampDataKey(d.currentCamp||currentCamp,'paid'),JSON.stringify(d.paidData));
-            if(d.statState)localStorage.setItem(getCampDataKey(d.currentCamp||currentCamp,'statState'),JSON.stringify(d.statState));
-            alert("資料還原成功！");location.reload();
-        }catch(err){
+            const d = JSON.parse(e.target.result);
+            if(d.camps) localStorage.setItem('pika_v17_camps', JSON.stringify(d.camps));
+            if(d.currentCamp) localStorage.setItem('pika_v17_currentCamp', d.currentCamp);
+            if(d.buyData) localStorage.setItem(getCampDataKey(d.currentCamp || currentCamp, 'data'), JSON.stringify(d.buyData));
+            if(d.friends) localStorage.setItem(getCampDataKey(d.currentCamp || currentCamp, 'friends'), JSON.stringify(d.friends));
+            if(d.paidData) localStorage.setItem(getCampDataKey(d.currentCamp || currentCamp, 'paid'), JSON.stringify(d.paidData));
+            if(d.statState) localStorage.setItem(getCampDataKey(d.currentCamp || currentCamp, 'statState'), JSON.stringify(d.statState));
+            alert("資料還原成功！");
+            location.reload();
+        } catch(err){
             alert("檔案格式錯誤，還原失敗！");
         }
     };
     r.readAsText(f);
 }
 
-function saveLocal(){localStorage.setItem(getCampDataKey(currentCamp,'data'),JSON.stringify(buyData));}
-function openModal(id){document.getElementById(id).style.display='flex';}
-function closeModal(id){document.getElementById(id).style.display='none';}
+function saveLocal(){
+    localStorage.setItem(getCampDataKey(currentCamp, 'data'), JSON.stringify(buyData));
+}
 
-function switchTab(t,el){
-    document.querySelectorAll('.view-section').forEach(v=>v.classList.remove('active'));
-    document.getElementById(t+'View').classList.add('active');
-    document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
-    el.classList.add('active');
-    if(t==='list')renderList();
-    if(t==='stats')renderStats();
+function openModal(id){
+    const m = document.getElementById(id);
+    if(m) m.style.display = 'flex';
+}
+
+function closeModal(id){
+    const m = document.getElementById(id);
+    if(m) m.style.display = 'none';
+}
+
+function switchTab(t, el){
+    document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active'));
+    const targetView = document.getElementById(t + 'View');
+    if(targetView) targetView.classList.add('active');
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    if(el) el.classList.add('active');
+    if(t === 'list') renderList();
+    if(t === 'stats') renderStats();
 }
 
 function zoom(s){
-    document.getElementById('zoomedImg').src=s;
-    document.getElementById('imgModal').style.display='flex';
+    const zoomedImg = document.getElementById('zoomedImg');
+    const imgModal = document.getElementById('imgModal');
+    if(zoomedImg) zoomedImg.src = s;
+    if(imgModal) imgModal.style.display = 'flex';
 }
 </script>
 </body>
 </html>
-
-}
-
+</html>
