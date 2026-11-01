@@ -80,7 +80,7 @@ input,textarea,select,button{width:100%;padding:12px;margin:8px 0;border:2px sol
         <button class="btn-main" onclick="saveItem()">加入清單</button>
     </div>
 </div>
-<div id="listView" class="view-section">
+    <div id="listView" class="view-section">
     <h2 class="pika-header">買買清單</h2>
     <div id="friendList"></div>
 </div>
@@ -280,7 +280,10 @@ function switchCamp(campName){
     localStorage.setItem('pika_v17_currentCamp',currentCamp);
     loadCampData();
     document.getElementById('friendListInput').value=friends.join('\n');
-    updateFriendSelect();renderList();renderStats();
+    updateCampSelect();
+    updateFriendSelect();
+    renderList();
+    renderStats();
 }
 
 function saveSettings(){
@@ -370,6 +373,7 @@ function calcMath(val){
     if(roundMode==='round')return Math.round(val);
     return Math.floor(val);
 }
+
 function getFriendPayInfo(f){
     if(!paidData[f]){
         paidData[f]={jpy:0,twd:0,mode:'jpy'};
@@ -512,7 +516,7 @@ function renderList(){
         listDiv.appendChild(div);
     }
 }
-    function toggleAccordion(friend,el){
+function toggleAccordion(friend,el){
     const group=el.parentElement;
     group.classList.toggle('open');
     openGroups[friend]=group.classList.contains('open');
@@ -807,5 +811,3 @@ function zoom(s){
 </body>
 </html>
 
-
-    
