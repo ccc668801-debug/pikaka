@@ -58,7 +58,7 @@ input,select,textarea{width:100%;padding:10px;margin:4px 0;border:2px solid #eee
 .led-shop-title{font-size:1rem;font-weight:700;color:var(--pika-brown);margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .led-cat-tag{display:inline-block;font-size:0.75rem;font-weight:600;color:#8C7B70;background:#F7F3EB;padding:2px 8px;border-radius:8px;}
 .led-amt-box{text-align:right;margin-left:8px;flex-shrink:0;}
-.led-amt{font-size:1.05rem;font-weight:700;color:#E05A47;}
+.led-amt{font-size:1.05rem;font-weight:700;color:#7A5C48;}
 .led-amt.inc{color:#27AE60;}
 .led-method{font-size:0.75rem;color:#999;margin-top:2px;}
 .led-sub-list{margin-top:8px;margin-left:58px;background:#FDFBF5;border-radius:10px;padding:6px 10px;border:1px dashed #EADBC8;}
@@ -78,7 +78,10 @@ input,select,textarea{width:100%;padding:10px;margin:4px 0;border:2px solid #eee
 <div onclick="toggleTripMenu(event)" style="font-size:.8rem;color:#E67E22">✈️ <span id="currentTripName">我的日本之旅</span> <span style="font-size:0.6rem">▼</span></div>
 <div id="tripDropdown" class="trip-dropdown"><div id="tripListMenu"></div><div class="trip-add-btn" onclick="createNewTrip()">＋ 開新旅程</div></div>
 </div>
+<div style="display:flex;align-items:center;gap:6px;">
+<span id="appVersionDisplay" style="font-size:0.7rem;color:#A08C7D;font-weight:bold;">v1.9</span>
 <span onclick="openSettings()" style="cursor:pointer;font-size:1.6rem">🐾</span>
+</div>
 </div>
 <div id="addView" class="view-section"><h2 class="pika-header">PikaBuy</h2><div class="panel"><input type="hidden" id="editId"><input type="text" id="shopLoc" placeholder="地點"><input type="text" id="itemName" placeholder="品名"><input type="number" id="itemPrice" placeholder="預估單價 (円)"><textarea id="itemNote" placeholder="備註..." rows="2"></textarea><div class="img-preview-box" onclick="document.getElementById('imgInput').click()" style="width:100%;height:100px;border:2px dashed #ccc;border-radius:12px;display:flex;align-items:center;justify-content:center;margin:10px 0;background:#fafafa;overflow:hidden;"><img id="previewImg" style="display:none;width:100%;height:100%;object-fit:cover;"><span id="imgTip" style="font-size:0.8rem">📸 上傳圖片</span></div><input type="file" id="imgInput" accept="image/*" style="display:none" onchange="handleImg(this)"><button class="btn-main" id="saveBtn" onclick="saveShopping()">新增到清單</button></div></div>
 <div id="listView" class="view-section active"><h2 class="pika-header">Pika List</h2><div id="listItemsGrouped"></div></div>
@@ -126,12 +129,12 @@ input,select,textarea{width:100%;padding:10px;margin:4px 0;border:2px solid #eee
 </div>
 <input type="file" id="importInput" style="display:none" accept=".json" onchange="importData(this)">
 <button onclick="clearCurrentTripData()" class="btn-outline" style="color:#e74c3c;border-color:#fadbd8;margin-top:15px;font-size:0.75rem;">⚠️ 清空目前旅程資料</button>
-<div style="text-align:center;margin-top:20px;font-size:0.6rem;color:#ccc;" id="appVersionDisplay">PikaMoney v1.8</div>
+<div style="text-align:center;margin-top:20px;font-size:0.6rem;color:#ccc;">PikaMoney v1.9</div>
 </div></div>
 
 <div id="imgZoomModal" class="modal" onclick="this.style.display='none'" style="background:rgba(0,0,0,0.9);"><img id="zoomedImg" style="max-width:95%;max-height:90%;border-radius:10px;border:2px solid #fff;"></div>
 <script>
-const APP_VERSION="v1.8";
+const APP_VERSION="v1.9";
 const getAccount=()=>localStorage.getItem('pika_current_user')||'guest',getDBKey=()=>`pika_${getAccount()}_money_v1`;
 let currentTripId="default",wallet={suica:0,cash:0,credit:0,rate:0.203,twd:0},shoppingItems=[],ledgerItems=[],trips={},currentCat="🍱 飲食",calcInput="0",tempImgBase64="";
 const categories=['🍱 飲食','💊 藥妝','🚌 交通','🛍️ 購物','👕 衣服','🍰 甜點','⚡ 皮卡丘','🍹 飲料','💰 儲值','📦 代購','🏷️ 其他'];
@@ -146,7 +149,7 @@ return `${dt.getMonth()+1}/${dt.getDate()}（週${days[dt.getDay()]}）`;
 
 window.onload=function(){
 document.getElementById('displayUserName').innerText=`Hi!`;
-document.getElementById('appVersionDisplay').innerText=`PikaMoney ${APP_VERSION}`;
+document.getElementById('appVersionDisplay').innerText=APP_VERSION;
 let db=JSON.parse(localStorage.getItem(getDBKey()));
 if(!db){
 db={trips:{"default":"我的日本之旅"},currentTripId:"default",data:{"default":{wallet:{suica:0,cash:0,credit:0,rate:0.203,twd:0},shoppingItems:[],ledgerItems:[]}}};
@@ -396,11 +399,11 @@ const body=card.querySelector('.led-card-body');
 hG[dt].items.forEach(i=>{
 const parts=i.cat.split(' ');
 const icon=parts[0]||'🏷️';
-const catPureName=parts[1]||i.cat; // 只保留純文字分類名稱
+const catPureName=parts[1]||i.cat;
 const isInc=(i.cat==='💰 儲值');
 const shopTitle=i.shop?(i.shop+(i.name&&i.name!==i.shop?' - '+i.name:'')):(i.name||i.cat);
 const currSym=i.method==='TWD'?'NT$':'¥';
-const amtStr=`${isInc?'+':'-'}${currSym}${Number(i.amount).toLocaleString()}`;
+const amtStr=`${currSym}${Number(i.amount).toLocaleString()}`;
 const mLabel=methodNames[i.method]||i.method;
 
 let subHtml="";
