@@ -60,7 +60,7 @@ input,textarea,select,button{width:100%;padding:12px;margin:8px 0;border:2px sol
 <span onclick="openCampModal()" style="cursor:pointer;font-size:1.2rem" title="管理代購團">🏷️</span>
 <div style="display:flex;align-items:center;gap:2px;">
 <span onclick="openModal('settingModal')" style="cursor:pointer;font-size:1.5rem">⚙️</span>
-<span style="font-size:0.65rem;color:#aaa;font-weight:normal;">v2.3</span>
+<span style="font-size:0.65rem;color:#aaa;font-weight:normal;">v2.4</span>
 </div>
 </div>
 </div>
@@ -528,7 +528,7 @@ ${totalQ>1?`
 </div>`:``}
 <div style="font-size:0.75rem;color:#888;">${i.note?'備註: '+i.note:''}</div>
 <div style="display:flex;align-items:center;gap:5px;margin-top:3px;flex-wrap:wrap;">
-<span style="color:#b87c53;font-size:0.85rem;">${i.actualPrice*(isUnpacked?0:bQ)}円 (單價:${i.actualPrice})</span>
+<span style="color:#b87c53;font-size:0.85rem;">${i.actualPrice*(isUnpacked?0:bQ)}円${totalQ>1?` (單價:${i.actualPrice})`:''}</span>
 <button class="btn-tax ${i.isTaxFree?'tax-active':''}" onclick="toggleTax(${i.id})">${i.isTaxFree?'已退':'退稅'}</button>
 <button class="btn-sm-action" onclick="openEditModal(${i.id})">✏️ 編輯</button>
 </div>
