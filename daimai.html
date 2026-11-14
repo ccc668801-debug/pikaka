@@ -60,7 +60,7 @@ input,textarea,select,button{width:100%;padding:12px;margin:8px 0;border:2px sol
 <span onclick="openCampModal()" style="cursor:pointer;font-size:1.2rem" title="管理代購團">🏷️</span>
 <div style="display:flex;align-items:center;gap:2px;">
 <span onclick="openModal('settingModal')" style="cursor:pointer;font-size:1.5rem">⚙️</span>
-<span style="font-size:0.65rem;color:#aaa;font-weight:normal;">v2.7</span>
+<span style="font-size:0.65rem;color:#aaa;font-weight:normal;">v2.9</span>
 </div>
 </div>
 </div>
@@ -507,7 +507,6 @@ if(isPacked)rowClass='item-row row-packed';
 if(isShipped)rowClass='item-row row-shipped';
 if(isUnpacked)rowClass='item-row row-unpacked';
 
-// 顯示金額：即使已買數量為0，也顯示商品原本的總價，讓使用者一眼看出價格還在
 const showPriceQty = (bQ > 0) ? bQ : (bQ === 0 && status !== 'unpacked' ? totalQ : 0);
 
 return `
@@ -739,7 +738,7 @@ ${item.img?`<img src="${item.img}" class="list-img" onclick="zoom('${item.img}')
 <span style="font-size:0.75rem;color:#666;">已買/需要:</span>
 <input type="number" value="${item.totalBoughtQty}" min="0" max="${item.totalNeedQty}" oninput="updateStatQty('${item.name}',this.value)" onchange="updateStatQty('${item.name}',this.value)" style="width:48px;padding:3px;text-align:center;font-size:0.85rem;border-radius:6px;border:1px solid #ddd;margin:0;">
 <span style="font-size:0.8rem;color:#888;">/ ${item.totalNeedQty}</span>
-<button onclick="addOneStatQty('${item.name}')" style="width:auto;padding:2px 8px;margin:0;background:var(--btn-active);color:#fff;border:none;border-radius:6px;font-size:0.75rem;cursor:pointer;">+1補貨</button>
+<button onclick="addOneStatQty('${item.name}')" style="width:auto;padding:2px 8px;margin:0;background:var(--btn-active);color:#fff;border:none;border-radius:6px;font-size:0.75rem;cursor:pointer;">+1</button>
 </div>
 <input type="text" value="${notesArr}" placeholder="採購備註..." onchange="updateStatNote('${item.name}',this.value)" style="margin:4px 0 0 0;padding:4px 8px;font-size:0.8rem;border-radius:8px;border:1px solid #ddd;">
 </div>
