@@ -60,7 +60,7 @@ input,textarea,select,button{width:100%;padding:12px;margin:8px 0;border:2px sol
 <span onclick="openCampModal()" style="cursor:pointer;font-size:1.2rem" title="管理代購團">🏷️</span>
 <div style="display:flex;align-items:center;gap:2px;">
 <span onclick="openModal('settingModal')" style="cursor:pointer;font-size:1.5rem">⚙️</span>
-<span style="font-size:0.65rem;color:#aaa;font-weight:normal;">v2.2</span>
+<span style="font-size:0.65rem;color:#aaa;font-weight:normal;">v2.3</span>
 </div>
 </div>
 </div>
@@ -138,6 +138,7 @@ input,textarea,select,button{width:100%;padding:12px;margin:8px 0;border:2px sol
 <textarea id="friendListInput" rows="3"></textarea>
 <button class="btn-main" onclick="saveSettings()">儲存設定</button>
 <hr style="margin:15px 0;border:none;border-top:1px solid #eee;">
+<button class="btn-main" style="background:#e67e22;box-shadow:0 4px 0 #d35400;font-size:0.85rem;margin-bottom:8px;" onclick="resetCampProgress()">🔄 全團採購進度歸零 (統計歸0)</button>
 <div style="display:flex;gap:10px;">
 <button class="btn-main" style="background:#bbb;box-shadow:0 4px 0 #999;font-size:0.85rem;" onclick="exportData()">📤 備份</button>
 <button class="btn-main" style="background:#bbb;box-shadow:0 4px 0 #999;font-size:0.85rem;" onclick="document.getElementById('importFile').click()">📥 還原</button>
@@ -324,6 +325,19 @@ renderStats();
 closeModal('settingModal');
 alert("設定已儲存！");
 }
+function resetCampProgress(){
+if(confirm("確定要將目前代購團的所有商品採購進度歸零嗎？（所有商品的已買數量將設為 0，統計歸 0）")){
+buyData.forEach(i=>{
+i.boughtQty=0;
+i.status='normal';
+});
+saveLocal();
+renderList();
+renderStats();
+closeModal('settingModal');
+alert("已成功將所有商品進度歸零！");
+}
+}
 function updateFriendSelect(){
 const select=document.getElementById('friendSelect');
 if(select)select.innerHTML=friends.map(f=>`<option value="${f}">${f}</option>`).join('');
@@ -382,7 +396,7 @@ friend:friend,
 name:name,
 price:price,
 qty:qty,
-boughtQty:qty, // 預設新增即計入總金額
+boughtQty:qty,
 customRate:customRate,
 note:note,
 img:currentImg,
