@@ -60,7 +60,7 @@ input,textarea,select,button{width:100%;padding:12px;margin:8px 0;border:2px sol
 <span onclick="openCampModal()" style="cursor:pointer;font-size:1.2rem" title="管理代購團">🏷️</span>
 <div style="display:flex;align-items:center;gap:2px;">
 <span onclick="openModal('settingModal')" style="cursor:pointer;font-size:1.5rem">⚙️</span>
-<span style="font-size:0.65rem;color:#aaa;font-weight:normal;">v2.6</span>
+<span style="font-size:0.65rem;color:#aaa;font-weight:normal;">v2.7</span>
 </div>
 </div>
 </div>
@@ -312,7 +312,7 @@ friends=input.split('\n').map(s=>s.trim()).filter(s=>s!=="");
 if(friends.length===0)friends=["未分類"];
 rate=parseFloat(document.getElementById('exRate').value)||0.21;
 costRate=parseFloat(document.getElementById('costRate').value)||0;
-roundMode=document.getElementById('roundMode').value;
+roundMode=localStorage.getItem('pika_v17_roundMode')||'floor';
 showProfitDash=document.getElementById('showProfitDash').value;
 localStorage.setItem(getCampDataKey(currentCamp,'friends'),JSON.stringify(friends));
 localStorage.setItem('pika_v17_rate',rate);
@@ -326,7 +326,7 @@ closeModal('settingModal');
 alert("設定已儲存！");
 }
 function resetCampProgress(){
-if(confirm("確定要將目前代購團的採購進度歸零嗎？（此動作只會將「已買數量」設為 0，商品的價格與資料皆會完整保留！）")){
+if(confirm("確定要將採購進度歸零嗎？（此動作只會將「已買數量」設為 0，商品的價格與資料皆會完整保留！）")){
 buyData.forEach(i=>{
 i.boughtQty=0;
 i.status='normal';
@@ -506,6 +506,10 @@ let rowClass='item-row row-normal';
 if(isPacked)rowClass='item-row row-packed';
 if(isShipped)rowClass='item-row row-shipped';
 if(isUnpacked)rowClass='item-row row-unpacked';
+
+// 顯示金額：即使已買數量為0，也顯示商品原本的總價，讓使用者一眼看出價格還在
+const showPriceQty = (bQ > 0) ? bQ : (bQ === 0 && status !== 'unpacked' ? totalQ : 0);
+
 return `
 <div class="${rowClass}">
 <div style="display:flex;gap:3px;align-items:center;flex-shrink:0;">
@@ -528,7 +532,7 @@ ${totalQ>1?`
 </div>`:``}
 <div style="font-size:0.75rem;color:#888;">${i.note?'備註: '+i.note:''}</div>
 <div style="display:flex;align-items:center;gap:5px;margin-top:3px;flex-wrap:wrap;">
-<span style="color:#b87c53;font-size:0.85rem;">${i.actualPrice*(isUnpacked?0:bQ)}円${totalQ>1?` (單價:${i.actualPrice})`:''}</span>
+<span style="color:#b87c53;font-size:0.85rem;">${i.actualPrice * showPriceQty}円${totalQ>1?` (單價:${i.actualPrice})`:''}</span>
 <button class="btn-tax ${i.isTaxFree?'tax-active':''}" onclick="toggleTax(${i.id})">${i.isTaxFree?'已退':'退稅'}</button>
 <button class="btn-sm-action" onclick="openEditModal(${i.id})">✏️ 編輯</button>
 </div>
