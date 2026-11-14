@@ -55,8 +55,8 @@ input,select,textarea{width:100%;padding:10px;margin:4px 0;border:2px solid #eee
 .led-main{display:flex;align-items:center;justify-content:space-between;}
 .led-icon{width:46px;height:46px;border-radius:14px;background:#FFF7DF;border:1.5px solid #FFE8A3;display:flex;align-items:center;justify-content:center;font-size:1.5rem;margin-right:12px;flex-shrink:0;}
 .led-info{flex:1;min-width:0;}
-.led-cat{font-size:1rem;font-weight:700;color:var(--pika-brown);margin-bottom:2px;}
-.led-shop{font-size:0.82rem;color:#8C7B70;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.led-cat{font-size:1rem;font-weight:700;color:var(--btn-active);margin-bottom:2px;}
+.led-shop{font-size:0.82rem;color:#A08C7D;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .led-amt-box{text-align:right;margin-left:8px;flex-shrink:0;}
 .led-amt{font-size:1.05rem;font-weight:700;color:#E05A47;}
 .led-amt.inc{color:#27AE60;}
@@ -83,7 +83,9 @@ input,select,textarea{width:100%;padding:10px;margin:4px 0;border:2px solid #eee
 <div id="addView" class="view-section"><h2 class="pika-header">PikaBuy</h2><div class="panel"><input type="hidden" id="editId"><input type="text" id="shopLoc" placeholder="地點"><input type="text" id="itemName" placeholder="品名"><input type="number" id="itemPrice" placeholder="預估單價 (円)"><textarea id="itemNote" placeholder="備註..." rows="2"></textarea><div class="img-preview-box" onclick="document.getElementById('imgInput').click()" style="width:100%;height:100px;border:2px dashed #ccc;border-radius:12px;display:flex;align-items:center;justify-content:center;margin:10px 0;background:#fafafa;overflow:hidden;"><img id="previewImg" style="display:none;width:100%;height:100%;object-fit:cover;"><span id="imgTip" style="font-size:0.8rem">📸 上傳圖片</span></div><input type="file" id="imgInput" accept="image/*" style="display:none" onchange="handleImg(this)"><button class="btn-main" id="saveBtn" onclick="saveShopping()">新增到清單</button></div></div>
 <div id="listView" class="view-section active"><h2 class="pika-header">Pika List</h2><div id="listItemsGrouped"></div></div>
 <div id="ledgerView" class="view-section"><div class="panel" style="margin-top:15px;padding:12px;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><input type="date" id="ledgerDate" style="width:130px;margin:0;padding:5px;font-size:0.8rem;"><div style="display:flex;align-items:center;gap:6px;"><span id="twdCalcRealtime" style="font-size:0.85rem;color:#2980B9;font-weight:bold;"></span><span style="font-size:0.75rem;color:#999;">Quick Pay</span></div></div><div class="calc-display" id="calcDisplay">0</div><select id="payMethod" style="padding:8px;" onchange="updateRealtimeCalc()"><option value="Cash">💴 現金 (JPY)</option><option value="Suica">🍉 西瓜卡 (JPY)</option><option value="Credit">💳 信用卡 (JPY)</option><option value="TWD">🇹🇼 台幣 (TWD)</option></select><input type="text" id="ledgerShop" placeholder="🏪 商店名稱 (例: 星巴克、唐吉訶德)" style="padding:8px;"><div class="sub-box"><div id="subItemsContainer"></div><button type="button" class="btn-add-sub" onclick="addSubItemRow()">＋ 新增細項 (<span id="subCount">0</span>/30)</button></div><div class="cat-grid" id="catGrid"></div><div class="calc-grid"><button class="calc-btn" onclick="pressNum('7')">7</button><button class="calc-btn" onclick="pressNum('8')">8</button><button class="calc-btn" onclick="pressNum('9')">9</button><button class="calc-btn" onclick="pressNum('4')">4</button><button class="calc-btn" onclick="pressNum('5')">5</button><button class="calc-btn" onclick="pressNum('6')">6</button><button class="calc-btn" onclick="pressNum('1')">1</button><button class="calc-btn" onclick="pressNum('2')">2</button><button class="calc-btn" onclick="pressNum('3')">3</button><button class="calc-btn" onclick="pressNum('C')" style="color:red">C</button><button class="calc-btn" onclick="pressNum('0')">0</button><button class="calc-btn btn-ok" onclick="saveLedger()">OK</button></div></div></div>
-<div id="historyView" class="view-section"><h2 class="pika-header">MoneyByebye</h2><div class="total-banner" style="display:flex;justify-content:space-between;align-items:center;padding:10px 15px;"><div id="grandTotalBanner" style="display:flex;flex-direction:column;align-items:flex-start;gap:2px;font-size:1rem;"><span>總支出: 0 円</span><span style="font-size:0.8rem;color:#666;font-weight:normal;">(約 0 元 TWD)</span></div><button id="toggleTotalBtn" onclick="toggleTotalVisibility()" style="background:var(--maca-yellow);border:none;border-radius:10px;padding:6px 12px;cursor:pointer;font-size:0.75rem;color:var(--pika-brown);font-weight:bold;">👁️ 隱藏</button></div><div id="walletSummary" style="display:flex;gap:5px;margin-bottom:15px"></div><div id="ledgerHistoryGroups"></div></div>
+<div id="historyView" class="view-section"><h2 class="pika-header">MoneyByebye</h2><div class="total-banner" style="display:flex;justify-content:space-between;align-items:center;padding:10px 15px;"><div id="grandTotalBanner" style="display:flex;flex-direction:column;align-items:flex-start;gap:2px;font-size:1rem;"><span>總支出: 0 円</span><span style="font-size:0.8rem;color:#666;font-weight:normal;">(約 0 元 TWD)</span></div><button id="toggleTotalBtn" onclick="toggleTotalVisibility()" style="background:var(--maca-yellow);border:none;border-radius:10px;padding:6px 12px;cursor:pointer;font-size:0.75rem;color:var(--pika-brown);font-weight:bold;">👁️ 隱藏</button></div>
+<div style="display:flex;gap:6px;margin-bottom:12px;"><input type="text" id="filterKeyword" placeholder="🔍 搜尋商店或品名..." oninput="renderAll()" style="margin:0;flex:2;padding:8px;font-size:0.85rem;"><select id="filterMethod" onchange="renderAll()" style="margin:0;flex:1;padding:8px;font-size:0.85rem;"><option value="">所有付款方式</option><option value="Cash">現金</option><option value="Suica">西瓜卡</option><option value="Credit">信用卡</option><option value="TWD">台幣</option></select></div>
+<div id="walletSummary" style="display:flex;gap:5px;margin-bottom:15px"></div><div id="ledgerHistoryGroups"></div></div>
 <div id="analysisView" class="view-section"><h2 class="pika-header">Pika Analysis</h2><div class="panel" id="analysisContent"></div></div>
 <nav class="bottom-nav"><div class="nav-item" onclick="switchTab('add',this)"><div>＋</div><span>新增</span></div><div class="nav-item active" onclick="switchTab('list',this)"><div>📋</div><span>清單</span></div><div class="nav-item" onclick="switchTab('ledger',this)"><div>👛</div><span>記帳</span></div><div class="nav-item" onclick="switchTab('history',this)"><div>💰</div><span>明細</span></div><div class="nav-item" onclick="switchTab('analysis',this)"><div>📊</div><span>分析</span></div></nav>
 </div>
@@ -112,7 +114,7 @@ input,select,textarea{width:100%;padding:10px;margin:4px 0;border:2px solid #eee
 <script>
 const getAccount=()=>localStorage.getItem('pika_current_user')||'guest',getDBKey=()=>`pika_${getAccount()}_money_v1`;
 let currentTripId="default",wallet={suica:0,cash:0,credit:0,rate:0.203,twd:0},shoppingItems=[],ledgerItems=[],trips={},currentCat="🍱 飲食",calcInput="0",tempImgBase64="";
-const categories=['🍱 飲食','💊 藥妝','🚌 交通','🛍️ 購物','👕 衣服','🍰 甜點','😎 皮卡丘','🍹 飲料','💰 儲值','🏷️ 其他'];
+const categories=['🍱 飲食','💊 藥妝','🚌 交通','🛍️ 購物','👕 衣服','🍰 甜點','⚡ 皮卡丘','🍹 飲料','💰 儲值','📦 代購','🏷️ 其他'];
 let openedShops=new Set(),isTotalHidden=false,subItemsList=[];
 
 function formatShortDate(d){
@@ -271,7 +273,18 @@ l.appendChild(g);
 }
 
 let gT=0;const h=document.getElementById('ledgerHistoryGroups');h.innerHTML="";const hG={};
+const keyword=(document.getElementById('filterKeyword').value||"").toLowerCase();
+const methodFilter=document.getElementById('filterMethod').value;
+
 ledgerItems.forEach(i=>{
+if(keyword){
+const matchShop=(i.shop||"").toLowerCase().includes(keyword);
+const matchName=(i.name||"").toLowerCase().includes(keyword);
+const matchCat=(i.cat||"").toLowerCase().includes(keyword);
+if(!matchShop&&!matchName&&!matchCat)return;
+}
+if(methodFilter&&i.method!==methodFilter)return;
+
 if(!hG[i.date])hG[i.date]={items:[],total:0};
 hG[i.date].items.push(i);
 if(i.cat!=='💰 儲值'){
@@ -299,7 +312,7 @@ hG[dt].items.forEach(i=>{
 const parts=i.cat.split(' ');
 const icon=parts[0]||'🏷️';
 const catTitle=parts[1]||i.cat;
-const shopDisplay=i.shop||i.name||catTitle;
+const shopDisplay=i.shop||catTitle;
 const isInc=(i.cat==='💰 儲值');
 const currSym=i.method==='TWD'?'NT$':'¥';
 const amtStr=`${isInc?'+':'-'}${currSym}${Number(i.amount).toLocaleString()}`;
@@ -312,7 +325,7 @@ subHtml=`<div class="led-sub-list">`+i.subItems.map(s=>`<div class="led-sub-item
 
 const row=document.createElement('div');
 row.className='led-row';
-row.innerHTML=`<div class="led-main"><div class="led-icon">${icon}</div><div class="led-info"><div class="led-cat">${catTitle}</div><div class="led-shop">${shopDisplay}</div></div><div class="led-amt-box"><div class="led-amt ${isInc?'inc':''}">${amtStr}</div><div class="led-method">${mLabel} <span onclick="delLedger(${i.id})" style="color:#ccc;cursor:pointer;margin-left:4px;">✘</span></div></div></div>${subHtml}`;
+row.innerHTML=`<div class="led-main"><div class="led-icon">${icon}</div><div class="led-info"><div class="led-cat">${catTitle}</div>${shopDisplay?`<div class="led-shop">${shopDisplay}</div>`:''}</div><div class="led-amt-box"><div class="led-amt ${isInc?'inc':''}">${amtStr}</div><div class="led-method">${mLabel} <span onclick="delLedger(${i.id})" style="color:#ccc;cursor:pointer;margin-left:4px;">✘</span></div></div></div>${subHtml}`;
 body.appendChild(row);
 });
 h.appendChild(card);
