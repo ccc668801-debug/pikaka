@@ -126,12 +126,12 @@ input,select,textarea{width:100%;padding:10px;margin:4px 0;border:2px solid #eee
 </div>
 <input type="file" id="importInput" style="display:none" accept=".json" onchange="importData(this)">
 <button onclick="clearCurrentTripData()" class="btn-outline" style="color:#e74c3c;border-color:#fadbd8;margin-top:15px;font-size:0.75rem;">⚠️ 清空目前旅程資料</button>
-<div style="text-align:center;margin-top:20px;font-size:0.6rem;color:#ccc;" id="appVersionDisplay">PikaMoney v1.7</div>
+<div style="text-align:center;margin-top:20px;font-size:0.6rem;color:#ccc;" id="appVersionDisplay">PikaMoney v1.8</div>
 </div></div>
 
 <div id="imgZoomModal" class="modal" onclick="this.style.display='none'" style="background:rgba(0,0,0,0.9);"><img id="zoomedImg" style="max-width:95%;max-height:90%;border-radius:10px;border:2px solid #fff;"></div>
 <script>
-const APP_VERSION="v1.7";
+const APP_VERSION="v1.8";
 const getAccount=()=>localStorage.getItem('pika_current_user')||'guest',getDBKey=()=>`pika_${getAccount()}_money_v1`;
 let currentTripId="default",wallet={suica:0,cash:0,credit:0,rate:0.203,twd:0},shoppingItems=[],ledgerItems=[],trips={},currentCat="🍱 飲食",calcInput="0",tempImgBase64="";
 const categories=['🍱 飲食','💊 藥妝','🚌 交通','🛍️ 購物','👕 衣服','🍰 甜點','⚡ 皮卡丘','🍹 飲料','💰 儲值','📦 代購','🏷️ 其他'];
@@ -396,6 +396,7 @@ const body=card.querySelector('.led-card-body');
 hG[dt].items.forEach(i=>{
 const parts=i.cat.split(' ');
 const icon=parts[0]||'🏷️';
+const catPureName=parts[1]||i.cat; // 只保留純文字分類名稱
 const isInc=(i.cat==='💰 儲值');
 const shopTitle=i.shop?(i.shop+(i.name&&i.name!==i.shop?' - '+i.name:'')):(i.name||i.cat);
 const currSym=i.method==='TWD'?'NT$':'¥';
@@ -409,7 +410,7 @@ subHtml=`<div class="led-sub-list">`+i.subItems.map(s=>`<div class="led-sub-item
 
 const row=document.createElement('div');
 row.className='led-row';
-row.innerHTML=`<div class="led-main"><div class="led-icon">${icon}</div><div class="led-info"><div class="led-shop-title">${shopTitle}</div><div><span class="led-cat-tag">${i.cat}</span></div></div><div class="led-amt-box"><div class="led-amt ${isInc?'inc':''}">${amtStr}</div><div class="led-method">${mLabel} <span onclick="openEditLedger(${i.id})" style="color:#3498db;cursor:pointer;margin-left:4px;" title="編輯">✎</span> <span onclick="delLedger(${i.id})" style="color:#ccc;cursor:pointer;margin-left:4px;">✘</span></div></div></div>${subHtml}`;
+row.innerHTML=`<div class="led-main"><div class="led-icon">${icon}</div><div class="led-info"><div class="led-shop-title">${shopTitle}</div><div><span class="led-cat-tag">${catPureName}</span></div></div><div class="led-amt-box"><div class="led-amt ${isInc?'inc':''}">${amtStr}</div><div class="led-method">${mLabel} <span onclick="openEditLedger(${i.id})" style="color:#3498db;cursor:pointer;margin-left:4px;" title="編輯">✎</span> <span onclick="delLedger(${i.id})" style="color:#ccc;cursor:pointer;margin-left:4px;">✘</span></div></div></div>${subHtml}`;
 body.appendChild(row);
 });
 h.appendChild(card);
