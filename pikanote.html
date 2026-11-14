@@ -24,10 +24,10 @@
         .page.active{display:block}
         @keyframes fadeIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
         
-        .list-row{background:#fff;padding:20px 22px;border-radius:24px;border:1px solid rgba(0,0,0,0.03);margin-bottom:12px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;transition:0.2s;box-shadow:0 2px 8px rgba(0,0,0,0.01)}
+        .list-row{background:#fff;padding:18px 22px;border-radius:24px;border:1px solid rgba(0,0,0,0.03);margin-bottom:12px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;transition:0.2s;box-shadow:0 2px 8px rgba(0,0,0,0.01)}
         .list-row:active{transform:scale(0.99)}
-        .list-title{font-weight:500; letter-spacing: 0.02em; color:#444; font-size: 1.1rem;}
-        .list-arrow{font-size: 10px; color:#C0C0C0; font-weight: 400;}
+        .list-title{font-weight:500; letter-spacing: 0.02em; color:#444; font-size: 1.05rem;}
+        .list-subtitle{font-size: 11px; color:#A0A0A0; margin-top: 2px;}
 
         .bg-color-1{background-color:#FFECF1!important}.bg-color-2{background-color:#E0F2FE!important}.bg-color-3{background-color:#F0FDF4!important}.bg-color-4{background-color:#FFFBEB!important}.bg-color-5{background-color:#F5F3FF!important}
         
@@ -36,20 +36,16 @@
             z-index:1000; background:var(--jp-white); overflow-y:auto; padding-bottom:100px;
         }
         
-        /* 新增頁面用的 5 列縮圖網格 */
         .img-grid{display:grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap:8px; margin:15px 0}
         .thumb-img{width:100%; height:65px; object-fit:cover; border-radius:12px; cursor:pointer}
 
-        /* 編輯頁面：預設直接大圖顯示 */
         .edit-img-container { display: flex; flex-direction: column; gap: 14px; margin: 15px 0; }
         .edit-img-container .img-item { width: 100%; transition: all 0.25s ease; }
         .edit-img-container .img-item img { width: 100%; height: auto; max-height: 75vh; object-fit: contain; border-radius: 18px; cursor: pointer; background: rgba(255,255,255,0.4); }
 
-        /* 編輯頁面：點擊「縮小照片」後的 5 列小圖模式 */
         .edit-img-container.compact { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; }
         .edit-img-container.compact .img-item:not(.expanded) img { width: 100%; height: 65px; object-fit: cover; border-radius: 12px; }
         
-        /* 縮小模式下「雙擊單張變大」的樣式 */
         .edit-img-container.compact .img-item.expanded { grid-column: span 5; margin: 6px 0; }
         .edit-img-container.compact .img-item.expanded img { width: 100%; height: auto; max-height: 75vh; object-fit: contain; border-radius: 18px; }
 
@@ -60,7 +56,6 @@
         .color-dot.active { border: 2px solid #4A4A4A !important; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         
-        /* 移動按鈕樣式 */
         .move-btn-group { display: none; }
         body.sort-mode .move-btn-group { display: flex; flex-direction: column; gap: 8px; border-right: 1px solid #f0f0f0; margin-right: 15px; padding-right: 10px; }
     </style>
@@ -77,7 +72,6 @@
                 </div>
             </div>
             
-            <!-- 純淨無底線、無圖示的分組名稱，連點兩下即可編輯 -->
             <div class="mb-2">
                 <input type="text" id="edit-group-title" readonly onclick="handleGroupTitleTap(this)" onblur="finishEditGroupName(this)" onkeydown="if(event.key==='Enter') this.blur()" class="text-sm font-medium text-stone-400 bg-transparent border-none outline-none w-full select-none cursor-pointer">
             </div>
@@ -143,16 +137,13 @@
         </section>
 
         <section id="todo-page" class="page"><div id="todo-container" class="space-y-4"></div></section>
-        <section id="note-page" class="page">
-            <div id="main-note-list" class="space-y-2"></div>
-        </section>
         
-        <section id="detail-page" class="page">
-            <div class="flex items-center gap-4 mb-6">
-                <button onclick="showPage('note-page')" class="text-stone-300">←</button>
-                <input type="text" id="group-display-title" readonly onclick="handleDetailGroupTap(this)" onblur="finishDetailGroupName(this)" onkeydown="if(event.key==='Enter') this.blur()" class="text-lg font-medium text-stone-600 bg-transparent border-none outline-none w-full select-none cursor-pointer">
+        <section id="note-page" class="page">
+            <!-- 搜尋列 -->
+            <div class="mb-4">
+                <input type="text" id="search-input" oninput="renderMainList()" placeholder="🔍 搜尋分組、標題或內容..." class="w-full p-4 bg-white rounded-2xl border border-stone-100 shadow-sm outline-none text-stone-600 text-sm">
             </div>
-            <div id="note-grid" class="grid grid-cols-2 gap-3"></div>
+            <div id="main-note-list" class="space-y-2"></div>
         </section>
 
         <section id="add-todo-sub" class="page">
@@ -168,7 +159,7 @@
     <script>
         const STORAGE_KEY = `pika_v24_db_513`;
         let db = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {todos:[], groups:{}, fontIdx:0};
-        let currentGroup = '', currentNoteIdx = -1, tempImages = [], selectedColor = 'bg-color-1';
+        let currentGroup = '', currentNoteKey = '', tempImages = [], selectedColor = 'bg-color-1';
         let isEditImgCompact = false;
         let lastTapTime = 0, lastTapIdx = -1;
         let lastGroupTapTime = 0;
@@ -244,44 +235,54 @@
             showPage('note-page');
         }
 
+        // 渲染便條清單（支援搜尋關鍵字篩選）
         function renderMainList() {
             const list = document.getElementById('main-note-list');
-            const groupKeys = Object.keys(db.groups);
+            const keyword = document.getElementById('search-input') ? document.getElementById('search-input').value.trim().toLowerCase() : '';
+            let allNotes = [];
             
-            list.innerHTML = groupKeys.map((g, index) => {
-                const groupItems = db.groups[g];
-                const isSingle = groupItems.length === 1 && groupItems[0].isSingle;
-                const n = isSingle ? groupItems[0] : null;
+            Object.keys(db.groups).forEach(g => {
+                db.groups[g].forEach((n, idx) => {
+                    allNotes.push({ group: g, note: n, index: idx });
+                });
+            });
+
+            // 關鍵字過濾
+            const filteredNotes = allNotes.filter(item => {
+                if (!keyword) return true;
+                const matchGroup = item.group.toLowerCase().includes(keyword);
+                const matchTitle = item.note.title.toLowerCase().includes(keyword);
+                const matchContent = item.note.content.toLowerCase().includes(keyword);
+                return matchGroup || matchTitle || matchContent;
+            });
+
+            list.innerHTML = filteredNotes.map((item, flatIdx) => {
+                const n = item.note;
+                const g = item.group;
                 
                 const moveBtns = `
                     <div class="move-btn-group">
-                        <button onclick="moveItem(${index}, -1, event)" class="text-stone-400">▲</button>
-                        <button onclick="moveItem(${index}, 1, event)" class="text-stone-400">▼</button>
+                        <button onclick="moveItem(${flatIdx}, -1, event)" class="text-stone-400">▲</button>
+                        <button onclick="moveItem(${flatIdx}, 1, event)" class="text-stone-400">▼</button>
                     </div>
                 `;
 
-                if(isSingle) {
-                    return `<div class="list-row ${n.color} ${n.dimmed?'opacity-50':''}" onclick="openEditorDirectly('${g}', 0)">
-                            ${moveBtns}
-                            <div class="flex flex-grow justify-between items-center">
-                                <span class="list-title">${g}</span>
-                                <span class="list-arrow">查看內容 →</span>
+                return `<div class="list-row ${n.color} ${n.dimmed?'opacity-50':''}" onclick="openEditorDirectly('${g}', ${item.index})">
+                        ${moveBtns}
+                        <div class="flex flex-grow justify-between items-center">
+                            <div>
+                                <span class="list-title">${n.title}</span>
+                                <div class="list-subtitle">${g}</div>
                             </div>
-                        </div>`;
-                } else {
-                    return `<div class="list-row" onclick="openGroup('${g}')">
-                            ${moveBtns}
-                            <div class="flex flex-grow justify-between items-center">
-                                <span class="list-title">${g}</span>
-                                <span class="list-arrow">${groupItems.length} 則 →</span>
-                            </div>
-                        </div>`;
-                }
-            }).join('') || '<p class="text-center text-stone-300 py-10 text-xs">尚無便條</p>';
+                            <span class="text-xs text-stone-400">→</span>
+                        </div>
+                    </div>`;
+            }).join('') || '<p class="text-center text-stone-300 py-10 text-xs">沒有找到符合的便條</p>';
         }
 
         function openEditorDirectly(g, idx) {
-            currentGroup = g; currentNoteIdx = idx;
+            currentGroup = g; 
+            currentNoteKey = idx;
             const note = db.groups[g][idx];
             const groupInput = document.getElementById('edit-group-title');
             groupInput.value = g;
@@ -304,7 +305,6 @@
             document.getElementById('dim-btn').innerText = note.dimmed ? '標記未完成' : '標記完成';
         }
 
-        // 雙擊開啟編輯分組名稱（支援手機觸控與滑鼠雙擊）
         function handleGroupTitleTap(el) {
             if (!el.readOnly) return;
             const now = Date.now();
@@ -338,53 +338,6 @@
                 return;
             }
 
-            // 保持原本在列表中的順序替換分組名稱
-            const newGroups = {};
-            Object.keys(db.groups).forEach(k => {
-                if (k === currentGroup) {
-                    newGroups[newGTitle] = db.groups[currentGroup];
-                } else {
-                    newGroups[k] = db.groups[k];
-                }
-            });
-            db.groups = newGroups;
-            currentGroup = newGTitle;
-            document.getElementById('group-display-title').value = newGTitle;
-            save();
-        }
-
-        // 群組內頁頂部標題也同步支援雙擊修改
-        function handleDetailGroupTap(el) {
-            if (!el.readOnly) return;
-            const now = Date.now();
-            if (now - lastGroupTapTime < 350) {
-                el.readOnly = false;
-                el.classList.remove('select-none', 'cursor-pointer');
-                el.focus();
-                el.select();
-                lastGroupTapTime = 0;
-            } else {
-                lastGroupTapTime = now;
-            }
-        }
-
-        function finishDetailGroupName(el) {
-            if (el.readOnly) return;
-            el.readOnly = true;
-            el.classList.add('select-none', 'cursor-pointer');
-
-            const newGTitle = el.value.trim() || "未分類";
-            if (newGTitle === currentGroup) {
-                el.value = currentGroup;
-                return;
-            }
-
-            if (db.groups[newGTitle]) {
-                alert('已存在相同名稱的分組！');
-                el.value = currentGroup;
-                return;
-            }
-
             const newGroups = {};
             Object.keys(db.groups).forEach(k => {
                 if (k === currentGroup) {
@@ -396,7 +349,6 @@
             db.groups = newGroups;
             currentGroup = newGTitle;
             save();
-            renderNoteGrid();
         }
 
         function updateSizeToggleBtn(imgCount) {
@@ -418,7 +370,7 @@
             } else {
                 grid.classList.remove('compact');
             }
-            const note = db.groups[currentGroup][currentNoteIdx];
+            const note = db.groups[currentGroup][currentNoteKey];
             updateSizeToggleBtn(note.images.length);
         }
 
@@ -441,33 +393,15 @@
             }
         }
 
-        function openGroup(g) { 
-            currentGroup = g; 
-            showPage('detail-page'); 
-            const detailTitle = document.getElementById('group-display-title');
-            detailTitle.value = g; 
-            detailTitle.readOnly = true;
-            renderNoteGrid(); 
-        }
-
-        function renderNoteGrid() {
-            document.getElementById('note-grid').innerHTML = db.groups[currentGroup].map((n, i) => `
-                <div onclick="openEditorDirectly('${currentGroup}', ${i})" class="p-4 rounded-2xl ${n.color} ${n.dimmed?'opacity-50':''}">
-                    <h4 class="font-medium text-sm truncate text-stone-700">${n.title}</h4>
-                    <p class="text-[10px] line-clamp-1 mt-1 opacity-50">${n.content}</p>
-                </div>
-            `).join('');
-        }
-
-        function closeEditor() { document.getElementById('editor-overlay').style.display = 'none'; renderMainList(); if(document.getElementById('detail-page').classList.contains('active')) renderNoteGrid(); }
-        function autoSaveEdit() { const n = db.groups[currentGroup][currentNoteIdx]; n.title = document.getElementById('edit-item-title').value; n.content = document.getElementById('edit-content').innerText; save(); }
-        function deleteCurrentNote() { if(confirm('確定刪除？')) { db.groups[currentGroup].splice(currentNoteIdx, 1); if(!db.groups[currentGroup].length) delete db.groups[currentGroup]; save(); closeEditor(); showPage('note-page'); } }
-        function toggleDimCurrent() { const n = db.groups[currentGroup][currentNoteIdx]; n.dimmed = !n.dimmed; save(); document.getElementById('dim-btn').innerText = n.dimmed ? '標記未完成' : '標記完成'; }
+        function closeEditor() { document.getElementById('editor-overlay').style.display = 'none'; renderMainList(); }
+        function autoSaveEdit() { const n = db.groups[currentGroup][currentNoteKey]; n.title = document.getElementById('edit-item-title').value; n.content = document.getElementById('edit-content').innerText; save(); }
+        function deleteCurrentNote() { if(confirm('確定刪除？')) { db.groups[currentGroup].splice(currentNoteKey, 1); if(!db.groups[currentGroup].length) delete db.groups[currentGroup]; save(); closeEditor(); showPage('note-page'); } }
+        function toggleDimCurrent() { const n = db.groups[currentGroup][currentNoteKey]; n.dimmed = !n.dimmed; save(); document.getElementById('dim-btn').innerText = n.dimmed ? '標記未完成' : '標記完成'; }
 
         async function handleImageUpload(e, mode) {
             const files = Array.from(e.target.files);
             for(let file of files) {
-                const currentImages = (mode === 'new') ? tempImages : db.groups[currentGroup][currentNoteIdx].images;
+                const currentImages = (mode === 'new') ? tempImages : db.groups[currentGroup][currentNoteKey].images;
                 if(currentImages.length >= 10) {
                     alert('每則便條最多只能放 10 張照片喔！');
                     break;
@@ -493,7 +427,7 @@
                                 renderImgGrid('new-img-grid', tempImages, true);
                             }
                         } else {
-                            const targetNote = db.groups[currentGroup][currentNoteIdx];
+                            const targetNote = db.groups[currentGroup][currentNoteKey];
                             if(targetNote.images.length < 10) {
                                 targetNote.images.push(b64);
                                 save();
@@ -529,7 +463,7 @@
                 tempImages.splice(i,1); 
                 renderImgGrid('new-img-grid', tempImages, true); 
             } else { 
-                const targetNote = db.groups[currentGroup][currentNoteIdx];
+                const targetNote = db.groups[currentGroup][currentNoteKey];
                 targetNote.images.splice(i,1); 
                 save(); 
                 renderImgGrid('edit-img-grid', targetNote.images, false); 
