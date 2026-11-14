@@ -60,7 +60,7 @@ input,textarea,select,button{width:100%;padding:12px;margin:8px 0;border:2px sol
 <span onclick="openCampModal()" style="cursor:pointer;font-size:1.2rem" title="管理代購團">🏷️</span>
 <div style="display:flex;align-items:center;gap:2px;">
 <span onclick="openModal('settingModal')" style="cursor:pointer;font-size:1.5rem">⚙️</span>
-<span style="font-size:0.65rem;color:#aaa;font-weight:normal;">v1.9</span>
+<span style="font-size:0.65rem;color:#aaa;font-weight:normal;">v2.2</span>
 </div>
 </div>
 </div>
@@ -382,7 +382,7 @@ friend:friend,
 name:name,
 price:price,
 qty:qty,
-boughtQty:qty,
+boughtQty:qty, // 預設新增即計入總金額
 customRate:customRate,
 note:note,
 img:currentImg,
@@ -469,7 +469,7 @@ if(!groups[i.friend])groups[i.friend]={items:[],totalJPY:0};
 const unitP=i.isTaxFree?Math.round(i.price/1.1):i.price;
 i.actualPrice=unitP;
 groups[i.friend].items.push(i);
-if(i.status!=='unpacked')groups[i.friend].totalJPY+=(unitP*(i.boughtQty||0));
+if(i.status!=='unpacked')groups[i.friend].totalJPY+=(unitP*(i.boughtQty||(i.qty||1)));
 });
 for(let f in groups){
 const payInfo=getFriendPayInfo(f);
@@ -487,7 +487,7 @@ const status=i.status||'normal';
 const isUnpacked=(status==='unpacked');
 const isPacked=(status==='packed');
 const isShipped=(status==='shipped');
-const isPartial=(status==='normal'&&bQ<totalQ);
+const isPartial=(status==='normal'&&bQ>0&&bQ<totalQ);
 let rowClass='item-row row-normal';
 if(isPacked)rowClass='item-row row-packed';
 if(isShipped)rowClass='item-row row-shipped';
@@ -507,14 +507,14 @@ ${i.img?`<img src="${i.img}" class="list-img" onclick="zoom('${i.img}')">`:`<div
 ${isUnpacked?'<span style="color:#e74c3c;font-size:0.75rem;white-space:nowrap;">(未買到)</span>':isShipped?'<span style="color:#8e24aa;font-size:0.75rem;white-space:nowrap;">(已出貨)</span>':isPartial?'<span style="color:#e67e22;font-size:0.75rem;white-space:nowrap;">(待補貨)</span>':''}
 </div>
 ${totalQ>1?`
-<div style="display:flex;align-items:center;gap:3px;margin:3px 0;font-size:0.75rem;color:#d35400;white-space:nowrap;">
+<div style="display:flex;align-items:center;gap:3px;margin:3px 0;font-size:0.75rem;color:#b87c53;white-space:nowrap;">
 <span>需${totalQ}/已買</span>
 <input type="number" value="${bQ}" min="0" max="${totalQ}" onchange="updateBoughtQty(${i.id},this.value)" style="width:38px;padding:1px 2px;text-align:center;font-size:0.75rem;border-radius:5px;border:1px solid #ddd;display:inline-block;margin:0;">
 <span>個</span>
 </div>`:``}
 <div style="font-size:0.75rem;color:#888;">${i.note?'備註: '+i.note:''}</div>
 <div style="display:flex;align-items:center;gap:5px;margin-top:3px;flex-wrap:wrap;">
-<span style="color:#d35400;font-size:0.85rem;">${i.actualPrice*(isUnpacked?0:bQ)}円 (單價:${i.actualPrice})</span>
+<span style="color:#b87c53;font-size:0.85rem;">${i.actualPrice*(isUnpacked?0:bQ)}円 (單價:${i.actualPrice})</span>
 <button class="btn-tax ${i.isTaxFree?'tax-active':''}" onclick="toggleTax(${i.id})">${i.isTaxFree?'已退':'退稅'}</button>
 <button class="btn-sm-action" onclick="openEditModal(${i.id})">✏️ 編輯</button>
 </div>
@@ -716,7 +716,7 @@ card.innerHTML=`
 ${item.img?`<img src="${item.img}" class="list-img" onclick="zoom('${item.img}')">`:`<div class="list-img" style="background:#f9f9f9;display:flex;align-items:center;justify-content:center;font-size:0.65rem;color:#ccc;">無圖</div>`}
 <div style="flex:1;min-width:0;">
 <div class="${isAllPacked?'packed-name':''}" style="font-size:0.95rem;word-break:break-all;font-weight:700;">${item.name}</div>
-<div style="font-size:0.8rem;color:#d35400;">單價: ${item.price}円</div>
+<div style="font-size:0.8rem;color:#b87c53;">單價: ${item.price}円</div>
 <div style="display:flex;align-items:center;gap:5px;margin-top:4px;flex-wrap:wrap;">
 <span style="font-size:0.75rem;color:#666;">已買/需要:</span>
 <input type="number" value="${item.totalBoughtQty}" min="0" max="${item.totalNeedQty}" oninput="updateStatQty('${item.name}',this.value)" onchange="updateStatQty('${item.name}',this.value)" style="width:48px;padding:3px;text-align:center;font-size:0.85rem;border-radius:6px;border:1px solid #ddd;margin:0;">
