@@ -103,7 +103,8 @@ input,select,textarea{width:100%;padding:10px;margin:4px 0;border:2px solid #eee
 <option value="Credit">💳 信用卡 (JPY)</option>
 <option value="TWD">🇹🇼 台幣 (TWD)</option>
 </select>
-<label>商店名稱 (可不填)</label><input type="text" id="editLedgerShop" placeholder="例: 星巴克">
+<label>商店名稱</label><input type="text" id="editLedgerShop" placeholder="例: 星巴克">
+<label>品名 / 備註</label><input type="text" id="editLedgerName" placeholder="例: 拿鐵咖啡">
 <label>分類</label>
 <select id="editLedgerCat"></select>
 <button onclick="saveEditedLedger()" class="btn-main">儲存修改</button>
@@ -173,7 +174,11 @@ let db=JSON.parse(localStorage.getItem(getDBKey()));
 currentTripId=id;trips=db.trips;
 const d=db.data[id]||{wallet:{suica:0,cash:0,credit:0,rate:0.203,twd:0},shoppingItems:[],ledgerItems:[]};
 wallet=d.wallet;if(wallet.credit===undefined)wallet.credit=0;
-shoppingItems=d.shoppingItems||[];ledgerItems=d.ledgerItems||[];
+shoppingItems=d.shoppingItems||[];
+ledgerItems=(d.ledgerItems||[]).map(item=>{
+if(!item.name)item.name=item.shop||item.cat;
+return item;
+});
 document.getElementById('currentTripName').innerText=trips[id];sync();
 }
 function createNewTrip(){const n=prompt("請輸入旅程名稱:");if(!n)return;const id='t_'+Date.now();trips[id]=n;sync();switchTrip(id);}
@@ -283,6 +288,7 @@ document.getElementById('editLedgerDate').value=item.date||new Date().toISOStrin
 document.getElementById('editLedgerAmount').value=item.amount;
 document.getElementById('editLedgerMethod').value=item.method;
 document.getElementById('editLedgerShop').value=item.shop||"";
+document.getElementById('editLedgerName').value=item.name||"";
 const catSel=document.getElementById('editLedgerCat');
 catSel.innerHTML=categories.map(c=>`<option value="${c}" ${c===item.cat?'selected':''}>${c}</option>`).join('');
 document.getElementById('editLedgerModal').style.display='flex';
@@ -294,13 +300,13 @@ const newDate=document.getElementById('editLedgerDate').value;
 const newAmt=parseInt(document.getElementById('editLedgerAmount').value)||0;
 const newMethod=document.getElementById('editLedgerMethod').value;
 const newShop=document.getElementById('editLedgerShop').value.trim();
+const newName=document.getElementById('editLedgerName').value.trim();
 const newCat=document.getElementById('editLedgerCat').value;
 if(newAmt<=0)return alert("請輸入有效金額");
 
 const idx=ledgerItems.findIndex(x=>x.id===id);
 if(idx!==-1){
 const old=ledgerItems[idx];
-// 恢復舊錢包
 if(old.cat==='💰 儲值'){wallet.cash+=old.amount;wallet.suica-=old.amount;}
 else{
 if(old.method==='Suica')wallet.suica+=old.amount;
@@ -309,7 +315,6 @@ else if(old.method==='TWD')wallet.twd+=old.amount;
 else if(old.method==='Credit')wallet.credit=Math.max(0,(wallet.credit||0)-old.amount);
 }
 
-// 扣除新錢包
 if(newCat==='💰 儲值'){wallet.cash-=newAmt;wallet.suica+=newAmt;}
 else{
 if(newMethod==='Suica')wallet.suica-=newAmt;
@@ -318,7 +323,7 @@ else if(newMethod==='TWD')wallet.twd-=newAmt;
 else if(newMethod==='Credit')wallet.credit=(wallet.credit||0)+newAmt;
 }
 
-ledgerItems[idx]={...old,date:newDate,amount:newAmt,method:newMethod,shop:newShop,name:newShop||newCat,cat:newCat};
+ledgerItems[idx]={...old,date:newDate,amount:newAmt,method:newMethod,shop:newShop,name:newName||newShop||newCat,cat:newCat};
 }
 
 closeModal('editLedgerModal');
@@ -382,6 +387,7 @@ const parts=i.cat.split(' ');
 const icon=parts[0]||'🏷️';
 const catTitle=parts[1]||i.cat;
 const shopDisplay=i.shop||"";
+const itemNameDisplay=i.name&&i.name!==i.shop?i.name:"";
 const isInc=(i.cat==='💰 儲值');
 const currSym=i.method==='TWD'?'NT$':'¥';
 const amtStr=`${isInc?'+':'-'}${currSym}${Number(i.amount).toLocaleString()}`;
@@ -394,7 +400,7 @@ subHtml=`<div class="led-sub-list">`+i.subItems.map(s=>`<div class="led-sub-item
 
 const row=document.createElement('div');
 row.className='led-row';
-row.innerHTML=`<div class="led-main"><div class="led-icon">${icon}</div><div class="led-info"><div class="led-cat">${catTitle}</div>${shopDisplay?`<div class="led-shop">${shopDisplay}</div>`:''}</div><div class="led-amt-box"><div class="led-amt ${isInc?'inc':''}">${amtStr}</div><div class="led-method">${mLabel} <span onclick="openEditLedger(${i.id})" style="color:#2980b9;cursor:pointer;margin-left:4px;" title="編輯">✏️</span> <span onclick="delLedger(${i.id})" style="color:#ccc;cursor:pointer;margin-left:4px;" title="刪除">✘</span></div></div></div>${subHtml}`;
+row.innerHTML=`<div class="led-main"><div class="led-icon">${icon}</div><div class="led-info"><div class="led-cat">${itemNameDisplay||catTitle}</div>${shopDisplay?`<div class="led-shop">${shopDisplay}</div>`:''}</div><div class="led-amt-box"><div class="led-amt ${isInc?'inc':''}">${amtStr}</div><div class="led-method">${mLabel} <span onclick="openEditLedger(${i.id})" style="color:#2980b9;cursor:pointer;margin-left:4px;" title="編輯">✏️</span> <span onclick="delLedger(${i.id})" style="color:#ccc;cursor:pointer;margin-left:4px;" title="刪除">✘</span></div></div></div>${subHtml}`;
 body.appendChild(row);
 });
 h.appendChild(card);
