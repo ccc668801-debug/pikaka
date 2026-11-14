@@ -69,13 +69,20 @@
 
     <div id="editor-overlay">
         <div class="max-w-2xl mx-auto p-6">
-            <div class="flex justify-between items-center mb-8">
+            <div class="flex justify-between items-center mb-6">
                 <button onclick="closeEditor()" class="text-stone-400 font-bold">✕ 關閉</button>
                 <div class="flex items-center gap-2">
                     <button id="toggle-img-size-btn" onclick="toggleEditImgSize()" class="hidden bg-white/80 text-stone-600 px-3.5 py-2 rounded-full text-xs font-medium shadow-sm border border-stone-200/60 transition">縮小照片</button>
                     <label class="cursor-pointer bg-stone-100 px-4 py-2 rounded-full text-sm">🖼️ 加圖<input type="file" multiple class="hidden" onchange="handleImageUpload(event, 'edit')"></label>
                 </div>
             </div>
+            
+            <!-- 可隨時修改的分組名稱 -->
+            <div class="mb-4 flex items-center gap-2">
+                <span class="text-xs text-stone-400 font-medium">分組:</span>
+                <input type="text" id="edit-group-title" onblur="updateGroupName()" class="text-sm font-medium text-stone-500 bg-stone-100/60 hover:bg-stone-100 px-3 py-1.5 rounded-xl outline-none transition w-full max-w-xs border border-transparent focus:border-stone-300" title="點擊可修改分組名稱">
+            </div>
+
             <input type="text" id="edit-item-title" oninput="autoSaveEdit()" class="w-full text-2xl font-medium bg-transparent border-none outline-none mb-4" placeholder="標題">
             <div id="edit-img-grid" class="edit-img-container"></div>
             <div id="edit-content" contenteditable="true" oninput="autoSaveEdit()" class="w-full min-h-[50vh] text-lg leading-relaxed outline-none opacity-80" placeholder="內容..."></div>
@@ -160,8 +167,8 @@
         const STORAGE_KEY = `pika_v24_db_513`;
         let db = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {todos:[], groups:{}, fontIdx:0};
         let currentGroup = '', currentNoteIdx = -1, tempImages = [], selectedColor = 'bg-color-1';
-        let isEditImgCompact = false; // 追蹤目前是否處於縮小模式
-        let lastTapTime = 0, lastTapIdx = -1; // 支援手機與桌機雙擊偵測
+        let isEditImgCompact = false;
+        let lastTapTime = 0, lastTapIdx = -1;
 
         const quotes = ["今日という日は、残りの人生の最初の一日である。","一期一会","日日是好日。","初心忘るべからず。","生活の斷片を記録する。","ゆっくり歩めば、遠くまで行ける。"];
         const fontClasses = ['font-style-0', 'font-style-1', 'font-style-2', 'font-style-3', 'font-style-4'];
@@ -273,10 +280,10 @@
         function openEditorDirectly(g, idx) {
             currentGroup = g; currentNoteIdx = idx;
             const note = db.groups[g][idx];
+            document.getElementById('edit-group-title').value = g;
             document.getElementById('edit-item-title').value = note.title;
             document.getElementById('edit-content').innerText = note.content;
             
-            // 點進筆記時預設為直接展開大圖模式
             isEditImgCompact = false;
             const grid = document.getElementById('edit-img-grid');
             grid.classList.remove('compact');
@@ -289,7 +296,24 @@
             document.getElementById('dim-btn').innerText = note.dimmed ? '標記未完成' : '標記完成';
         }
 
-        // 更新右上角「縮小照片 / 放大照片」按鈕狀態
+        // 修改分組名稱功能
+        function updateGroupName() {
+            const newGTitle = document.getElementById('edit-group-title').value.trim() || "未分類";
+            if(newGTitle === currentGroup) return; // 名稱沒變直接返回
+
+            if(db.groups[newGTitle]) {
+                alert('已存在相同名稱的分組！');
+                document.getElementById('edit-group-title').value = currentGroup;
+                return;
+            }
+
+            // 移動資料到新分組名稱下
+            db.groups[newGTitle] = db.groups[currentGroup];
+            delete db.groups[currentGroup];
+            currentGroup = newGTitle;
+            save();
+        }
+
         function updateSizeToggleBtn(imgCount) {
             const btn = document.getElementById('toggle-img-size-btn');
             if(imgCount > 0) {
@@ -300,13 +324,11 @@
             }
         }
 
-        // 切換大圖與小圖模式
         function toggleEditImgSize() {
             isEditImgCompact = !isEditImgCompact;
             const grid = document.getElementById('edit-img-grid');
             if(isEditImgCompact) {
                 grid.classList.add('compact');
-                // 剛縮小全部照片時，先清除個別放大的狀態
                 grid.querySelectorAll('.img-item').forEach(el => el.classList.remove('expanded'));
             } else {
                 grid.classList.remove('compact');
@@ -315,7 +337,6 @@
             updateSizeToggleBtn(note.images.length);
         }
 
-        // 圖片點擊與雙擊處理（縮小模式下雙擊單張變大）
         function handleEditImgTap(idx, imgSrc, el) {
             const now = Date.now();
             const isDoubleTap = (lastTapIdx === idx) && (now - lastTapTime < 350);
@@ -324,12 +345,10 @@
 
             if (isEditImgCompact) {
                 if (isDoubleTap) {
-                    // 縮小狀態下雙擊：單張切換變大 / 變小
                     el.parentElement.classList.toggle('expanded');
-                    lastTapTime = 0; // 重置避免連續三擊誤觸
+                    lastTapTime = 0;
                 }
             } else {
-                // 已經是大圖狀態時，雙擊可開啟全螢幕 Lightbox 細看
                 if (isDoubleTap) {
                     zoomImg(imgSrc);
                     lastTapTime = 0;
