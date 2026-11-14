@@ -32,7 +32,7 @@ body{background:var(--bg-color);color:var(--pika-brown);margin:0;padding-bottom:
 .cat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-bottom:12px;}
 .cat-item{border:1px solid #eee;padding:8px 2px;border-radius:10px;text-align:center;cursor:pointer;background:#fff;font-size:0.75rem;font-weight:bold;}
 .cat-item.active{border:2px solid var(--btn-active);background:#FFF9F0;}
-.total-banner{background:#fff;padding:12px 15px;border-radius:20px;border:3px solid var(--btn-active);margin-bottom:15px;display:flex;justify-content:space-between;align-items:center;}
+.total-banner{background:#fff;padding:12px 15px;border-radius:20px;border:3px solid var(--btn-active);margin-bottom:15px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;}
 .summary-box{flex:1;padding:10px 4px;text-align:center;border-radius:15px;border:2.5px solid var(--maca-yellow);background:#fff;font-size:.7rem;}
 .date-group{margin-bottom:10px;border-radius:20px;border:2.5px solid var(--maca-yellow);background:#fff;overflow:hidden;}
 .date-header{font-family:'Mochiy Pop One',sans-serif!important;background:var(--maca-yellow);padding:12px 15px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;font-size:0.95rem;}
@@ -79,7 +79,7 @@ input,select,textarea{width:100%;padding:10px;margin:4px 0;border:2px solid #eee
 <div id="tripDropdown" class="trip-dropdown"><div id="tripListMenu"></div><div class="trip-add-btn" onclick="createNewTrip()">＋ 開新旅程</div></div>
 </div>
 <div style="display:flex;align-items:center;gap:6px;">
-<span id="appVersionDisplay" style="font-size:0.7rem;color:#A08C7D;font-weight:bold;">v1.11</span>
+<span id="appVersionDisplay" style="font-size:0.7rem;color:#A08C7D;font-weight:bold;">v1.13</span>
 <span onclick="openSettings()" style="cursor:pointer;font-size:1.6rem">🐾</span>
 </div>
 </div>
@@ -88,18 +88,22 @@ input,select,textarea{width:100%;padding:10px;margin:4px 0;border:2px solid #eee
 <div id="ledgerView" class="view-section"><div class="panel" style="margin-top:15px;padding:12px;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><input type="date" id="ledgerDate" style="width:130px;margin:0;padding:5px;font-size:0.8rem;"><div style="display:flex;align-items:center;gap:6px;"><span id="twdCalcRealtime" style="font-size:0.85rem;color:#2980B9;font-weight:bold;"></span><span style="font-size:0.75rem;color:#999;">Quick Pay</span></div></div><div class="calc-display" id="calcDisplay">0</div><select id="payMethod" style="padding:8px;" onchange="updateRealtimeCalc()"><option value="Cash">💴 現金 (JPY)</option><option value="Suica">🍉 西瓜卡 (JPY)</option><option value="Credit">💳 信用卡 (JPY)</option><option value="TWD">🇹🇼 台幣 (TWD)</option></select><input type="text" id="ledgerShop" placeholder="🏪 商店名稱 (例: 星巴克、唐吉訶德)" style="padding:8px;"><div class="sub-box"><div id="subItemsContainer"></div><button type="button" class="btn-add-sub" onclick="addSubItemRow()">＋ 新增細項 (<span id="subCount">0</span>/30)</button></div><div class="cat-grid" id="catGrid"></div><div class="calc-grid"><button class="calc-btn" onclick="pressNum('7')">7</button><button class="calc-btn" onclick="pressNum('8')">8</button><button class="calc-btn" onclick="pressNum('9')">9</button><button class="calc-btn" onclick="pressNum('4')">4</button><button class="calc-btn" onclick="pressNum('5')">5</button><button class="calc-btn" onclick="pressNum('6')">6</button><button class="calc-btn" onclick="pressNum('1')">1</button><button class="calc-btn" onclick="pressNum('2')">2</button><button class="calc-btn" onclick="pressNum('3')">3</button><button class="calc-btn" onclick="pressNum('C')" style="color:red">C</button><button class="calc-btn" onclick="pressNum('0')">0</button><button class="calc-btn btn-ok" onclick="saveLedger()">OK</button></div></div></div>
 <div id="historyView" class="view-section">
 <h2 class="pika-header">MoneyByebye</h2>
-<div class="total-banner">
-<div id="grandTotalBanner" style="cursor:pointer;font-size:1.15rem;font-weight:bold;color:var(--pika-brown);" onclick="toggleMainCurrency()" title="點擊切換主幣值">
+<div class="total-banner" onclick="toggleMainCurrency()" title="點擊切換主幣值">
+<div id="grandTotalBanner" style="font-size:1.15rem;font-weight:bold;color:var(--pika-brown);">
 <!-- 這裡由 JS 動態填入 -->
 </div>
-<div style="display:flex;gap:6px;align-items:center;">
-<button id="toggleTotalBtn" onclick="toggleTotalVisibility()" style="background:var(--maca-yellow);border:none;border-radius:10px;padding:6px 10px;cursor:pointer;font-size:0.75rem;color:var(--pika-brown);font-weight:bold;">👁️ 隱藏</button>
-</div>
+<button id="toggleTotalBtn" onclick="event.stopPropagation();toggleTotalVisibility()" style="background:var(--maca-yellow);border:none;border-radius:10px;padding:6px 10px;cursor:pointer;font-size:0.75rem;color:var(--pika-brown);font-weight:bold;">👁️ 隱藏</button>
 </div>
 <div style="display:flex;gap:6px;margin-bottom:12px;"><input type="text" id="filterKeyword" placeholder="🔍 搜尋商店或品名..." oninput="renderAll()" style="margin:0;flex:2;padding:8px;font-size:0.85rem;"><select id="filterMethod" onchange="renderAll()" style="margin:0;flex:1;padding:8px;font-size:0.85rem;"><option value="">所有付款方式</option><option value="Cash">現金</option><option value="Suica">西瓜卡</option><option value="Credit">信用卡</option><option value="TWD">台幣</option></select></div>
 <div id="walletSummary" style="display:flex;gap:5px;margin-bottom:15px"></div><div id="ledgerHistoryGroups"></div></div>
 <div id="analysisView" class="view-section"><h2 class="pika-header">Pika Analysis</h2><div class="panel" id="analysisContent"></div></div>
-<nav class="bottom-nav"><div class="nav-item" onclick="switchTab('add',this)"><div>＋</div><span>新增</span></div><div class="nav-item active" onclick="switchTab('list',this)"><div>📋</div><span>清單</span></div><div class="nav-item" onclick="switchTab('ledger',this)"><div>👛</div><span>記帳</span></div><div class="nav-item" onclick="switchTab('history',this)"><div>💰</div><span>明細</span></div><div class="nav-item" onclick="switchTab('analysis',this)"><div>📊</div><span>分析</span></div></nav>
+<nav class="bottom-nav">
+<div class="nav-item" onclick="switchTab('add',this)"><div>＋</div><span>新增</span></div>
+<div class="nav-item active" onclick="switchTab('list',this)"><div>📋</div><span>清單</span></div>
+<div class="nav-item" onclick="switchTab('ledger',this)"><div>👛</div><span>記帳</span></div>
+<div class="nav-item" onclick="switchTab('history',this)"><div>💰</div><span>明細</span></div>
+<div class="nav-item" onclick="switchTab('analysis',this)"><div>📊</div><span>分析</span></div>
+</nav>
 </div>
 
 <!-- 編輯明細彈窗 -->
@@ -145,17 +149,17 @@ input,select,textarea{width:100%;padding:10px;margin:4px 0;border:2px solid #eee
 </div>
 <input type="file" id="importInput" style="display:none" accept=".json" onchange="importData(this)">
 <button onclick="clearCurrentTripData()" class="btn-outline" style="color:#e74c3c;border-color:#fadbd8;margin-top:15px;font-size:0.75rem;">⚠️ 清空目前旅程資料</button>
-<div style="text-align:center;margin-top:20px;font-size:0.6rem;color:#ccc;">PikaMoney v1.11</div>
+<div style="text-align:center;margin-top:20px;font-size:0.6rem;color:#ccc;">PikaMoney v1.13</div>
 </div></div>
 
 <div id="imgZoomModal" class="modal" onclick="this.style.display='none'" style="background:rgba(0,0,0,0.9);"><img id="zoomedImg" style="max-width:95%;max-height:90%;border-radius:10px;border:2px solid #fff;"></div>
 <script>
-const APP_VERSION="v1.11";
+const APP_VERSION="v1.13";
 const getAccount=()=>localStorage.getItem('pika_current_user')||'guest',getDBKey=()=>`pika_${getAccount()}_money_v1`;
 let currentTripId="default",wallet={suica:0,cash:0,credit:0,rate:0.203,twd:0},shoppingItems=[],ledgerItems=[],trips={},currentCat="🍱 飲食",calcInput="0",tempImgBase64="";
 const categories=['🍱 飲食','💊 藥妝','🚌 交通','🛍️ 購物','👕 衣服','🍰 甜點','⚡ 皮卡丘','🍹 飲料','💰 儲值','📦 代購','🏷️ 其他'];
 let openedShops=new Set(),isTotalHidden=false,subItemsList=[],editSubItemsList=[];
-let mainCurrencyType='JPY'; // 'JPY' 或 'TWD'
+let mainCurrencyType='JPY';
 
 function formatShortDate(d){
 if(!d)return "";
@@ -443,7 +447,6 @@ hG[i.date].total+=v;gT+=v;
 
 let twdTotal=Math.round(gT*(wallet.rate||0.203));
 if(isTotalHidden){
-document.getElementById('grandTotalBanner.innerHTML`<span>總支出: ****</span>`;` // 保留隱藏邏輯
 document.getElementById('grandTotalBanner').innerHTML=`<span>總支出: ****</span>`;
 }else{
 if(mainCurrencyType==='JPY'){
