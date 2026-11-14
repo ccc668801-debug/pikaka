@@ -119,8 +119,37 @@ window.onload=function(){curU=localStorage.getItem('pika_current_user')||'5133';
 function initApp(){db=JSON.parse(localStorage.getItem(DK))||{};if(!db[curU]){db[curU]={trips:{"default":"我的旅遊"},curT:"default",data:{"default":{items:[],notes:[]}}};save()}curT=db[curU].curT||"default";checkData();document.getElementById('curTripN').innerText=db[curU].trips[curT]||"我的旅遊";document.getElementById('ld').valueAsDate=new Date();render();renderN()}
 function checkData(){if(!db[curU].data[curT])db[curU].data[curT]={items:[],notes:[]}}
 function save(){localStorage.setItem(DK,JSON.stringify(db))}
-function openTM(){const a=document.getElementById('tAcc');a.innerHTML="";for(let i in db[curU].trips){a.innerHTML+=`<div style="display:flex;justify-content:space-between;padding:10px;border-bottom:1px solid #eee"><span onclick="switchT('${i}')" style="flex:1;text-align:left;cursor:pointer">${db[curU].trips[i]}</span><span class="del-btn" onclick="delT('${i}')">✘</span></div>`}document.getElementById('tModal').style.display='flex'}
-function addT(){const n=document.getElementById('newTN').value.trim();if(!n)return;const id='t'+Date.now();db[curU].trips[id]=n;db[curU].data[id]={items:[],notes:[]};save();openTM()}
+
+function openTM(){
+    const a=document.getElementById('tAcc');
+    a.innerHTML="";
+    for(let i in db[curU].trips){
+        const isCur = (curT === i);
+        a.innerHTML+=`<div style="display:flex;justify-content:space-between;align-items:center;padding:10px;border-bottom:1px solid #eee">
+            <span onclick="switchT('${i}')" style="flex:1;text-align:left;cursor:pointer;font-weight:${isCur?'bold':'normal'};color:${isCur?'var(--o)':'inherit'}">${db[curU].trips[i]}</span>
+            <div style="display:flex;align-items:center">
+                <span class="ed-btn" onclick="editT('${i}')">✎</span>
+                ${i==='default'?'':'<span class="del-btn" onclick="delT(\''+i+'\')">✘</span>'}
+            </div>
+        </div>`;
+    }
+    document.getElementById('tModal').style.display='flex';
+}
+
+function editT(id){
+    const curName = db[curU].trips[id];
+    const newName = prompt("修改旅程名稱：", curName);
+    if(newName !== null && newName.trim() !== ""){
+        db[curU].trips[id] = newName.trim();
+        save();
+        if(curT === id){
+            document.getElementById('curTripN').innerText = newName.trim();
+        }
+        openTM();
+    }
+}
+
+function addT(){const n=document.getElementById('newTN').value.trim();if(!n)return;const id='t'+Date.now();db[curU].trips[id]=n;db[curU].data[id]={items:[],notes:[]};save();document.getElementById('newTN').value="";openTM()}
 function switchT(id){curT=id;db[curU].curT=id;document.getElementById('curTripN').innerText=db[curU].trips[id];save();render();renderN();closeM()}
 function delT(id){if(id==='default')return;if(confirm("刪除？")){delete db[curU].trips[id];delete db[curU].data[id];if(curT===id)curT='default';save();openTM()}}
 function closeM(){document.getElementById('tModal').style.display='none'}
@@ -148,7 +177,6 @@ function renderN(){
     d.notes.forEach((n,i)=>{
         const isO=openN.includes(i),div=document.createElement('div');div.className=`note-card ${isO?'open':''}`;
         
-        // 解析標題：嘗試將日期/星期與後方地名分離
         const tMatch = n.t.match(/^([0-9\/\\.\-\u4e00-\u9fa5]+(?:\s*\([^)]+\))?)\s*(.*)/);
         let datePart = n.t, namePart = "";
         if(tMatch && tMatch[2]){
@@ -192,6 +220,7 @@ function renderN(){
 function saveS(){const ld=document.getElementById('ld').value,ln=document.getElementById('ln').value.trim(),lu=document.getElementById('lu').value.trim();if(!ln)return;const items=db[curU].data[curT].items;if(editIdx>-1){items[editIdx]={...items[editIdx],ld,ln,lu};editIdx=-1}else{items.push({ld,ln,lu,sd:""})}save();render();['ln','lu'].forEach(i=>document.getElementById(i).value="");document.getElementById('saveBtn').innerText="加入清單"}
 function saveN(){const t=document.getElementById('ntT').value.trim(),c=document.getElementById('ntC').value.trim();if(!t)return;if(editNIdx>-1){db[curU].data[curT].notes[editNIdx]={...db[curU].data[curT].notes[editNIdx],t,c};editNIdx=-1;document.getElementById('noteSaveBtn').innerText="新增"}else{db[curU].data[curT].notes.push({t,c,done:[]})}save();renderN();document.getElementById('ntT').value="";document.getElementById('ntC').value="";sw('noteList',document.querySelectorAll('.nav-item')[2])}
 function tgD(d){const i=openD.indexOf(d);if(i===-1)openD.push(d);else openD.splice(i,1);render()}
+function tgNC(i){const x=openN.indexOf(i);if(x===-1)openN.openN.push(i);else openN.splice(x,1);renderN()}
 function tgNC(i){const x=openN.indexOf(i);if(x===-1)openN.push(i);else openN.splice(x,1);renderN()}
 function tgND(ni,li){const n=db[curU].data[curT].notes[ni];n.done=n.done||[];n.done[li]=!n.done[li];save();renderN()}
 function delL(d,l){if(confirm("刪？")){db[curU].data[curT].items=db[curU].data[curT].items.filter(x=>!((x.ld||"未排期")===d&&x.ln===l));save();render()}}
