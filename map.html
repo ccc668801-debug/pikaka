@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
@@ -84,10 +83,10 @@ input,textarea{padding:12px;border:1.5px solid #EEE;border-radius:12px;width:100
 <div id="noteAddView" class="view-sec">
 <h2 class="p-h">New Note</h2>
 <div class="panel">
-<div style="display:flex;gap:5px;margin-bottom:10px;flex-wrap:wrap;justify-content:center;font-size:0.75rem;color:#AAA">
-<span>*紅 (r)</span><span>*藍 (b)</span><span>*綠 (g)</span><span>*橘 (o)</span><span>*紫 (p)</span>
+<div style="display:flex;gap:4px;margin-bottom:10px;flex-wrap:wrap;justify-content:center;font-size:0.75rem;color:#AAA">
+<span>*紅(r)</span><span>*藍(b)</span><span>*綠(g)</span><span>*橘(o)</span><span>*紫(p)</span><span>*粉(k)</span><span>*黃(y)</span><span>*青(c)</span><span>*棕(br)</span>
 </div>
-<input type="text" id="ntT" placeholder="日期 (例如：5/26)"><textarea id="ntC" placeholder="09:00 桃園機場 / 買西瓜卡 *藍&#10;淺草文化中心 / 9點開" rows="10"></textarea><button class="pika-btn" id="noteSaveBtn" onclick="saveN()">新增</button>
+<input type="text" id="ntT" placeholder="日期 (例如：11/13 (五) 橫濱)"><textarea id="ntC" placeholder="09:00 桃園機場 / 買西瓜卡 *藍&#10;淺草文化中心 / 9點開" rows="10"></textarea><button class="pika-btn" id="noteSaveBtn" onclick="saveN()">新增</button>
 </div>
 </div>
 
@@ -102,7 +101,18 @@ input,textarea{padding:12px;border:1.5px solid #EEE;border-radius:12px;width:100
 <div id="tModal" class="modal"><div class="modal-b"><h3>旅程管理</h3><div id="tAcc" style="max-height:220px;overflow-y:auto;margin:15px 0"></div><input type="text" id="newTN" placeholder="新旅程名稱"><button class="pika-btn" style="background:var(--bl);box-shadow:0 4px 0 #7FB8E6;margin-bottom:10px" onclick="addT()">建立新旅程</button><button class="pika-btn" style="background:#EEE;color:#888;box-shadow:0 4px 0 #DDD" onclick="closeM()">關閉</button></div></div>
 
 <script>
-const DK='pikaka_v513_final',colorCode={'紅':'#E57373','r':'#E57373','藍':'#64B5F6','b':'#64B5F6','綠':'#81C784','g':'#81C784','橘':'#FFB74D','o':'#FFB74D','紫':'#BA68C8','p':'#BA68C8'};
+const DK='pikaka_v513_final',
+colorCode={
+    '紅':'#E57373','r':'#E57373',
+    '藍':'#64B5F6','b':'#64B5F6',
+    '綠':'#81C784','g':'#81C784',
+    '橘':'#FFB74D','o':'#FFB74D',
+    '紫':'#BA68C8','p':'#BA68C8',
+    '粉':'#F06292','k':'#F06292',
+    '黃':'#FFD54F','y':'#FFD54F',
+    '青':'#4DB6AC','c':'#4DB6AC',
+    '棕':'#A1887F','br':'#A1887F'
+};
 let curU="5133",curT="default",db={},openD=[],openN=[],editIdx=-1,editNIdx=-1;
 
 window.onload=function(){curU=localStorage.getItem('pika_current_user')||'5133';document.getElementById('welcomeMsg').innerText=`Hi! ${curU}`;initApp()};
@@ -137,10 +147,36 @@ function renderN(){
     const d=db[curU].data[curT],list=document.getElementById('noteItems');list.innerHTML="";
     d.notes.forEach((n,i)=>{
         const isO=openN.includes(i),div=document.createElement('div');div.className=`note-card ${isO?'open':''}`;
-        let h=`<div class="note-title" onclick="tgNC(${i})"><span style="flex:1">${n.t}</span><div style="display:flex;align-items:center"><span class="fat-btn fat-up" onclick="event.stopPropagation();moveN(${i},-1)">▲</span><span class="fat-btn fat-down" onclick="event.stopPropagation();moveN(${i},1)">▼</span><span class="ed-btn" onclick="event.stopPropagation();edN(${i})">✎</span><span class="del-btn" onclick="event.stopPropagation();delN(${i})">✘</span></div></div><div class="note-body">`;
+        
+        // 解析標題：嘗試將日期/星期與後方地名分離
+        const tMatch = n.t.match(/^([0-9\/\\.\-\u4e00-\u9fa5]+(?:\s*\([^)]+\))?)\s*(.*)/);
+        let datePart = n.t, namePart = "";
+        if(tMatch && tMatch[2]){
+            datePart = tMatch[1];
+            namePart = tMatch[2];
+        }
+
+        let h=`<div class="note-title" onclick="tgNC(${i})">
+            <div style="flex:1;display:flex;align-items:center;flex-wrap:wrap;gap:6px;">
+                <span style="color:var(--o);font-weight:700;">${datePart}</span>
+                ${namePart?`<span style="color:#555;font-weight:500;font-size:0.9rem;">${namePart}</span>`:''}
+            </div>
+            <div style="display:flex;align-items:center">
+                <span class="fat-btn fat-up" onclick="event.stopPropagation();moveN(${i},-1)">▲</span>
+                <span class="fat-btn fat-down" onclick="event.stopPropagation();moveN(${i},1)">▼</span>
+                <span class="ed-btn" onclick="event.stopPropagation();edN(${i})">✎</span>
+                <span class="del-btn" onclick="event.stopPropagation();delN(${i})">✘</span>
+            </div>
+        </div><div class="note-body">`;
+
         n.c.split('\n').filter(l=>l.trim()!=="").forEach((l,li)=>{
             const s=l.trim(),isD=n.done&&n.done[li],timeMatch=s.match(/^(\d{1,2}[:：]?\d{2}(?:\s*[-~～]\s*\d{1,2}[:：]?\d{2})?)\s*(.*)/);
-            let timeStr=timeMatch?timeMatch[1]:"",restStr=timeMatch?timeMatch[2]:s,finalColor='inherit',colorMatch=restStr.match(/\*([紅藍綠橘紫rbygop])/);
+            let timeStr=timeMatch?timeMatch[1]:"",restStr=timeMatch?timeMatch[2]:s,finalColor='inherit';
+            
+            const colorKeys = Object.keys(colorCode).join('');
+            const colorMatchRegex = new RegExp(`\\*([${colorKeys}])`);
+            let colorMatch = restStr.match(colorMatchRegex);
+
             if(colorMatch){finalColor=colorCode[colorMatch[1]]||'inherit';restStr=restStr.replace(colorMatch[0],'').trim()}
             let mainT=restStr,remT="",sep=restStr.includes("/")?"/":restStr.includes("|")?"|":null;
             if(sep){let pts=restStr.split(sep);mainT=pts[0].trim();remT=pts[1].trim()}
