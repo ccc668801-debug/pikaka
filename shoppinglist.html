@@ -79,7 +79,7 @@ input,select,textarea{width:100%;padding:10px;margin:4px 0;border:2px solid #eee
 <div id="tripDropdown" class="trip-dropdown"><div id="tripListMenu"></div><div class="trip-add-btn" onclick="createNewTrip()">＋ 開新旅程</div></div>
 </div>
 <div style="display:flex;align-items:center;gap:6px;">
-<span id="appVersionDisplay" style="font-size:0.7rem;color:#A08C7D;font-weight:bold;">v1.9</span>
+<span id="appVersionDisplay" style="font-size:0.7rem;color:#A08C7D;font-weight:bold;">v1.10</span>
 <span onclick="openSettings()" style="cursor:pointer;font-size:1.6rem">🐾</span>
 </div>
 </div>
@@ -99,7 +99,7 @@ input,select,textarea{width:100%;padding:10px;margin:4px 0;border:2px solid #eee
 <input type="hidden" id="editLedgerId">
 <label>日期</label><input type="date" id="editLedgerDate">
 <label>商店名稱</label><input type="text" id="editLedgerShop" placeholder="例: 唐吉訶德">
-<label>金額</label><input type="number" id="editLedgerAmount">
+<label>總金額</label><input type="number" id="editLedgerAmount">
 <label>付款方式</label>
 <select id="editLedgerMethod">
 <option value="Cash">💴 現金 (JPY)</option>
@@ -109,6 +109,13 @@ input,select,textarea{width:100%;padding:10px;margin:4px 0;border:2px solid #eee
 </select>
 <label>分類</label>
 <select id="editLedgerCat"></select>
+
+<div class="sub-box" style="margin-top:12px;">
+<label style="font-size:0.85rem;font-weight:bold;">📝 編輯細項 (商品)</label>
+<div id="editSubItemsContainer"></div>
+<button type="button" class="btn-add-sub" onclick="addEditSubItemRow()">＋ 新增細項</button>
+</div>
+
 <button onclick="saveEditedLedger()" class="btn-main">儲存修改</button>
 </div></div>
 
@@ -129,16 +136,16 @@ input,select,textarea{width:100%;padding:10px;margin:4px 0;border:2px solid #eee
 </div>
 <input type="file" id="importInput" style="display:none" accept=".json" onchange="importData(this)">
 <button onclick="clearCurrentTripData()" class="btn-outline" style="color:#e74c3c;border-color:#fadbd8;margin-top:15px;font-size:0.75rem;">⚠️ 清空目前旅程資料</button>
-<div style="text-align:center;margin-top:20px;font-size:0.6rem;color:#ccc;">PikaMoney v1.9</div>
+<div style="text-align:center;margin-top:20px;font-size:0.6rem;color:#ccc;">PikaMoney v1.10</div>
 </div></div>
 
 <div id="imgZoomModal" class="modal" onclick="this.style.display='none'" style="background:rgba(0,0,0,0.9);"><img id="zoomedImg" style="max-width:95%;max-height:90%;border-radius:10px;border:2px solid #fff;"></div>
 <script>
-const APP_VERSION="v1.9";
+const APP_VERSION="v1.10";
 const getAccount=()=>localStorage.getItem('pika_current_user')||'guest',getDBKey=()=>`pika_${getAccount()}_money_v1`;
 let currentTripId="default",wallet={suica:0,cash:0,credit:0,rate:0.203,twd:0},shoppingItems=[],ledgerItems=[],trips={},currentCat="🍱 飲食",calcInput="0",tempImgBase64="";
 const categories=['🍱 飲食','💊 藥妝','🚌 交通','🛍️ 購物','👕 衣服','🍰 甜點','⚡ 皮卡丘','🍹 飲料','💰 儲值','📦 代購','🏷️ 其他'];
-let openedShops=new Set(),isTotalHidden=false,subItemsList=[];
+let openedShops=new Set(),isTotalHidden=false,subItemsList=[],editSubItemsList=[];
 
 function formatShortDate(d){
 if(!d)return "";
@@ -248,6 +255,7 @@ document.getElementById('itemName').value=i.name;document.getElementById('itemPr
 if(i.img){tempImgBase64=i.img;document.getElementById('previewImg').src=i.img;document.getElementById('previewImg').style.display='block';document.getElementById('imgTip').style.display='none';}
 document.getElementById('saveBtn').innerText="更新商品";switchTab('add',document.querySelectorAll('.nav-item')[0]);
 }
+
 function openEditLedger(id){
 const item=ledgerItems.find(x=>x.id===id);if(!item)return;
 document.getElementById('editLedgerId').value=item.id;
@@ -257,8 +265,49 @@ document.getElementById('editLedgerAmount').value=item.amount||0;
 document.getElementById('editLedgerMethod').value=item.method||"Cash";
 const catSel=document.getElementById('editLedgerCat');
 catSel.innerHTML=categories.map(c=>`<option value="${c}" ${c===item.cat?'selected':''}>${c}</option>`).join('');
+
+// 載入細項
+editSubItemsList=item.subItems?item.subItems.map(s=>({name:s.name,price:s.price})):[];
+renderEditSubItemInputs();
+
 document.getElementById('editLedgerModal').style.display='flex';
 }
+
+function addEditSubItemRow(){
+if(editSubItemsList.length>=30)return alert("最多只能新增 30 個細項！");
+editSubItemsList.push({name:"",price:""});
+renderEditSubItemInputs();
+}
+function removeEditSubItemRow(idx){
+editSubItemsList.splice(idx,1);
+renderEditSubItemInputs();
+calcEditSubTotal();
+}
+function updateEditSubItem(idx,field,val){
+editSubItemsList[idx][field]=val;
+if(field==='price')calcEditSubTotal();
+}
+function calcEditSubTotal(){
+let sum=0,hasVal=false;
+editSubItemsList.forEach(s=>{
+const p=parseInt(s.price);
+if(!isNaN(p)&&p>0){sum+=p;hasVal=true;}
+});
+if(hasVal){
+document.getElementById('editLedgerAmount').value=sum;
+}
+}
+function renderEditSubItemInputs(){
+const box=document.getElementById('editSubItemsContainer');
+box.innerHTML="";
+editSubItemsList.forEach((item,idx)=>{
+const row=document.createElement('div');
+row.className='sub-input-row';
+row.innerHTML=`<input type="text" placeholder="細項 ${idx+1} 品名" value="${item.name}" oninput="updateEditSubItem(${idx},'name',this.value)" style="flex:2"><input type="number" placeholder="金額" value="${item.price}" oninput="updateEditSubItem(${idx},'price',this.value)" style="flex:1"><span onclick="removeEditSubItemRow(${idx})" style="color:#e74c3c;cursor:pointer;padding:0 4px;font-weight:bold;">✕</span>`;
+box.appendChild(row);
+});
+}
+
 function saveEditedLedger(){
 const id=Number(document.getElementById('editLedgerId').value);
 const newDate=document.getElementById('editLedgerDate').value;
@@ -266,6 +315,8 @@ const newShop=document.getElementById('editLedgerShop').value.trim();
 const newAmount=parseInt(document.getElementById('editLedgerAmount').value)||0;
 const newMethod=document.getElementById('editLedgerMethod').value;
 const newCat=document.getElementById('editLedgerCat').value;
+const validSubs=editSubItemsList.filter(s=>s.name.trim()!==''||(parseInt(s.price)>0)).map(s=>({name:s.name.trim(),price:parseInt(s.price)||0}));
+
 if(newAmount<=0)return alert("請輸入大於 0 的金額");
 
 const idx=ledgerItems.findIndex(x=>x.id===id);
@@ -293,7 +344,7 @@ else if(newMethod==='TWD')wallet.twd-=newAmount;
 else if(newMethod==='Credit')wallet.credit=(wallet.credit||0)+newAmount;
 }
 
-ledgerItems[idx]={...oldItem,date:newDate,shop:newShop,name:newShop||newCat,amount:newAmount,method:newMethod,cat:newCat};
+ledgerItems[idx]={...oldItem,date:newDate,shop:newShop,name:newShop||newCat,amount:newAmount,method:newMethod,cat:newCat,subItems:validSubs};
 }
 
 closeModal('editLedgerModal');
@@ -301,6 +352,7 @@ showToast();
 sync();
 renderAll();
 }
+
 function updateRealtimeCalc(){
 const m=document.getElementById('payMethod').value,amt=parseInt(calcInput)||0,label=document.getElementById('twdCalcRealtime');
 if(m==='TWD'&&amt>0){label.innerText=`≈ ${Math.round(amt/(wallet.rate||0.203))} 円`;}else{label.innerText="";}
