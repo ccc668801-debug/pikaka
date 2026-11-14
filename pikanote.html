@@ -35,15 +35,33 @@
             display:none; position:fixed; top:0; left:0; width:100%; height:100%; 
             z-index:1000; background:var(--jp-white); overflow-y:auto; padding-bottom:100px;
         }
+        
+        /* 新增頁面用的 5 列縮圖網格 */
         .img-grid{display:grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap:8px; margin:15px 0}
         .thumb-img{width:100%; height:65px; object-fit:cover; border-radius:12px; cursor:pointer}
-        .delete-img-btn{position:absolute; top:-5px; right:-5px; background:#ff4757; color:white; width:18px; height:18px; border-radius:50%; font-size:10px; display:flex; justify-content:center; align-items:center; z-index:10}
+
+        /* 編輯頁面：預設直接大圖顯示 */
+        .edit-img-container { display: flex; flex-direction: column; gap: 14px; margin: 15px 0; }
+        .edit-img-container .img-item { width: 100%; transition: all 0.25s ease; }
+        .edit-img-container .img-item img { width: 100%; height: auto; max-height: 75vh; object-fit: contain; border-radius: 18px; cursor: pointer; background: rgba(255,255,255,0.4); }
+
+        /* 編輯頁面：點擊「縮小照片」後的 5 列小圖模式 */
+        .edit-img-container.compact { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; }
+        .edit-img-container.compact .img-item:not(.expanded) img { width: 100%; height: 65px; object-fit: cover; border-radius: 12px; }
+        
+        /* 縮小模式下「雙擊單張變大」的樣式 */
+        .edit-img-container.compact .img-item.expanded { grid-column: span 5; margin: 6px 0; }
+        .edit-img-container.compact .img-item.expanded img { width: 100%; height: auto; max-height: 75vh; object-fit: contain; border-radius: 18px; }
+
+        .delete-img-btn{position:absolute; top:8px; right:8px; background:rgba(255,71,87,0.9); color:white; width:24px; height:24px; border-radius:50%; font-size:13px; display:flex; justify-content:center; align-items:center; z-index:10; box-shadow: 0 2px 6px rgba(0,0,0,0.15);}
+        .compact .img-item:not(.expanded) .delete-img-btn { top:-5px; right:-5px; width:18px; height:18px; font-size:10px; }
+
         .lightbox{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.9);z-index:2000;justify-content:center;align-items:center}
         .color-dot.active { border: 2px solid #4A4A4A !important; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         
         /* 移動按鈕樣式 */
-        .move-btn-group { display: none; } /* 預設隱藏 */
+        .move-btn-group { display: none; }
         body.sort-mode .move-btn-group { display: flex; flex-direction: column; gap: 8px; border-right: 1px solid #f0f0f0; margin-right: 15px; padding-right: 10px; }
     </style>
 </head>
@@ -53,10 +71,13 @@
         <div class="max-w-2xl mx-auto p-6">
             <div class="flex justify-between items-center mb-8">
                 <button onclick="closeEditor()" class="text-stone-400 font-bold">✕ 關閉</button>
-                <label class="cursor-pointer bg-stone-100 px-4 py-2 rounded-full text-sm">🖼️ 加圖 (可多選)<input type="file" multiple class="hidden" onchange="handleImageUpload(event, 'edit')"></label>
+                <div class="flex items-center gap-2">
+                    <button id="toggle-img-size-btn" onclick="toggleEditImgSize()" class="hidden bg-white/80 text-stone-600 px-3.5 py-2 rounded-full text-xs font-medium shadow-sm border border-stone-200/60 transition">縮小照片</button>
+                    <label class="cursor-pointer bg-stone-100 px-4 py-2 rounded-full text-sm">🖼️ 加圖<input type="file" multiple class="hidden" onchange="handleImageUpload(event, 'edit')"></label>
+                </div>
             </div>
             <input type="text" id="edit-item-title" oninput="autoSaveEdit()" class="w-full text-2xl font-medium bg-transparent border-none outline-none mb-4" placeholder="標題">
-            <div id="edit-img-grid" class="img-grid"></div>
+            <div id="edit-img-grid" class="edit-img-container"></div>
             <div id="edit-content" contenteditable="true" oninput="autoSaveEdit()" class="w-full min-h-[50vh] text-lg leading-relaxed outline-none opacity-80" placeholder="內容..."></div>
             <div class="mt-12 pt-8 border-t border-stone-100 flex justify-between items-center">
                 <button onclick="toggleDimCurrent()" id="dim-btn" class="text-stone-400 text-sm">標記完成</button>
@@ -109,7 +130,7 @@
                 <input type="text" id="new-group-title" class="w-full p-4 bg-stone-50 rounded-2xl outline-none font-medium text-stone-700" placeholder="分組名稱 (選填)">
                 <input type="text" id="new-item-title" class="w-full p-4 bg-stone-50 rounded-2xl outline-none text-stone-600" placeholder="便條標題 (必填一項)">
                 <div id="new-img-grid" class="img-grid"></div>
-                <label class="block text-center p-4 border border-dashed border-stone-200 rounded-2xl cursor-pointer text-stone-300 text-xs">🖼️ 增加圖片 (可一次選多張)<input type="file" multiple class="hidden" onchange="handleImageUpload(event, 'new')"></label>
+                <label class="block text-center p-4 border border-dashed border-stone-200 rounded-2xl cursor-pointer text-stone-300 text-xs">🖼️ 增加圖片 (最多10張)<input type="file" multiple class="hidden" onchange="handleImageUpload(event, 'new')"></label>
                 <div id="new-note-editor" contenteditable="true" class="min-h-[160px] p-5 bg-color-1 rounded-2xl outline-none text-stone-700" placeholder="內容..."></div>
                 <button onclick="saveNewNote()" class="w-full bg-stone-800 text-white py-4 rounded-2xl font-medium tracking-widest text-sm shadow-lg">儲存便條</button>
             </div>
@@ -139,7 +160,10 @@
         const STORAGE_KEY = `pika_v24_db_513`;
         let db = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {todos:[], groups:{}, fontIdx:0};
         let currentGroup = '', currentNoteIdx = -1, tempImages = [], selectedColor = 'bg-color-1';
-        const quotes = ["今日という日は、残りの人生の最初の一日である。","一期一会","日日est好日。","初心忘るべからず。","生活の斷片を記録する。","ゆっくり歩めば、遠くまで行ける。"];
+        let isEditImgCompact = false; // 追蹤目前是否處於縮小模式
+        let lastTapTime = 0, lastTapIdx = -1; // 支援手機與桌機雙擊偵測
+
+        const quotes = ["今日という日は、残りの人生の最初の一日である。","一期一会","日日是好日。","初心忘るべからず。","生活の斷片を記録する。","ゆっくり歩めば、遠くまで行ける。"];
         const fontClasses = ['font-style-0', 'font-style-1', 'font-style-2', 'font-style-3', 'font-style-4'];
 
         function save() { localStorage.setItem(STORAGE_KEY, JSON.stringify(db)); }
@@ -156,7 +180,7 @@
 
         function refreshQuote() { document.getElementById('quote-display').innerText = quotes[Math.floor(Math.random()*quotes.length)]; }
 
-        // --- 排序功能關鍵代碼 ---
+        // --- 排序功能 ---
         function toggleSortMode() {
             const body = document.getElementById('main-body');
             const btn = document.getElementById('sort-toggle-btn');
@@ -169,7 +193,7 @@
         }
 
         function moveItem(index, direction, e) {
-            e.stopPropagation(); // 防止點擊到開啟便條
+            e.stopPropagation();
             const keys = Object.keys(db.groups);
             const newIndex = index + direction;
             if (newIndex < 0 || newIndex >= keys.length) return;
@@ -179,15 +203,11 @@
             keys[index] = keys[newIndex];
             keys[newIndex] = temp;
 
-            keys.forEach(key => {
-                newGroups[key] = db.groups[key];
-            });
-
+            keys.forEach(key => { newGroups[key] = db.groups[key]; });
             db.groups = newGroups;
             save();
             renderMainList();
         }
-        // -----------------------
 
         function saveNewNote() {
             const gTitle = document.getElementById('new-group-title').value.trim();
@@ -255,11 +275,66 @@
             const note = db.groups[g][idx];
             document.getElementById('edit-item-title').value = note.title;
             document.getElementById('edit-content').innerText = note.content;
+            
+            // 點進筆記時預設為直接展開大圖模式
+            isEditImgCompact = false;
+            const grid = document.getElementById('edit-img-grid');
+            grid.classList.remove('compact');
+            updateSizeToggleBtn(note.images.length);
+            
             renderImgGrid('edit-img-grid', note.images, false);
             const overlay = document.getElementById('editor-overlay');
             overlay.style.display = 'block';
             overlay.className = note.color;
             document.getElementById('dim-btn').innerText = note.dimmed ? '標記未完成' : '標記完成';
+        }
+
+        // 更新右上角「縮小照片 / 放大照片」按鈕狀態
+        function updateSizeToggleBtn(imgCount) {
+            const btn = document.getElementById('toggle-img-size-btn');
+            if(imgCount > 0) {
+                btn.classList.remove('hidden');
+                btn.innerText = isEditImgCompact ? '放大照片' : '縮小照片';
+            } else {
+                btn.classList.add('hidden');
+            }
+        }
+
+        // 切換大圖與小圖模式
+        function toggleEditImgSize() {
+            isEditImgCompact = !isEditImgCompact;
+            const grid = document.getElementById('edit-img-grid');
+            if(isEditImgCompact) {
+                grid.classList.add('compact');
+                // 剛縮小全部照片時，先清除個別放大的狀態
+                grid.querySelectorAll('.img-item').forEach(el => el.classList.remove('expanded'));
+            } else {
+                grid.classList.remove('compact');
+            }
+            const note = db.groups[currentGroup][currentNoteIdx];
+            updateSizeToggleBtn(note.images.length);
+        }
+
+        // 圖片點擊與雙擊處理（縮小模式下雙擊單張變大）
+        function handleEditImgTap(idx, imgSrc, el) {
+            const now = Date.now();
+            const isDoubleTap = (lastTapIdx === idx) && (now - lastTapTime < 350);
+            lastTapTime = now;
+            lastTapIdx = idx;
+
+            if (isEditImgCompact) {
+                if (isDoubleTap) {
+                    // 縮小狀態下雙擊：單張切換變大 / 變小
+                    el.parentElement.classList.toggle('expanded');
+                    lastTapTime = 0; // 重置避免連續三擊誤觸
+                }
+            } else {
+                // 已經是大圖狀態時，雙擊可開啟全螢幕 Lightbox 細看
+                if (isDoubleTap) {
+                    zoomImg(imgSrc);
+                    lastTapTime = 0;
+                }
+            }
         }
 
         function openGroup(g) { currentGroup = g; showPage('detail-page'); document.getElementById('group-display-title').innerText = g; renderNoteGrid(); }
@@ -281,7 +356,6 @@
         async function handleImageUpload(e, mode) {
             const files = Array.from(e.target.files);
             for(let file of files) {
-                // 檢查是否已達上限 10 張
                 const currentImages = (mode === 'new') ? tempImages : db.groups[currentGroup][currentNoteIdx].images;
                 if(currentImages.length >= 10) {
                     alert('每則便條最多只能放 10 張照片喔！');
@@ -310,6 +384,7 @@
                                 targetNote.images.push(b64);
                                 save();
                                 renderImgGrid('edit-img-grid', targetNote.images, false);
+                                updateSizeToggleBtn(targetNote.images.length);
                             }
                         }
                     };
@@ -317,16 +392,37 @@
                 };
                 reader.readAsDataURL(file);
             }
-            // 清空 input 讓重複選取相同檔案時也能觸發 change
             e.target.value = '';
         }
 
         function renderImgGrid(id, imgs, isNew) {
-            document.getElementById(id).innerHTML = imgs.map((s, i) => `
-                <div class="relative"><img src="${s}" class="thumb-img" onclick="zoomImg('${s}')"><button onclick="removeImg(${i},${isNew})" class="delete-img-btn">×</button></div>
-            `).join('');
+            if(isNew) {
+                document.getElementById(id).innerHTML = imgs.map((s, i) => `
+                    <div class="relative"><img src="${s}" class="thumb-img" onclick="zoomImg('${s}')"><button onclick="removeImg(${i}, true)" class="delete-img-btn">×</button></div>
+                `).join('');
+            } else {
+                document.getElementById(id).innerHTML = imgs.map((s, i) => `
+                    <div class="relative img-item">
+                        <img src="${s}" onclick="handleEditImgTap(${i}, '${s}', this)">
+                        <button onclick="event.stopPropagation(); removeImg(${i}, false)" class="delete-img-btn">×</button>
+                    </div>
+                `).join('');
+            }
         }
-        function removeImg(i, isNew) { if(isNew) { tempImages.splice(i,1); renderImgGrid('new-img-grid', tempImages, true); } else { db.groups[currentGroup][currentNoteIdx].images.splice(i,1); save(); renderImgGrid('edit-img-grid', db.groups[currentGroup][currentNoteIdx].images, false); } }
+
+        function removeImg(i, isNew) { 
+            if(isNew) { 
+                tempImages.splice(i,1); 
+                renderImgGrid('new-img-grid', tempImages, true); 
+            } else { 
+                const targetNote = db.groups[currentGroup][currentNoteIdx];
+                targetNote.images.splice(i,1); 
+                save(); 
+                renderImgGrid('edit-img-grid', targetNote.images, false); 
+                updateSizeToggleBtn(targetNote.images.length);
+            } 
+        }
+
         function zoomImg(s) { document.getElementById('lightbox-img').src = s; document.getElementById('lightbox').style.display = 'flex'; }
 
         function selectColor(c, el) { selectedColor = c; document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('active')); el.classList.add('active'); document.getElementById('new-note-editor').className = `min-h-[160px] p-5 rounded-2xl outline-none ${c} text-stone-700`; }
