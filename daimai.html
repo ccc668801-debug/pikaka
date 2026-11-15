@@ -859,42 +859,46 @@ renderStats();
 }
 }
 
-// 支援跨團整合工具的匯出功能
+// 支援跨團整合工具的匯出功能 (Data URI 相容版)
 function exportGroupDataFile(){
-const groupName = prompt('請輸入這一團的名稱（例如：第2團、藥妝代購團）：', currentCamp);
-if(groupName === null) return;
-const cleanName = groupName.trim() || currentCamp;
-const exportPayload = {
-groupName: cleanName,
-exportedAt: new Date().toISOString(),
-buyersData: friends.map(f => {
-  return {
-    name: f,
-    orderNo: 1,
-    content: buyData.filter(item => item.friend === f).map(item => `${item.name}x${item.qty||1}`).join('、')
+  const groupName = prompt('請輸入這一團的名稱（例如：第2團、藥妝代購團）：', currentCamp);
+  if(groupName === null) return;
+  const cleanName = groupName.trim() || currentCamp;
+  
+  const exportPayload = {
+    groupName: cleanName,
+    exportedAt: new Date().toISOString(),
+    buyersData: friends.map(f => {
+      return {
+        name: f,
+        orderNo: 1,
+        content: buyData.filter(item => item.friend === f).map(item => `${item.name}x${item.qty||1}`).join('、')
+      };
+    }),
+    matchRecords: buyData.map(item => {
+      return {
+        id: item.id,
+        zone: 'A',
+        role: item.name,
+        buyerName: item.friend,
+        buyerOrderNo: 1,
+        time: new Date().toLocaleTimeString('zh-TW', { hour12: false })
+      };
+    }),
+    buyerStates: {}
   };
-}),
-matchRecords: buyData.map(item => {
-  return {
-    id: item.id,
-    zone: 'A',
-    role: item.name,
-    buyerName: item.friend,
-    buyerOrderNo: 1,
-    time: new Date().toLocaleTimeString('zh-TW', { hour12: false })
-  };
-}),
-buyerStates: {}
-};
-const blob = new Blob([JSON.stringify(exportPayload, null, 2)], { type: 'application/json' });
-const url = URL.createObjectURL(blob);
-const a = document.createElement('a');
-a.href = url;
-a.download = `${cleanName}.json`;
-document.body.appendChild(a);
-a.click();
-document.body.removeChild(a);
-URL.revokeObjectURL(url);
+
+  try {
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportPayload, null, 2));
+    const a = document.createElement('a');
+    a.href = dataStr;
+    a.download = `${cleanName}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  } catch (err) {
+    alert('下載失敗，請檢查瀏覽器權限。');
+  }
 }
 
 function exportData(){
