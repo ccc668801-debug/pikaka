@@ -60,7 +60,7 @@ input,textarea,select,button{width:100%;padding:12px;margin:8px 0;border:2px sol
 <span onclick="openCampModal()" style="cursor:pointer;font-size:1.2rem" title="管理代購團">🏷️</span>
 <div style="display:flex;align-items:center;gap:2px;">
 <span onclick="openModal('settingModal')" style="cursor:pointer;font-size:1.5rem">⚙️</span>
-<span style="font-size:0.65rem;color:#aaa;font-weight:normal;">v2.9</span>
+<span style="font-size:0.65rem;color:#aaa;font-weight:normal;">v3.0</span>
 </div>
 </div>
 </div>
@@ -138,7 +138,7 @@ input,textarea,select,button{width:100%;padding:12px;margin:8px 0;border:2px sol
 <textarea id="friendListInput" rows="3"></textarea>
 <button class="btn-main" onclick="saveSettings()">儲存設定</button>
 <hr style="margin:15px 0;border:none;border-top:1px solid #eee;">
-<button class="btn-main" style="background:#e67e22;box-shadow:0 4px 0 #d35400;font-size:0.85rem;margin-bottom:8px;" onclick="resetCampProgress()">🔄 全團採購進度歸零 (價格保留)</button>
+<button class="btn-main" style="background:#e67e22;box-shadow:0 4px 0 #d35400;font-size:0.85rem;margin-bottom:8px;" onclick="resetCampProgress()">🔄 全團採購進度歸零 (價格與抵扣保留)</button>
 <div style="display:flex;gap:10px;">
 <button class="btn-main" style="background:#bbb;box-shadow:0 4px 0 #999;font-size:0.85rem;" onclick="exportData()">📤 備份</button>
 <button class="btn-main" style="background:#bbb;box-shadow:0 4px 0 #999;font-size:0.85rem;" onclick="document.getElementById('importFile').click()">📥 還原</button>
@@ -326,7 +326,7 @@ closeModal('settingModal');
 alert("設定已儲存！");
 }
 function resetCampProgress(){
-if(confirm("確定要將採購進度歸零嗎？（此動作只會將「已買數量」設為 0，商品的價格與資料皆會完整保留！）")){
+if(confirm("確定要將採購進度歸零嗎？\n\n(提示：此動作只會將「已買數量」設為 0，您的【商品價格】與【已付訂金/抵扣資料】皆會 100% 完整保留，絕對不會不見！)")) {
 buyData.forEach(i=>{
 i.boughtQty=0;
 i.status='normal';
@@ -335,7 +335,7 @@ saveLocal();
 renderList();
 renderStats();
 closeModal('settingModal');
-alert("已成功將採購進度歸零，所有商品價格皆完整保留！");
+alert("已成功將採購進度歸零！所有商品價格與訂金抵扣資料皆完整保留。");
 }
 }
 function updateFriendSelect(){
@@ -465,11 +465,16 @@ info.twd=twdEl?(parseFloat(twdEl.value)||0):0;
 paidData[f]=info;
 localStorage.setItem(getCampDataKey(currentCamp,'paid'),JSON.stringify(paidData));
 renderList();
+// 套用後自動保持該框展開，避免使用者誤以為資料不見或畫面卡住
+const box=document.getElementById(`deductBox-${f}`);
+if(box)box.classList.add('show');
 }
 function clearDeduct(f){
 paidData[f]={jpy:0,twd:0,mode:'jpy'};
 localStorage.setItem(getCampDataKey(currentCamp,'paid'),JSON.stringify(paidData));
 renderList();
+const box=document.getElementById(`deductBox-${f}`);
+if(box)box.classList.add('show');
 }
 function renderList(){
 const listDiv=document.getElementById('friendList');
@@ -550,7 +555,7 @@ div.innerHTML=`
 </div>
 </div>
 <div class="friend-content">
-<div id="deductBox-${f}" class="deduct-box ${hasDeduct?'has-deduct':''}">
+<div id="deductBox-${f}" class="deduct-box ${hasDeduct?'has-deduct show':''}">
 <div style="display:flex;gap:4px;font-size:0.8rem;">
 <button id="btnMode-${f}-both" onclick="setDeductMode('${f}','both')" style="flex:1;padding:4px;border-radius:8px;border:none;background:${payInfo.mode==='both'?'var(--btn-active)':'#eee'};color:${payInfo.mode==='both'?'white':'#666'};">全抵扣</button>
 <button id="btnMode-${f}-jpy" onclick="setDeductMode('${f}','jpy')" style="flex:1;padding:4px;border-radius:8px;border:none;background:${payInfo.mode==='jpy'?'var(--btn-active)':'#eee'};color:${payInfo.mode==='jpy'?'white':'#666'};">僅日幣抵扣</button>
