@@ -60,7 +60,7 @@ input,textarea,select,button{width:100%;padding:12px;margin:8px 0;border:2px sol
 <span onclick="openCampModal()" style="cursor:pointer;font-size:1.2rem" title="管理代購團">🏷️</span>
 <div style="display:flex;align-items:center;gap:2px;">
 <span onclick="openModal('settingModal')" style="cursor:pointer;font-size:1.5rem">⚙️</span>
-<span style="font-size:0.65rem;color:#aaa;font-weight:normal;">v3.0</span>
+<span style="font-size:0.65rem;color:#aaa;font-weight:normal;">v3.1</span>
 </div>
 </div>
 </div>
@@ -119,9 +119,9 @@ input,textarea,select,button{width:100%;padding:12px;margin:8px 0;border:2px sol
 <div id="settingModal" class="modal">
 <div class="modal-content">
 <h3 class="pika-header" style="margin-top:0;">設定與工具</h3>
-<label style="font-size:0.85rem;">💱 預設客戶收費匯率</label>
+<label style="font-size:0.85rem;">💱 此團預設客戶收費匯率</label>
 <input type="number" id="exRate" step="0.0001">
-<label style="font-size:0.85rem;margin-top:5px;display:block;">📉 實際換匯成本匯率 </label>
+<label style="font-size:0.85rem;margin-top:5px;display:block;">📉 此團實際換匯成本匯率 </label>
 <input type="number" id="costRate" step="0.0001" placeholder="例如 0.215">
 <label style="font-size:0.85rem;margin-top:5px;display:block;">👁️ 顯示利潤估算 Dashboard</label>
 <select id="showProfitDash">
@@ -207,7 +207,8 @@ if(!Array.isArray(camps)||camps.length===0)camps=["預設代購團"];
 let currentCamp=localStorage.getItem('pika_v17_currentCamp')||camps[0];
 if(!camps.includes(currentCamp))currentCamp=camps[0];
 function getCampDataKey(camp,type){return `pika_v17_${camp}_${type}`;}
-let buyData=[],friends=[],openGroups={},paidData={},statState={};
+
+let buyData=[],friends=[],openGroups={},paidData={},statState={},rate=0.21,costRate=0;
 function loadCampData(){
 buyData=loadStorage(getCampDataKey(currentCamp,'data'),[]);
 if(!Array.isArray(buyData))buyData=[];
@@ -219,9 +220,11 @@ paidData=loadStorage(getCampDataKey(currentCamp,'paid'),{});
 if(typeof paidData!=='object'||paidData===null)paidData={};
 statState=loadStorage(getCampDataKey(currentCamp,'statState'),{});
 if(typeof statState!=='object'||statState===null)statState={};
+
+// 獨立讀取此團的匯率設定
+rate=loadStorage(getCampDataKey(currentCamp,'rate'),0.21);
+costRate=loadStorage(getCampDataKey(currentCamp,'costRate'),0);
 }
-let rate=parseFloat(localStorage.getItem('pika_v17_rate'))||0.21;
-let costRate=parseFloat(localStorage.getItem('pika_v17_costRate'))||0;
 let roundMode=localStorage.getItem('pika_v17_roundMode')||'floor';
 let showProfitDash=localStorage.getItem('pika_v17_showProfitDash')||'yes';
 let currentImg="";
@@ -274,12 +277,14 @@ alert(`成功新增並切換至「${name}」！`);
 }
 function deleteCamp(campName){
 if(camps.length<=1)return alert("至少需要保留一個代購團！");
-if(confirm(`確定要刪除「${campName}」及其所有相關資料嗎？`)){
+if(confirm(`確定要刪除「${campName}」及其所有相關資料與匯率設定嗎？`)){
 localStorage.removeItem(getCampDataKey(campName,'data'));
 localStorage.removeItem(getCampDataKey(campName,'friends'));
 localStorage.removeItem(getCampDataKey(campName,'open'));
 localStorage.removeItem(getCampDataKey(campName,'paid'));
 localStorage.removeItem(getCampDataKey(campName,'statState'));
+localStorage.removeItem(getCampDataKey(campName,'rate'));
+localStorage.removeItem(getCampDataKey(campName,'costRate'));
 camps=camps.filter(c=>c!==campName);
 localStorage.setItem('pika_v17_camps',JSON.stringify(camps));
 if(currentCamp===campName){
@@ -301,6 +306,8 @@ localStorage.setItem('pika_v17_currentCamp',currentCamp);
 loadCampData();
 const friendInput=document.getElementById('friendListInput');
 if(friendInput)friendInput.value=friends.join('\n');
+document.getElementById('exRate').value=rate;
+document.getElementById('costRate').value=costRate;
 updateCampSelect();
 updateFriendSelect();
 renderList();
@@ -312,18 +319,18 @@ friends=input.split('\n').map(s=>s.trim()).filter(s=>s!=="");
 if(friends.length===0)friends=["未分類"];
 rate=parseFloat(document.getElementById('exRate').value)||0.21;
 costRate=parseFloat(document.getElementById('costRate').value)||0;
-roundMode=localStorage.getItem('pika_v17_roundMode')||'floor';
-showProfitDash=localStorage.getItem('pika_v17_showProfitDash')||'yes';
+roundMode=document.getElementById('roundMode').value;
+showProfitDash=document.getElementById('showProfitDash').value;
 localStorage.setItem(getCampDataKey(currentCamp,'friends'),JSON.stringify(friends));
-localStorage.setItem('pika_v17_rate',rate);
-localStorage.setItem('pika_v17_costRate',costRate);
+localStorage.setItem(getCampDataKey(currentCamp,'rate'),rate);
+localStorage.setItem(getCampDataKey(currentCamp,'costRate'),costRate);
 localStorage.setItem('pika_v17_roundMode',roundMode);
 localStorage.setItem('pika_v17_showProfitDash',showProfitDash);
 updateFriendSelect();
 renderList();
 renderStats();
 closeModal('settingModal');
-alert("設定已儲存！");
+alert("設定與此團匯率已儲存！");
 }
 function resetCampProgress(){
 if(confirm("確定要將採購進度歸零嗎？（此動作只會將「已買數量」設為 0，商品的價格與資料皆會完整保留！）")){
@@ -465,13 +472,11 @@ info.twd=twdEl?(parseFloat(twdEl.value)||0):0;
 paidData[f]=info;
 localStorage.setItem(getCampDataKey(currentCamp,'paid'),JSON.stringify(paidData));
 renderList();
-alert("✅ 抵扣金額已成功套用！");
 }
 function clearDeduct(f){
 paidData[f]={jpy:0,twd:0,mode:'jpy'};
 localStorage.setItem(getCampDataKey(currentCamp,'paid'),JSON.stringify(paidData));
 renderList();
-alert("已清除抵扣金額！");
 }
 function renderList(){
 const listDiv=document.getElementById('friendList');
@@ -552,7 +557,7 @@ div.innerHTML=`
 </div>
 </div>
 <div class="friend-content">
-<div id="deductBox-${f}" class="deduct-box ${hasDeduct?'show has-deduct':''}">
+<div id="deductBox-${f}" class="deduct-box ${hasDeduct?'has-deduct':''}">
 <div style="display:flex;gap:4px;font-size:0.8rem;">
 <button id="btnMode-${f}-both" onclick="setDeductMode('${f}','both')" style="flex:1;padding:4px;border-radius:8px;border:none;background:${payInfo.mode==='both'?'var(--btn-active)':'#eee'};color:${payInfo.mode==='both'?'white':'#666'};">全抵扣</button>
 <button id="btnMode-${f}-jpy" onclick="setDeductMode('${f}','jpy')" style="flex:1;padding:4px;border-radius:8px;border:none;background:${payInfo.mode==='jpy'?'var(--btn-active)':'#eee'};color:${payInfo.mode==='jpy'?'white':'#666'};">僅日幣抵扣</button>
