@@ -15,8 +15,12 @@ body{background:var(--bg-color);color:var(--pika-brown);margin:0;padding-bottom:
 .pika-header{font-size:1.5rem;color:var(--btn-active);text-align:center;margin:15px 0;}
 .panel{background:#fff;padding:15px;border-radius:25px;border:3px solid var(--maca-yellow);margin-bottom:15px;box-shadow:0 4px 10px rgba(0,0,0,0.05);}
 input,textarea,select,button{width:100%;padding:12px;margin:8px 0;border:2px solid #eee;border-radius:15px;font-size:1rem;outline:none;background:#fff;color:var(--pika-brown);}
+input:focus,textarea:focus,select:focus{border-color:var(--btn-active);}
 .btn-main{background:var(--btn-active);border-radius:20px;border:none;color:white;cursor:pointer;font-size:1.1rem;margin-top:10px;box-shadow:0 4px 0 #d38446;}
 .btn-main:active{transform:translateY(2px);box-shadow:0 2px 0 #d38446;}
+.btn-outline{width:100%;padding:11px;background:#FFF9E8;border:1.5px solid #F5DFA3;border-radius:16px;margin-top:8px;cursor:pointer;font-size:0.9rem;color:var(--pika-brown);font-weight:700;}
+.btn-outline:active{transform:scale(0.98);}
+.toast-msg{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(74,55,40,0.88);color:#fff;padding:12px 24px;border-radius:50px;font-size:0.95rem;z-index:9999;display:none;box-shadow:0 4px 15px rgba(0,0,0,0.2);}
 .friend-group{margin-bottom:12px;border-radius:20px;border:2.5px solid var(--maca-yellow);background:#fff;overflow:hidden;}
 .friend-header{background:var(--maca-yellow);padding:12px 15px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;}
 .friend-content{display:none;padding:10px;background:#fff;}
@@ -51,6 +55,9 @@ input,textarea,select,button{width:100%;padding:12px;margin:8px 0;border:2px sol
 </style>
 </head>
 <body>
+<div id="toastMessage" class="toast-msg">登記成功</div>
+<datalist id="buyerSuggestions"></datalist>
+
 <div class="top-bar">
 <div style="display:flex;align-items:center;gap:6px;">
 <span style="font-size:0.8rem;color:#888;">📦 團別:</span>
@@ -60,31 +67,32 @@ input,textarea,select,button{width:100%;padding:12px;margin:8px 0;border:2px sol
 <span onclick="openCampModal()" style="cursor:pointer;font-size:1.2rem" title="管理代購團">🏷️</span>
 <div style="display:flex;align-items:center;gap:2px;">
 <span onclick="openModal('settingModal')" style="cursor:pointer;font-size:1.5rem">⚙️</span>
-<span style="font-size:0.65rem;color:#aaa;font-weight:normal;">v3.2</span>
+<span style="font-size:0.65rem;color:#aaa;font-weight:normal;">v3.5</span>
 </div>
 </div>
 </div>
 <div id="addView" class="view-section active">
 <h2 class="pika-header">代購商品</h2>
 <div class="panel">
-<select id="friendSelect"></select>
+<input type="text" id="friendInput" list="buyerSuggestions" placeholder="買家名字">
 <input type="text" id="itemName" placeholder="商品名稱">
 <div style="display:flex;gap:8px;align-items:center;">
-<select id="itemCurrency" style="flex:1;margin:8px 0;" onchange="updatePricePlaceholder('itemCurrency','itemPrice')">
-<option value="jpy">日幣 円</option>
-<option value="twd">台幣 NT$</option>
+<input type="number" id="itemPrice" placeholder="請輸入商品價格" style="flex:2;margin:8px 0;">
+<select id="itemCurrency" style="flex:1.5;margin:8px 0;" onchange="updatePricePlaceholder('itemCurrency','itemPrice')">
+<option value="jpy">日幣匯率計算</option>
+<option value="twd">台幣代購金額</option>
 </select>
-<input type="number" id="itemPrice" placeholder="日幣含稅 (円)" style="flex:2;margin:8px 0;">
-<input type="number" id="itemQty" value="1" placeholder="數量" style="flex:1;margin:8px 0;">
+<input type="number" id="itemQty" value="1" placeholder="數量" style="flex:0.8;margin:8px 0;">
 </div>
-<input type="number" id="itemCustomRate" placeholder="此商品匯率 (留空用預設)">
+<input type="number" id="itemCustomRate" placeholder="此商品專屬匯率 (留空用團預設)">
 <textarea id="itemNote" placeholder="備註 ." rows="2"></textarea>
 <div onclick="document.getElementById('imgInput').click()" style="width:100%;height:110px;border:2.5px dashed #ddd;border-radius:20px;display:flex;align-items:center;justify-content:center;margin:10px 0;background:#fafafa;overflow:hidden;">
 <img id="previewImg" style="display:none;width:100%;height:100%;object-fit:cover;">
 <span id="imgTip" style="font-size:0.9rem;color:#aaa;">📸 拍照記錄</span>
 </div>
 <input type="file" id="imgInput" accept="image/*" style="display:none" onchange="handleImg(this,'previewImg')">
-<button class="btn-main" onclick="saveItem()">加入清單</button>
+<button class="btn-main" onclick="saveItem()">新增登記</button>
+<button class="btn-outline" onclick="quickFillBuyer()">帶入上一位買家繼續新增</button>
 </div>
 </div>
 <div id="listView" class="view-section">
@@ -138,7 +146,7 @@ input,textarea,select,button{width:100%;padding:12px;margin:8px 0;border:2px sol
 <option value="round">四捨五入</option>
 <option value="ceil">無條件進位</option>
 </select>
-<label style="font-size:0.85rem;margin-top:10px;display:block;">👥 名單 (一行一個)</label>
+<label style="font-size:0.85rem;margin-top:10px;display:block;">👥 常用買家名單 (輸入新買家也會自動加入)</label>
 <textarea id="friendListInput" rows="3"></textarea>
 <button class="btn-main" onclick="saveSettings()">儲存設定</button>
 <hr style="margin:15px 0;border:none;border-top:1px solid #eee;">
@@ -169,19 +177,19 @@ input,textarea,select,button{width:100%;padding:12px;margin:8px 0;border:2px sol
 <h3 class="pika-header" style="margin-top:0;">✏️ 編輯商品</h3>
 <input type="hidden" id="editId">
 <label style="font-size:0.8rem;">購買人</label>
-<select id="editFriend"></select>
+<input type="text" id="editFriend" list="buyerSuggestions" placeholder="買家名字">
 <label style="font-size:0.8rem;margin-top:5px;display:block;">商品名稱</label>
 <input type="text" id="editName">
 <div style="display:flex;gap:8px;align-items:center;margin-top:5px;">
-<div style="flex:1;">
-<label style="font-size:0.8rem;">幣別</label>
+<div style="flex:2;"><label style="font-size:0.8rem;">價格</label><input type="number" id="editPrice"></div>
+<div style="flex:1.5;">
+<label style="font-size:0.8rem;">計價方式</label>
 <select id="editCurrency" onchange="updatePricePlaceholder('editCurrency','editPrice')">
-<option value="jpy">日幣 円</option>
-<option value="twd">台幣 NT$</option>
+<option value="jpy">日幣匯率計算</option>
+<option value="twd">台幣代購金額</option>
 </select>
 </div>
-<div style="flex:2;"><label style="font-size:0.8rem;">價格</label><input type="number" id="editPrice"></div>
-<div style="flex:1;"><label style="font-size:0.8rem;">數量</label><input type="number" id="editQty"></div>
+<div style="flex:0.8;"><label style="font-size:0.8rem;">數量</label><input type="number" id="editQty"></div>
 </div>
 <label style="font-size:0.8rem;margin-top:5px;display:block;">專屬匯率 (留空用預設)</label>
 <input type="number" id="editCustomRate">
@@ -220,11 +228,27 @@ if(!camps.includes(currentCamp))currentCamp=camps[0];
 function getCampDataKey(camp,type){return `pika_v17_${camp}_${type}`;}
 
 let buyData=[],friends=[],openGroups={},paidData={},statState={},rate=0.21,costRate=0;
+let lastBuyerName="";
+
+function showToast(msg="登記成功"){
+const t=document.getElementById('toastMessage');
+if(!t)return;
+t.innerText=msg;
+t.style.display='block';
+setTimeout(()=>{t.style.display='none';},1400);
+}
+
 function loadCampData(){
 buyData=loadStorage(getCampDataKey(currentCamp,'data'),[]);
 if(!Array.isArray(buyData))buyData=[];
-friends=loadStorage(getCampDataKey(currentCamp,'friends'),["未分類"]);
-if(!Array.isArray(friends)||friends.length===0)friends=["未分類"];
+friends=loadStorage(getCampDataKey(currentCamp,'friends'),[]);
+if(!Array.isArray(friends))friends=[];
+// 確保現有訂單中的買家名字也都同步在建議清單內
+buyData.forEach(item=>{
+if(item.friend&&!friends.includes(item.friend)){
+friends.push(item.friend);
+}
+});
 openGroups=loadStorage(getCampDataKey(currentCamp,'open'),{});
 if(typeof openGroups!=='object'||openGroups===null)openGroups={};
 paidData=loadStorage(getCampDataKey(currentCamp,'paid'),{});
@@ -249,6 +273,7 @@ document.getElementById('roundMode').value=roundMode;
 document.getElementById('showProfitDash').value=showProfitDash;
 document.getElementById('friendListInput').value=friends.join('\n');
 updateFriendSelect();
+updatePricePlaceholder('itemCurrency','itemPrice');
 renderList();
 renderStats();
 };
@@ -256,9 +281,9 @@ function updatePricePlaceholder(currencyId, priceId){
 const cur = document.getElementById(currencyId).value;
 const priceInput = document.getElementById(priceId);
 if(cur === 'twd'){
-priceInput.placeholder = "台幣價格 (NT$)";
+priceInput.placeholder = "請輸入台幣金額 (NT$)";
 } else {
-priceInput.placeholder = "日幣含稅 (円)";
+priceInput.placeholder = "請輸入日幣價格 (円)";
 }
 }
 function updateCampSelect(){
@@ -292,7 +317,7 @@ localStorage.setItem('pika_v17_camps',JSON.stringify(camps));
 inputEl.value="";
 switchCamp(name);
 renderCampManageList();
-alert(`成功新增並切換至「${name}」！`);
+showToast(`已切換至「${name}」`);
 }
 function deleteCamp(campName){
 if(camps.length<=1)return alert("至少需要保留一個代購團！");
@@ -316,7 +341,7 @@ renderCampManageList();
 updateFriendSelect();
 renderList();
 renderStats();
-alert("代購團已刪除！");
+showToast("代購團已刪除");
 }
 }
 function switchCamp(campName){
@@ -335,7 +360,6 @@ renderStats();
 function saveSettings(){
 const input=document.getElementById('friendListInput').value;
 friends=input.split('\n').map(s=>s.trim()).filter(s=>s!=="");
-if(friends.length===0)friends=["未分類"];
 rate=parseFloat(document.getElementById('exRate').value)||0.21;
 costRate=parseFloat(document.getElementById('costRate').value)||0;
 roundMode=document.getElementById('roundMode').value;
@@ -349,7 +373,7 @@ updateFriendSelect();
 renderList();
 renderStats();
 closeModal('settingModal');
-alert("設定與此團匯率已儲存！");
+showToast("設定與此團匯率已儲存");
 }
 function resetCampProgress(){
 if(confirm("確定要將採購進度歸零嗎？（此動作只會將「已買數量」設為 0，商品的價格與資料皆會完整保留！）")){
@@ -361,14 +385,25 @@ saveLocal();
 renderList();
 renderStats();
 closeModal('settingModal');
-alert("已成功將採購進度歸零，所有商品價格皆完整保留！");
+showToast("採購進度已歸零");
 }
 }
 function updateFriendSelect(){
-const select=document.getElementById('friendSelect');
-if(select)select.innerHTML=friends.map(f=>`<option value="${f}">${f}</option>`).join('');
-const editSelect=document.getElementById('editFriend');
-if(editSelect)editSelect.innerHTML=friends.map(f=>`<option value="${f}">${f}</option>`).join('');
+const datalist=document.getElementById('buyerSuggestions');
+if(datalist)datalist.innerHTML=friends.map(f=>`<option value="${f}">`).join('');
+const friendInput=document.getElementById('friendListInput');
+if(friendInput)friendInput.value=friends.join('\n');
+}
+function quickFillBuyer(){
+if(lastBuyerName){
+const fEl=document.getElementById('friendInput');
+const nEl=document.getElementById('itemName');
+if(fEl)fEl.value=lastBuyerName;
+if(nEl)nEl.focus();
+showToast(`已帶入：${lastBuyerName}`);
+}else{
+alert("目前還沒有上一位買家紀錄");
+}
 }
 function handleImg(input,targetImgId){
 const file=input.files[0];
@@ -402,24 +437,35 @@ img.src=e.target.result;
 reader.readAsDataURL(file);
 }
 function saveItem(){
+const friendEl=document.getElementById('friendInput');
 const nameEl=document.getElementById('itemName');
 const priceEl=document.getElementById('itemPrice');
 const qtyEl=document.getElementById('itemQty');
 const currencyEl=document.getElementById('itemCurrency');
-const friendEl=document.getElementById('friendSelect');
 const customRateEl=document.getElementById('itemCustomRate');
 const noteEl=document.getElementById('itemNote');
+
+const friend=friendEl?friendEl.value.trim():"";
+if(!friend)return alert("請輸入買家名字！");
 if(!nameEl||!nameEl.value.trim())return alert("要寫商品名稱唷！");
+
 const name=nameEl.value.trim();
 const currency=currencyEl?currencyEl.value:'jpy';
 const price=priceEl?(parseFloat(priceEl.value)||0):0;
 const qtyVal=qtyEl?qtyEl.value:"1";
 const qty=(qtyVal===""||isNaN(parseInt(qtyVal)))?1:parseInt(qtyVal);
 const customRate=customRateEl&&customRateEl.value?parseFloat(customRateEl.value):"";
-const friend=friendEl?friendEl.value:(friends[0]||"未分類");
 const note=noteEl?noteEl.value:"";
+
+lastBuyerName=friend;
+if(!friends.includes(friend)){
+friends.push(friend);
+localStorage.setItem(getCampDataKey(currentCamp,'friends'),JSON.stringify(friends));
+updateFriendSelect();
+}
+
 buyData.push({
-id:Date.now(),
+id:Date.now()+Math.random(),
 friend:friend,
 name:name,
 currency:currency,
@@ -433,7 +479,7 @@ isTaxFree:false,
 status:'normal'
 });
 saveLocal();
-alert("✅ 新增完成！商品已成功加入清單。");
+showToast(`已登記：${friend}`);
 resetInput();
 renderList();
 renderStats();
@@ -457,6 +503,7 @@ if(noteEl)noteEl.value="";
 if(prevEl)prevEl.style.display='none';
 if(tipEl)tipEl.style.display='block';
 currentImg="";
+if(nameEl)nameEl.focus();
 }
 function calcMath(val){
 if(roundMode==='ceil')return Math.ceil(val);
@@ -512,33 +559,34 @@ buyData.forEach(i=>{
 if(!i.currency)i.currency='jpy';
 if(i.status===undefined)i.status='normal';
 if(i.boughtQty===undefined)i.boughtQty=(i.status==='unpacked')?0:(i.qty||1);
-if(!groups[i.friend])groups[i.friend]={items:[],totalJPY:0,totalTWD:0};
+if(!groups[i.friend])groups[i.friend]={items:[],totalTWD:0};
 
-const bQ=i.boughtQty!==undefined?i.boughtQty:(i.qty||1);
+const totalQ=i.qty||1;
 const isUnpacked=(i.status==='unpacked');
-const activeQ=isUnpacked?0:bQ;
+const activeQ=isUnpacked?0:totalQ;
+const itemEffectiveRate=i.customRate?i.customRate:rate;
 
 if(i.currency==='twd'){
-i.actualPrice=i.price;
+i.buyerTWD=i.price;
 groups[i.friend].totalTWD+=(i.price*activeQ);
 }else{
 const unitP=i.isTaxFree?Math.round(i.price/1.1):i.price;
-i.actualPrice=unitP;
-groups[i.friend].totalJPY+=(unitP*activeQ);
+i.buyerTWD=calcMath(unitP*itemEffectiveRate);
+groups[i.friend].totalTWD+=calcMath(unitP*activeQ*itemEffectiveRate);
 }
 groups[i.friend].items.push(i);
 });
 
 for(let f in groups){
 const payInfo=getFriendPayInfo(f);
-const itemTotalJPY=groups[f].totalJPY;
 const itemTotalTWD=groups[f].totalTWD;
 
-let diffJPY=itemTotalJPY-(payInfo.jpy||0);
-let convertedJPYtoTWD=calcMath(diffJPY*rate);
-let finalTWD=convertedJPYtoTWD+itemTotalTWD-(payInfo.twd||0);
+let finalTWD=itemTotalTWD-(payInfo.twd||0);
+if(payInfo.jpy>0){
+finalTWD-=calcMath(payInfo.jpy*rate);
+}
 
-const hasDeduct=(payInfo.jpy>0||payInfo.twd>0||itemTotalTWD>0);
+const hasDeduct=(payInfo.jpy>0||payInfo.twd>0);
 const div=document.createElement('div');
 div.className='friend-group'+(openGroups[f]?' open':'');
 let allFriendItems=buyData.filter(x=>x.friend===f);
@@ -556,9 +604,8 @@ if(isShipped)rowClass='item-row row-shipped';
 if(isUnpacked)rowClass='item-row row-unpacked';
 
 const showPriceQty=(bQ>0)?bQ:(bQ===0&&status!=='unpacked'?totalQ:0);
-const priceStr=(i.currency==='twd')
-?`NT$ ${i.actualPrice*showPriceQty}${totalQ>1?` (單價:${i.actualPrice})`:''}`
-:`${i.actualPrice*showPriceQty}円${totalQ>1?` (單價:${i.actualPrice})`:''}`;
+const itemSubtotalTWD=i.buyerTWD*showPriceQty;
+const priceStr=`NT$ ${itemSubtotalTWD}${totalQ>1?` (單價:${i.buyerTWD})`:''}`;
 
 const taxBtn=(i.currency==='twd')
 ?``
@@ -681,8 +728,7 @@ const friendName=targetCopyFriend;
 closeModal('copyModal');
 const group=buyData.filter(i=>i.friend===friendName);
 const payInfo=getFriendPayInfo(friendName);
-let jpyTotal=0;
-let twdItemTotal=0;
+let totalItemTWD=0;
 let text=`${friendName} 代購明細 (${currentCamp})：\n`;
 const showNote=document.getElementById('cpNote').checked;
 const showTax=document.getElementById('cpTax').checked;
@@ -693,59 +739,55 @@ const showRate=document.getElementById('cpRate').checked;
 group.forEach(i=>{
 if(!i.currency)i.currency='jpy';
 const status=i.status||'normal';
-const bQ=i.boughtQty!==undefined?i.boughtQty:(i.qty||1);
 const totalQ=i.qty||1;
+const itemEffectiveRate=i.customRate?i.customRate:rate;
 
 if(i.currency==='twd'){
 const p=i.price;
 const noteStr=(showNote&&i.note)?` [${i.note}]`:"";
 if(status==='unpacked'){
 text+=`- ${i.name}${totalQ>1?` x ${totalQ}`:''}${noteStr} (未買到)\n`;
-}else if(bQ>0){
-const shipLabel=(status==='shipped')?" (已出貨)":"";
-const qtyStr=totalQ>1?` x ${bQ}`:"";
-text+=`- ${i.name}${qtyStr}${shipLabel}${noteStr}`;
-text+=showPrice?`：NT$ ${p*bQ}\n`:`\n`;
-twdItemTotal+=(p*bQ);
 }else{
-text+=`- ${i.name}${totalQ>1?` x ${totalQ}`:''}${noteStr} (待補貨)\n`;
+const shipLabel=(status==='shipped')?" (已出貨)":"";
+const qtyStr=totalQ>1?` x ${totalQ}`:"";
+text+=`- ${i.name}${qtyStr}${shipLabel}${noteStr}`;
+text+=showPrice?`：NT$ ${p*totalQ}\n`:`\n`;
+totalItemTWD+=(p*totalQ);
 }
 }else{
 const p=i.isTaxFree?Math.round(i.price/1.1):i.price;
 const taxLabel=(showTax&&i.isTaxFree)?" (已退稅)":"";
 const noteStr=(showNote&&i.note)?` [${i.note}]`:"";
+const itemTwdVal=calcMath(p*totalQ*itemEffectiveRate);
 if(status==='unpacked'){
 text+=`- ${i.name}${totalQ>1?` x ${totalQ}`:''}${taxLabel}${noteStr} (未買到)\n`;
-}else if(bQ>0){
-const shipLabel=(status==='shipped')?" (已出貨)":"";
-const qtyStr=totalQ>1?` x ${bQ}`:"";
-text+=`- ${i.name}${qtyStr}${taxLabel}${shipLabel}${noteStr}`;
-text+=showPrice?`：${p*bQ}円\n`:`\n`;
-jpyTotal+=(p*bQ);
 }else{
-text+=`- ${i.name}${totalQ>1?` x ${totalQ}`:''}${taxLabel}${noteStr} (待補貨)\n`;
+const shipLabel=(status==='shipped')?" (已出貨)":"";
+const qtyStr=totalQ>1?` x ${totalQ}`:"";
+text+=`- ${i.name}${qtyStr}${taxLabel}${shipLabel}${noteStr}`;
+text+=showPrice?`：NT$ ${itemTwdVal}\n`:`\n`;
+totalItemTWD+=itemTwdVal;
 }
 }
 });
 
-let diffJPY=jpyTotal-(payInfo.jpy||0);
-let convertedTWD=calcMath(diffJPY*rate);
-let finalTWD=convertedTWD+twdItemTotal-(payInfo.twd||0);
-let jpyTotalTwdEquivalent=calcMath(jpyTotal*rate);
+let finalTWD=totalItemTWD-(payInfo.twd||0);
+if(payInfo.jpy>0){
+finalTWD-=calcMath(payInfo.jpy*rate);
+}
 
 text+=`------------------\n`;
-if(jpyTotal>0)text+=`日幣商品總計：${jpyTotal}円 (NT$ ${jpyTotalTwdEquivalent})\n`;
-if(twdItemTotal>0)text+=`台幣商品總計：NT$ ${twdItemTotal}\n`;
+text+=`商品總計金額：NT$ ${totalItemTWD}\n`;
 
 if(showDeduct&&(payInfo.jpy>0||payInfo.twd>0)){
-if(payInfo.jpy>0)text+=`已付日幣抵扣：-${payInfo.jpy}円\n`;
+if(payInfo.jpy>0)text+=`已付日幣抵扣：-${payInfo.jpy}円 (折NT$ ${calcMath(payInfo.jpy*rate)})\n`;
 if(payInfo.twd>0)text+=`已付台幣訂金：-NT$ ${payInfo.twd}\n`;
 }
-if(showRate&&jpyTotal>0)text+=`適用匯率：${rate}\n`;
+if(showRate)text+=`適用匯率：${rate}\n`;
 text+=finalTWD<0?`👉 需退款：-NT$ ${Math.abs(finalTWD)}`:`👉 尾款：NT$ ${finalTWD}`;
 
 if(navigator.clipboard&&navigator.clipboard.writeText){
-navigator.clipboard.writeText(text).then(()=>alert("帳單文字已複製！")).catch(()=>fallbackCopyText(text));
+navigator.clipboard.writeText(text).then(()=>showToast("帳單文字已複製")).catch(()=>fallbackCopyText(text));
 }else{
 fallbackCopyText(text);
 }
@@ -758,7 +800,7 @@ document.body.appendChild(textArea);
 textArea.focus();
 textArea.select();
 try{
-if(document.execCommand('copy'))alert("帳單文字已複製！");
+if(document.execCommand('copy'))showToast("帳單文字已複製");
 else alert("複製失敗，請手動長按複製。");
 }catch(err){
 alert("複製失敗，請手動長按複製。");
@@ -778,18 +820,18 @@ buyData.forEach(i=>{
 if(!i.currency)i.currency='jpy';
 const status=i.status||'normal';
 const bQ=status==='unpacked'?0:(i.boughtQty!==undefined?i.boughtQty:(i.qty||1));
+const itemEffectiveRate=i.customRate?i.customRate:rate;
 
 if(i.currency==='twd'){
 totalRevenueTWD+=calcMath(i.price*bQ);
 }else{
 const unitP=i.isTaxFree?Math.round(i.price/1.1):i.price;
-const itemEffectiveRate=i.customRate?i.customRate:rate;
 totalRevenueTWD+=calcMath(unitP*bQ*itemEffectiveRate);
 totalCostTWD+=costRate>0?calcMath(unitP*bQ*costRate):0;
 }
 
 if(!map[i.name]){
-map[i.name]={name:i.name, currency:i.currency, price:(i.currency==='twd'?i.price:(i.isTaxFree?Math.round(i.price/1.1):i.price)), img:i.img, totalNeedQty:0, totalBoughtQty:0, notes:new Set(), ids:[]};
+map[i.name]={name:i.name, currency:i.currency, price:i.price, img:i.img, totalNeedQty:0, totalBoughtQty:0, notes:new Set(), ids:[]};
 }
 map[i.name].totalNeedQty+=(i.qty||1);
 map[i.name].totalBoughtQty+=bQ;
@@ -821,14 +863,14 @@ card.className=`item-row ${isAllPacked?'stat-row-packed':''}`;
 card.style.borderRadius='12px';
 card.style.margin='8px 0';
 card.style.border='1px solid #eee';
-const priceStr=(item.currency==='twd')?`單價: NT$ ${item.price}`:`單價: ${item.price}円`;
+const priceStr=(item.currency==='twd')?`價格: NT$ ${item.price}`:`價格: ${item.price}円`;
 
 card.innerHTML=`
 <div class="check-circle ${isAllPacked?'is-packed':''}" onclick="toggleStatPackByName('${item.name}')">${isAllPacked?'✓':''}</div>
 ${item.img?`<img src="${item.img}" class="list-img" onclick="zoom('${item.img}')">`:`<div class="list-img" style="background:#f9f9f9;display:flex;align-items:center;justify-content:center;font-size:0.65rem;color:#ccc;">無圖</div>`}
 <div style="flex:1;min-width:0;">
 <div class="${isAllPacked?'packed-name':''}" style="font-size:0.95rem;word-break:break-all;font-weight:700;">${item.name}</div>
-<div style="font-size:0.8rem;color:#b87c53;">${priceStr}</div>
+<div style="font-size:0.8rem;color:#b87c53;">${priceStr} (${item.currency==='twd'?'台幣代購價':'日幣計價'})</div>
 <div style="display:flex;align-items:center;gap:5px;margin-top:4px;flex-wrap:wrap;">
 <span style="font-size:0.75rem;color:#666;">已買/需要:</span>
 <input type="number" value="${item.totalBoughtQty}" min="0" max="${item.totalNeedQty}" oninput="updateStatQty('${item.name}',this.value)" onchange="updateStatQty('${item.name}',this.value)" style="width:48px;padding:3px;text-align:center;font-size:0.85rem;border-radius:6px;border:1px solid #ddd;margin:0;">
@@ -921,7 +963,7 @@ editPrev.style.display='none';
 openModal('editModal');
 }
 function updateItem(){
-const id=parseInt(document.getElementById('editId').value);
+const id=parseFloat(document.getElementById('editId').value);
 const i=buyData.find(x=>x.id===id);
 if(!i)return;
 const friendEl=document.getElementById('editFriend');
@@ -931,7 +973,16 @@ const priceEl=document.getElementById('editPrice');
 const qtyEl=document.getElementById('editQty');
 const rateEl=document.getElementById('editCustomRate');
 const noteEl=document.getElementById('editNote');
-if(friendEl)i.friend=friendEl.value;
+
+const newFriend=friendEl?friendEl.value.trim():"";
+if(!newFriend)return alert("買家名字不能為空！");
+i.friend=newFriend;
+if(!friends.includes(newFriend)){
+friends.push(newFriend);
+localStorage.setItem(getCampDataKey(currentCamp,'friends'),JSON.stringify(friends));
+updateFriendSelect();
+}
+
 if(nameEl)i.name=nameEl.value.trim();
 if(currencyEl)i.currency=currencyEl.value;
 if(priceEl)i.price=parseFloat(priceEl.value)||0;
@@ -946,7 +997,7 @@ saveLocal();
 closeModal('editModal');
 renderList();
 renderStats();
-alert("修改成功！");
+showToast("修改成功");
 }
 function delItem(id){
 if(confirm("確定要刪除這件商品嗎？")){
