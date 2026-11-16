@@ -60,7 +60,7 @@ input,textarea,select,button{width:100%;padding:12px;margin:8px 0;border:2px sol
 <span onclick="openCampModal()" style="cursor:pointer;font-size:1.2rem" title="管理代購團">🏷️</span>
 <div style="display:flex;align-items:center;gap:2px;">
 <span onclick="openModal('settingModal')" style="cursor:pointer;font-size:1.5rem">⚙️</span>
-<span style="font-size:0.65rem;color:#aaa;font-weight:normal;">v3.1</span>
+<span style="font-size:0.65rem;color:#aaa;font-weight:normal;">v3.2</span>
 </div>
 </div>
 </div>
@@ -69,9 +69,13 @@ input,textarea,select,button{width:100%;padding:12px;margin:8px 0;border:2px sol
 <div class="panel">
 <select id="friendSelect"></select>
 <input type="text" id="itemName" placeholder="商品名稱">
-<div style="display:flex;gap:8px;">
-<input type="number" id="itemPrice" placeholder="日幣含稅 (円)" style="flex:2;">
-<input type="number" id="itemQty" value="1" placeholder="數量" style="flex:1;">
+<div style="display:flex;gap:8px;align-items:center;">
+<select id="itemCurrency" style="flex:1;margin:8px 0;" onchange="updatePricePlaceholder('itemCurrency','itemPrice')">
+<option value="jpy">日幣 円</option>
+<option value="twd">台幣 NT$</option>
+</select>
+<input type="number" id="itemPrice" placeholder="日幣含稅 (円)" style="flex:2;margin:8px 0;">
+<input type="number" id="itemQty" value="1" placeholder="數量" style="flex:1;margin:8px 0;">
 </div>
 <input type="number" id="itemCustomRate" placeholder="此商品匯率 (留空用預設)">
 <textarea id="itemNote" placeholder="備註 ." rows="2"></textarea>
@@ -168,8 +172,15 @@ input,textarea,select,button{width:100%;padding:12px;margin:8px 0;border:2px sol
 <select id="editFriend"></select>
 <label style="font-size:0.8rem;margin-top:5px;display:block;">商品名稱</label>
 <input type="text" id="editName">
-<div style="display:flex;gap:8px;">
-<div style="flex:2;"><label style="font-size:0.8rem;">日幣含稅價</label><input type="number" id="editPrice"></div>
+<div style="display:flex;gap:8px;align-items:center;margin-top:5px;">
+<div style="flex:1;">
+<label style="font-size:0.8rem;">幣別</label>
+<select id="editCurrency" onchange="updatePricePlaceholder('editCurrency','editPrice')">
+<option value="jpy">日幣 円</option>
+<option value="twd">台幣 NT$</option>
+</select>
+</div>
+<div style="flex:2;"><label style="font-size:0.8rem;">價格</label><input type="number" id="editPrice"></div>
 <div style="flex:1;"><label style="font-size:0.8rem;">數量</label><input type="number" id="editQty"></div>
 </div>
 <label style="font-size:0.8rem;margin-top:5px;display:block;">專屬匯率 (留空用預設)</label>
@@ -221,7 +232,6 @@ if(typeof paidData!=='object'||paidData===null)paidData={};
 statState=loadStorage(getCampDataKey(currentCamp,'statState'),{});
 if(typeof statState!=='object'||statState===null)statState={};
 
-// 獨立讀取此團的匯率設定
 rate=loadStorage(getCampDataKey(currentCamp,'rate'),0.21);
 costRate=loadStorage(getCampDataKey(currentCamp,'costRate'),0);
 }
@@ -242,6 +252,15 @@ updateFriendSelect();
 renderList();
 renderStats();
 };
+function updatePricePlaceholder(currencyId, priceId){
+const cur = document.getElementById(currencyId).value;
+const priceInput = document.getElementById(priceId);
+if(cur === 'twd'){
+priceInput.placeholder = "台幣價格 (NT$)";
+} else {
+priceInput.placeholder = "日幣含稅 (円)";
+}
+}
 function updateCampSelect(){
 const select=document.getElementById('activeCampSelect');
 if(select){
@@ -386,11 +405,13 @@ function saveItem(){
 const nameEl=document.getElementById('itemName');
 const priceEl=document.getElementById('itemPrice');
 const qtyEl=document.getElementById('itemQty');
+const currencyEl=document.getElementById('itemCurrency');
 const friendEl=document.getElementById('friendSelect');
 const customRateEl=document.getElementById('itemCustomRate');
 const noteEl=document.getElementById('itemNote');
 if(!nameEl||!nameEl.value.trim())return alert("要寫商品名稱唷！");
 const name=nameEl.value.trim();
+const currency=currencyEl?currencyEl.value:'jpy';
 const price=priceEl?(parseFloat(priceEl.value)||0):0;
 const qtyVal=qtyEl?qtyEl.value:"1";
 const qty=(qtyVal===""||isNaN(parseInt(qtyVal)))?1:parseInt(qtyVal);
@@ -401,6 +422,7 @@ buyData.push({
 id:Date.now(),
 friend:friend,
 name:name,
+currency:currency,
 price:price,
 qty:qty,
 boughtQty:qty,
@@ -420,6 +442,7 @@ function resetInput(){
 const nameEl=document.getElementById('itemName');
 const priceEl=document.getElementById('itemPrice');
 const qtyEl=document.getElementById('itemQty');
+const currencyEl=document.getElementById('itemCurrency');
 const rateEl=document.getElementById('itemCustomRate');
 const noteEl=document.getElementById('itemNote');
 const prevEl=document.getElementById('previewImg');
@@ -427,6 +450,8 @@ const tipEl=document.getElementById('imgTip');
 if(nameEl)nameEl.value="";
 if(priceEl)priceEl.value="";
 if(qtyEl)qtyEl.value="1";
+if(currencyEl)currencyEl.value="jpy";
+updatePricePlaceholder('itemCurrency','itemPrice');
 if(rateEl)rateEl.value="";
 if(noteEl)noteEl.value="";
 if(prevEl)prevEl.style.display='none';
@@ -484,20 +509,36 @@ if(!listDiv)return;
 listDiv.innerHTML="";
 const groups={};
 buyData.forEach(i=>{
+if(!i.currency)i.currency='jpy';
 if(i.status===undefined)i.status='normal';
 if(i.boughtQty===undefined)i.boughtQty=(i.status==='unpacked')?0:(i.qty||1);
-if(!groups[i.friend])groups[i.friend]={items:[],totalJPY:0};
+if(!groups[i.friend])groups[i.friend]={items:[],totalJPY:0,totalTWD:0};
+
+const bQ=i.boughtQty!==undefined?i.boughtQty:(i.qty||1);
+const isUnpacked=(i.status==='unpacked');
+const activeQ=isUnpacked?0:bQ;
+
+if(i.currency==='twd'){
+i.actualPrice=i.price;
+groups[i.friend].totalTWD+=(i.price*activeQ);
+}else{
 const unitP=i.isTaxFree?Math.round(i.price/1.1):i.price;
 i.actualPrice=unitP;
+groups[i.friend].totalJPY+=(unitP*activeQ);
+}
 groups[i.friend].items.push(i);
-if(i.status!=='unpacked')groups[i.friend].totalJPY+=(unitP*(i.boughtQty||(i.qty||1)));
 });
+
 for(let f in groups){
 const payInfo=getFriendPayInfo(f);
 const itemTotalJPY=groups[f].totalJPY;
+const itemTotalTWD=groups[f].totalTWD;
+
 let diffJPY=itemTotalJPY-(payInfo.jpy||0);
-let finalTWD=calcMath(diffJPY*rate)-(payInfo.twd||0);
-const hasDeduct=(payInfo.jpy>0||payInfo.twd>0);
+let convertedJPYtoTWD=calcMath(diffJPY*rate);
+let finalTWD=convertedJPYtoTWD+itemTotalTWD-(payInfo.twd||0);
+
+const hasDeduct=(payInfo.jpy>0||payInfo.twd>0||itemTotalTWD>0);
 const div=document.createElement('div');
 div.className='friend-group'+(openGroups[f]?' open':'');
 let allFriendItems=buyData.filter(x=>x.friend===f);
@@ -514,7 +555,14 @@ if(isPacked)rowClass='item-row row-packed';
 if(isShipped)rowClass='item-row row-shipped';
 if(isUnpacked)rowClass='item-row row-unpacked';
 
-const showPriceQty = (bQ > 0) ? bQ : (bQ === 0 && status !== 'unpacked' ? totalQ : 0);
+const showPriceQty=(bQ>0)?bQ:(bQ===0&&status!=='unpacked'?totalQ:0);
+const priceStr=(i.currency==='twd')
+?`NT$ ${i.actualPrice*showPriceQty}${totalQ>1?` (單價:${i.actualPrice})`:''}`
+:`${i.actualPrice*showPriceQty}円${totalQ>1?` (單價:${i.actualPrice})`:''}`;
+
+const taxBtn=(i.currency==='twd')
+?``
+:`<button class="btn-tax ${i.isTaxFree?'tax-active':''}" onclick="toggleTax(${i.id})">${i.isTaxFree?'已退':'退稅'}</button>`;
 
 return `
 <div class="${rowClass}">
@@ -538,14 +586,15 @@ ${totalQ>1?`
 </div>`:``}
 <div style="font-size:0.75rem;color:#888;">${i.note?'備註: '+i.note:''}</div>
 <div style="display:flex;align-items:center;gap:5px;margin-top:3px;flex-wrap:wrap;">
-<span style="color:#b87c53;font-size:0.85rem;">${i.actualPrice * showPriceQty}円${totalQ>1?` (單價:${i.actualPrice})`:''}</span>
-<button class="btn-tax ${i.isTaxFree?'tax-active':''}" onclick="toggleTax(${i.id})">${i.isTaxFree?'已退':'退稅'}</button>
+<span style="color:#b87c53;font-size:0.85rem;">${priceStr}</span>
+${taxBtn}
 <button class="btn-sm-action" onclick="openEditModal(${i.id})">✏️ 編輯</button>
 </div>
 </div>
 <span onclick="delItem(${i.id})" style="color:#ddd;cursor:pointer;padding:5px;font-size:1.1rem;">✕</span>
 </div>
 `;}).join('');
+
 let twdText=finalTWD<0?`-NT$ ${Math.abs(finalTWD)} (需退)`:`NT$ ${finalTWD}`;
 let twdColor=finalTWD<0?'#e74c3c':'var(--btn-active)';
 div.innerHTML=`
@@ -633,19 +682,38 @@ closeModal('copyModal');
 const group=buyData.filter(i=>i.friend===friendName);
 const payInfo=getFriendPayInfo(friendName);
 let jpyTotal=0;
+let twdItemTotal=0;
 let text=`${friendName} 代購明細 (${currentCamp})：\n`;
 const showNote=document.getElementById('cpNote').checked;
 const showTax=document.getElementById('cpTax').checked;
 const showPrice=document.getElementById('cpPrice').checked;
 const showDeduct=document.getElementById('cpDeduct').checked;
 const showRate=document.getElementById('cpRate').checked;
+
 group.forEach(i=>{
-const p=i.isTaxFree?Math.round(i.price/1.1):i.price;
-const taxLabel=(showTax&&i.isTaxFree)?" (已退稅)":"";
-const noteStr=(showNote&&i.note)?` [${i.note}]`:"";
+if(!i.currency)i.currency='jpy';
 const status=i.status||'normal';
 const bQ=i.boughtQty!==undefined?i.boughtQty:(i.qty||1);
 const totalQ=i.qty||1;
+
+if(i.currency==='twd'){
+const p=i.price;
+const noteStr=(showNote&&i.note)?` [${i.note}]`:"";
+if(status==='unpacked'){
+text+=`- ${i.name}${totalQ>1?` x ${totalQ}`:''}${noteStr} (未買到)\n`;
+}else if(bQ>0){
+const shipLabel=(status==='shipped')?" (已出貨)":"";
+const qtyStr=totalQ>1?` x ${bQ}`:"";
+text+=`- ${i.name}${qtyStr}${shipLabel}${noteStr}`;
+text+=showPrice?`：NT$ ${p*bQ}\n`:`\n`;
+twdItemTotal+=(p*bQ);
+}else{
+text+=`- ${i.name}${totalQ>1?` x ${totalQ}`:''}${noteStr} (待補貨)\n`;
+}
+}else{
+const p=i.isTaxFree?Math.round(i.price/1.1):i.price;
+const taxLabel=(showTax&&i.isTaxFree)?" (已退稅)":"";
+const noteStr=(showNote&&i.note)?` [${i.note}]`:"";
 if(status==='unpacked'){
 text+=`- ${i.name}${totalQ>1?` x ${totalQ}`:''}${taxLabel}${noteStr} (未買到)\n`;
 }else if(bQ>0){
@@ -657,17 +725,25 @@ jpyTotal+=(p*bQ);
 }else{
 text+=`- ${i.name}${totalQ>1?` x ${totalQ}`:''}${taxLabel}${noteStr} (待補貨)\n`;
 }
+}
 });
+
 let diffJPY=jpyTotal-(payInfo.jpy||0);
-let finalTWD=calcMath(diffJPY*rate)-(payInfo.twd||0);
+let convertedTWD=calcMath(diffJPY*rate);
+let finalTWD=convertedTWD+twdItemTotal-(payInfo.twd||0);
 let jpyTotalTwdEquivalent=calcMath(jpyTotal*rate);
-text+=`------------------\n商品總計：${jpyTotal}円 (NT$ ${jpyTotalTwdEquivalent})\n`;
+
+text+=`------------------\n`;
+if(jpyTotal>0)text+=`日幣商品總計：${jpyTotal}円 (NT$ ${jpyTotalTwdEquivalent})\n`;
+if(twdItemTotal>0)text+=`台幣商品總計：NT$ ${twdItemTotal}\n`;
+
 if(showDeduct&&(payInfo.jpy>0||payInfo.twd>0)){
 if(payInfo.jpy>0)text+=`已付日幣抵扣：-${payInfo.jpy}円\n`;
 if(payInfo.twd>0)text+=`已付台幣訂金：-NT$ ${payInfo.twd}\n`;
 }
-if(showRate)text+=`適用匯率：${rate}\n`;
+if(showRate&&jpyTotal>0)text+=`適用匯率：${rate}\n`;
 text+=finalTWD<0?`👉 需退款：-NT$ ${Math.abs(finalTWD)}`:`👉 尾款：NT$ ${finalTWD}`;
+
 if(navigator.clipboard&&navigator.clipboard.writeText){
 navigator.clipboard.writeText(text).then(()=>alert("帳單文字已複製！")).catch(()=>fallbackCopyText(text));
 }else{
@@ -697,21 +773,30 @@ if(!statsDiv)return;
 statsDiv.innerHTML="";
 const map={};
 let totalRevenueTWD=0,totalCostTWD=0;
+
 buyData.forEach(i=>{
-const unitP=i.isTaxFree?Math.round(i.price/1.1):i.price;
-const itemEffectiveRate=i.customRate?i.customRate:rate;
+if(!i.currency)i.currency='jpy';
 const status=i.status||'normal';
 const bQ=status==='unpacked'?0:(i.boughtQty!==undefined?i.boughtQty:(i.qty||1));
+
+if(i.currency==='twd'){
+totalRevenueTWD+=calcMath(i.price*bQ);
+}else{
+const unitP=i.isTaxFree?Math.round(i.price/1.1):i.price;
+const itemEffectiveRate=i.customRate?i.customRate:rate;
 totalRevenueTWD+=calcMath(unitP*bQ*itemEffectiveRate);
 totalCostTWD+=costRate>0?calcMath(unitP*bQ*costRate):0;
+}
+
 if(!map[i.name]){
-map[i.name]={name:i.name,price:unitP,img:i.img,totalNeedQty:0,totalBoughtQty:0,notes:new Set(),ids:[]};
+map[i.name]={name:i.name, currency:i.currency, price:(i.currency==='twd'?i.price:(i.isTaxFree?Math.round(i.price/1.1):i.price)), img:i.img, totalNeedQty:0, totalBoughtQty:0, notes:new Set(), ids:[]};
 }
 map[i.name].totalNeedQty+=(i.qty||1);
 map[i.name].totalBoughtQty+=bQ;
 if(i.statNote)map[i.name].notes.add(i.statNote);
 map[i.name].ids.push(i.id);
 });
+
 const dash=document.getElementById('profitDashboard');
 if(showProfitDash==='yes'&&costRate>0){
 if(dash)dash.style.display='block';
@@ -724,6 +809,7 @@ if(profitEl)profitEl.innerText=`NT$ ${totalRevenueTWD-totalCostTWD}`;
 }else{
 if(dash)dash.style.display='none';
 }
+
 for(let key in map){
 let item=map[key];
 if(keyword&&!item.name.toLowerCase().includes(keyword))continue;
@@ -735,12 +821,14 @@ card.className=`item-row ${isAllPacked?'stat-row-packed':''}`;
 card.style.borderRadius='12px';
 card.style.margin='8px 0';
 card.style.border='1px solid #eee';
+const priceStr=(item.currency==='twd')?`單價: NT$ ${item.price}`:`單價: ${item.price}円`;
+
 card.innerHTML=`
 <div class="check-circle ${isAllPacked?'is-packed':''}" onclick="toggleStatPackByName('${item.name}')">${isAllPacked?'✓':''}</div>
 ${item.img?`<img src="${item.img}" class="list-img" onclick="zoom('${item.img}')">`:`<div class="list-img" style="background:#f9f9f9;display:flex;align-items:center;justify-content:center;font-size:0.65rem;color:#ccc;">無圖</div>`}
 <div style="flex:1;min-width:0;">
 <div class="${isAllPacked?'packed-name':''}" style="font-size:0.95rem;word-break:break-all;font-weight:700;">${item.name}</div>
-<div style="font-size:0.8rem;color:#b87c53;">單價: ${item.price}円</div>
+<div style="font-size:0.8rem;color:#b87c53;">${priceStr}</div>
 <div style="display:flex;align-items:center;gap:5px;margin-top:4px;flex-wrap:wrap;">
 <span style="font-size:0.75rem;color:#666;">已買/需要:</span>
 <input type="number" value="${item.totalBoughtQty}" min="0" max="${item.totalNeedQty}" oninput="updateStatQty('${item.name}',this.value)" onchange="updateStatQty('${item.name}',this.value)" style="width:48px;padding:3px;text-align:center;font-size:0.85rem;border-radius:6px;border:1px solid #ddd;margin:0;">
@@ -816,10 +904,12 @@ if(!i)return;
 document.getElementById('editId').value=i.id;
 document.getElementById('editFriend').value=i.friend;
 document.getElementById('editName').value=i.name;
+document.getElementById('editCurrency').value=i.currency||'jpy';
 document.getElementById('editPrice').value=i.price;
 document.getElementById('editQty').value=i.qty||1;
 document.getElementById('editCustomRate').value=i.customRate||"";
 document.getElementById('editNote').value=i.note||"";
+updatePricePlaceholder('editCurrency','editPrice');
 editCurrentImg=i.img||"";
 const editPrev=document.getElementById('editPreviewImg');
 if(editCurrentImg&&editPrev){
@@ -836,12 +926,14 @@ const i=buyData.find(x=>x.id===id);
 if(!i)return;
 const friendEl=document.getElementById('editFriend');
 const nameEl=document.getElementById('editName');
+const currencyEl=document.getElementById('editCurrency');
 const priceEl=document.getElementById('editPrice');
 const qtyEl=document.getElementById('editQty');
 const rateEl=document.getElementById('editCustomRate');
 const noteEl=document.getElementById('editNote');
 if(friendEl)i.friend=friendEl.value;
 if(nameEl)i.name=nameEl.value.trim();
+if(currencyEl)i.currency=currencyEl.value;
 if(priceEl)i.price=parseFloat(priceEl.value)||0;
 const newQInput=qtyEl?qtyEl.value:"1";
 const newQ=(newQInput===""||isNaN(parseInt(newQInput)))?1:parseInt(newQInput);
