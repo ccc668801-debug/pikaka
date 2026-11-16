@@ -67,1001 +67,766 @@ input:focus,textarea:focus,select:focus{border-color:var(--btn-active);}
 <span onclick="openCampModal()" style="cursor:pointer;font-size:1.2rem" title="管理代購團">🏷️</span>
 <div style="display:flex;align-items:center;gap:2px;">
 <span onclick="openModal('settingModal')" style="cursor:pointer;font-size:1.5rem">⚙️</span>
-<span style="font-size:0.65rem;color:#aaa;font-weight:normal;">v3.5</span>
+<span style="font-size:0.65rem;color:#aaa;font-weight:normal;">v4.0</span>
 </div>
 </div>
 </div>
+
 <div id="addView" class="view-section active">
 <h2 class="pika-header">代購商品</h2>
 <div class="panel">
 <input type="text" id="friendInput" list="buyerSuggestions" placeholder="買家名字">
+<button type="button" onclick="fillLastBuyer()" class="btn-outline" style="margin-top:0;margin-bottom:8px;padding:6px;font-size:0.8rem;">帶入上一位買家繼續新增 ⚡</button>
 <input type="text" id="itemName" placeholder="商品名稱">
 <div style="display:flex;gap:8px;align-items:center;">
-<input type="number" id="itemPrice" placeholder="請輸入商品價格" style="flex:2;margin:8px 0;">
-<select id="itemCurrency" style="flex:1.5;margin:8px 0;" onchange="updatePricePlaceholder('itemCurrency','itemPrice')">
-<option value="jpy">日幣匯率計算</option>
-<option value="twd">台幣代購金額</option>
+<select id="itemPriceType" style="flex:1;margin:8px 0;">
+<option value="jpy">日幣匯率計價</option>
+<option value="ntd">台幣定價</option>
 </select>
-<input type="number" id="itemQty" value="1" placeholder="數量" style="flex:0.8;margin:8px 0;">
+<input type="number" id="itemPrice" placeholder="請輸入價格" style="flex:2;margin:8px 0;">
 </div>
-<input type="number" id="itemCustomRate" placeholder="此商品專屬匯率 (留空用團預設)">
-<textarea id="itemNote" placeholder="備註 ." rows="2"></textarea>
-<div onclick="document.getElementById('imgInput').click()" style="width:100%;height:110px;border:2.5px dashed #ddd;border-radius:20px;display:flex;align-items:center;justify-content:center;margin:10px 0;background:#fafafa;overflow:hidden;">
-<img id="previewImg" style="display:none;width:100%;height:100%;object-fit:cover;">
-<span id="imgTip" style="font-size:0.9rem;color:#aaa;">📸 拍照記錄</span>
+<div style="display:flex;gap:8px;align-items:center;">
+<input type="number" id="itemQty" value="1" min="1" placeholder="數量" style="flex:1;margin:8px 0;">
+<input type="text" id="itemNote" placeholder="備註 (尺寸/顏色等)" style="flex:2;margin:8px 0;">
 </div>
-<input type="file" id="imgInput" accept="image/*" style="display:none" onchange="handleImg(this,'previewImg')">
-<button class="btn-main" onclick="saveItem()">新增登記</button>
-<button class="btn-outline" onclick="quickFillBuyer()">帶入上一位買家繼續新增</button>
+<div style="margin:8px 0;">
+<label style="font-size:0.85rem;color:#888;display:block;margin-bottom:4px;">商品圖片 (選填)</label>
+<input type="file" id="itemImageFile" accept="image/*" style="padding:8px;font-size:0.85rem;" onchange="handleImageUpload(event)">
+<input type="hidden" id="itemImageBase64">
+<div id="imagePreviewContainer" style="margin-top:6px;display:none;">
+<img id="imagePreview" style="width:60px;height:60px;object-fit:cover;border-radius:10px;border:1px solid #ddd;">
 </div>
 </div>
+<button class="btn-main" onclick="addItem()">登記商品 ✨</button>
+</div>
+</div>
+
 <div id="listView" class="view-section">
-<h2 class="pika-header">買買清單</h2>
-<div id="friendList"></div>
+<h2 class="pika-header">買家代購單</h2>
+<div style="display:flex;gap:8px;margin-bottom:12px;">
+<input type="text" id="searchKeyword" placeholder="搜尋買家或商品..." oninput="renderLists()" style="margin:0;flex:1;">
+<button class="btn-outline" onclick="expandAll(true)" style="width:auto;margin:0;padding:0 12px;font-size:0.8rem;">展開</button>
+<button class="btn-outline" onclick="expandAll(false)" style="width:auto;margin:0;padding:0 12px;font-size:0.8rem;">收合</button>
 </div>
+<div id="buyerListContainer"></div>
+</div>
+
 <div id="statsView" class="view-section">
-<h2 class="pika-header">商品統計與採購</h2>
-<div id="profitDashboard" class="panel" style="background:#fff9e6;border-color:#f3a05f;display:none;padding:12px;font-size:0.85rem;line-height:1.5;">
-<b>💰 代購利潤估算：</b><br>
-預估總營收：<span id="statRev">NT$ 0</span> | 實際成本：<span id="statCost">NT$ 0</span><br>
-預估總利潤：<span id="statProfit" style="color:#d35400;font-size:1.05rem;">NT$ 0</span>
+<h2 class="pika-header">採購清單統計</h2>
+<div class="panel">
+<div style="display:flex;justify-content:space-between;margin-bottom:10px;font-size:0.95rem;">
+<span>總品項數: <strong id="statTotalItems">0</strong></span>
+<span>已買齊: <strong id="statBoughtItems" style="color:var(--check-green)">0</strong></span>
 </div>
-<div class="panel" style="padding:10px;">
-<input type="text" id="statSearch" placeholder="🔍 搜尋統計商品..." oninput="renderStats()" style="margin:0 0 10px 0;padding:8px;">
-<div id="statsList"></div>
+<div style="display:flex;justify-content:space-between;margin-bottom:15px;font-size:0.95rem;">
+<span>預估日幣總額: <strong id="statTotalJpy">0</strong> 円</span>
+<span>預估台幣總額: <strong id="statTotalNtd">0</strong> NT$</span>
 </div>
+<div style="display:flex;gap:8px;">
+<button class="btn-outline" onclick="resetProgress()" style="flex:1;background:#fff5f5;color:var(--tax-red);border-color:var(--tax-red);">重置採購進度 🔄</button>
+<button class="btn-outline" onclick="exportData()" style="flex:1;">匯出備份 💾</button>
 </div>
-<nav class="bottom-nav">
-<div class="nav-item active" onclick="switchTab('add',this)"><div>🛍️</div><span>記錄</span></div>
-<div class="nav-item" onclick="switchTab('list',this)"><div>📖</div><span>清單</span></div>
-<div class="nav-item" onclick="switchTab('stats',this)"><div>📊</div><span>統計</span></div>
-</nav>
-<div id="campModal" class="modal">
-<div class="modal-content">
-<h3 class="pika-header" style="margin-top:0;">🏷️ 管理代購團</h3>
-<div style="display:flex;gap:8px;margin-bottom:10px;">
-<input type="text" id="newCampInput" placeholder="輸入新代購團名稱..." style="margin:0;">
-<button class="btn-main" style="margin:0;width:90px;" onclick="addNewCamp()">新增</button>
+<button class="btn-outline" onclick="document.getElementById('importFile').click()" style="margin-top:8px;">匯入還原 📂</button>
+<input type="file" id="importFile" style="display:none" onchange="importData(event)">
 </div>
-<div style="font-size:0.85rem;color:#666;margin-bottom:5px;">現有代購團列表：</div>
-<div id="campManageList" style="max-height:180px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;margin-bottom:15px;"></div>
-<button onclick="closeModal('campModal')" style="width:100%;background:none;border:none;margin-top:5px;color:#aaa;cursor:pointer;">關閉</button>
+<div id="statListContainer"></div>
 </div>
+
+<div class="bottom-nav">
+<div class="nav-item active" onclick="switchView('add',this)">➕<br>登記</div>
+<div class="nav-item" onclick="switchView('list',this)">📋<br>代購單</div>
+<div class="nav-item" onclick="switchView('stats',this)">📊<br>統計</div>
 </div>
+
+<!-- Modal: 設定 -->
 <div id="settingModal" class="modal">
 <div class="modal-content">
-<h3 class="pika-header" style="margin-top:0;">設定與工具</h3>
-<label style="font-size:0.85rem;">💱 此團預設客戶收費匯率</label>
-<input type="number" id="exRate" step="0.0001">
-<label style="font-size:0.85rem;margin-top:5px;display:block;">📉 此團實際換匯成本匯率 </label>
-<input type="number" id="costRate" step="0.0001" placeholder="例如 0.215">
-<label style="font-size:0.85rem;margin-top:5px;display:block;">👁️ 顯示利潤估算 Dashboard</label>
-<select id="showProfitDash">
-<option value="yes">顯示</option>
-<option value="no">隱藏</option>
-</select>
-<label style="font-size:0.85rem;margin-top:5px;display:block;">🔢 小數點取整模式</label>
-<select id="roundMode">
-<option value="floor">無條件捨去 (例: 7120.5 ➔ 7120)</option>
-<option value="round">四捨五入</option>
-<option value="ceil">無條件進位</option>
-</select>
-<label style="font-size:0.85rem;margin-top:10px;display:block;">👥 常用買家名單 (輸入新買家也會自動加入)</label>
-<textarea id="friendListInput" rows="3"></textarea>
-<button class="btn-main" onclick="saveSettings()">儲存設定</button>
-<hr style="margin:15px 0;border:none;border-top:1px solid #eee;">
-<button class="btn-main" style="background:#e67e22;box-shadow:0 4px 0 #d35400;font-size:0.85rem;margin-bottom:8px;" onclick="resetCampProgress()">🔄 全團採購進度歸零 (價格保留)</button>
-<div style="display:flex;gap:10px;">
-<button class="btn-main" style="background:#bbb;box-shadow:0 4px 0 #999;font-size:0.85rem;" onclick="exportData()">📤 備份</button>
-<button class="btn-main" style="background:#bbb;box-shadow:0 4px 0 #999;font-size:0.85rem;" onclick="document.getElementById('importFile').click()">📥 還原</button>
+<h3 style="margin-top:0;color:var(--btn-active)">⚙️ 系統設定</h3>
+<div style="margin:12px 0;">
+<label style="font-size:0.85rem;color:#666;display:block;margin-bottom:4px;">本團代購匯率 (日幣折台幣):</label>
+<input type="number" id="campRateInput" step="0.001" placeholder="例如 0.22" onchange="updateCampSetting('rate',this.value)">
 </div>
-<input type="file" id="importFile" style="display:none" accept=".json" onchange="importData(this)">
-<button onclick="closeModal('settingModal')" style="width:100%;background:none;border:none;margin-top:10px;color:#aaa;cursor:pointer;">關閉</button>
+<div style="margin:12px 0;">
+<label style="font-size:0.85rem;color:#666;display:block;margin-bottom:4px;">本團成本匯率 (選填):</label>
+<input type="number" id="campCostRateInput" step="0.001" placeholder="例如 0.21" onchange="updateCampSetting('costRate',this.value)">
+</div>
+<div style="margin:15px 0;">
+<label style="display:flex;align-items:center;gap:10px;cursor:pointer;">
+<input type="checkbox" id="settingShowItemPrice" onchange="toggleSettingShowItemPrice(this.checked)" style="width:auto;margin:0;">
+<span>顯示商品明細原價／定價 (賣家核對用)</span>
+</label>
+</div>
+<button class="btn-main" onclick="closeModal('settingModal')">確定</button>
 </div>
 </div>
-<div id="copyModal" class="modal">
+
+<!-- Modal: 代購團管理 -->
+<div id="campModal" class="modal">
 <div class="modal-content">
-<h3 class="pika-header" style="margin-top:0;">📋 複製帳單設定</h3>
-<div style="font-size:0.9rem;margin-bottom:10px;color:#666;">請勾選欄位：</div>
-<label style="display:flex;align-items:center;gap:8px;margin:8px 0;font-weight:normal;"><input type="checkbox" id="cpNote" checked style="width:auto;margin:0;"> 顯示商品備註</label>
-<label style="display:flex;align-items:center;gap:8px;margin:8px 0;font-weight:normal;"><input type="checkbox" id="cpTax" checked style="width:auto;margin:0;"> 顯示退稅標記</label>
-<label style="display:flex;align-items:center;gap:8px;margin:8px 0;font-weight:normal;"><input type="checkbox" id="cpPrice" checked style="width:auto;margin:0;"> 顯示單價與總計</label>
-<label style="display:flex;align-items:center;gap:8px;margin:8px 0;font-weight:normal;"><input type="checkbox" id="cpDeduct" checked style="width:auto;margin:0;"> 顯示已付訂金/抵扣明細</label>
-<label style="display:flex;align-items:center;gap:8px;margin:8px 0;font-weight:normal;"><input type="checkbox" id="cpRate" checked style="width:auto;margin:0;"> 適用匯率與尾款</label>
-<button class="btn-main" onclick="executeCopy()">確認複製文字</button>
-<button onclick="closeModal('copyModal')" style="width:100%;background:none;border:none;margin-top:10px;color:#aaa;cursor:pointer;">取消</button>
+<h3 style="margin-top:0;color:var(--btn-active)">🏷️ 管理代購團</h3>
+<div id="campListContainer" style="max-height:150px;overflow-y:auto;margin-bottom:10px;"></div>
+<input type="text" id="newCampName" placeholder="新代購團名稱 (例如 2026東京11月)">
+<button class="btn-main" onclick="createNewCamp()">新增代購團 ✨</button>
+<button class="btn-outline" onclick="closeModal('campModal')" style="margin-top:10px;">關閉</button>
 </div>
 </div>
+
+<!-- Modal: 編輯商品 -->
 <div id="editModal" class="modal">
 <div class="modal-content">
-<h3 class="pika-header" style="margin-top:0;">✏️ 編輯商品</h3>
-<input type="hidden" id="editId">
-<label style="font-size:0.8rem;">購買人</label>
-<input type="text" id="editFriend" list="buyerSuggestions" placeholder="買家名字">
-<label style="font-size:0.8rem;margin-top:5px;display:block;">商品名稱</label>
-<input type="text" id="editName">
-<div style="display:flex;gap:8px;align-items:center;margin-top:5px;">
-<div style="flex:2;"><label style="font-size:0.8rem;">價格</label><input type="number" id="editPrice"></div>
-<div style="flex:1.5;">
-<label style="font-size:0.8rem;">計價方式</label>
-<select id="editCurrency" onchange="updatePricePlaceholder('editCurrency','editPrice')">
-<option value="jpy">日幣匯率計算</option>
-<option value="twd">台幣代購金額</option>
+<h3 style="margin-top:0;color:var(--btn-active)">✏️ 編輯商品</h3>
+<input type="hidden" id="editItemId">
+<input type="text" id="editFriendInput" placeholder="買家名字">
+<input type="text" id="editItemName" placeholder="商品名稱">
+<div style="display:flex;gap:8px;align-items:center;">
+<select id="editItemPriceType" style="flex:1;margin:8px 0;">
+<option value="jpy">日幣匯率計價</option>
+<option value="ntd">台幣定價</option>
 </select>
+<input type="number" id="editItemPrice" placeholder="價格" style="flex:2;margin:8px 0;">
 </div>
-<div style="flex:0.8;"><label style="font-size:0.8rem;">數量</label><input type="number" id="editQty"></div>
+<div style="display:flex;gap:8px;align-items:center;">
+<input type="number" id="editItemQty" min="1" placeholder="數量" style="flex:1;margin:8px 0;">
+<input type="text" id="editItemNote" placeholder="備註" style="flex:2;margin:8px 0;">
 </div>
-<label style="font-size:0.8rem;margin-top:5px;display:block;">專屬匯率 (留空用預設)</label>
-<input type="number" id="editCustomRate">
-<label style="font-size:0.8rem;margin-top:5px;display:block;">備註</label>
-<textarea id="editNote" rows="2"></textarea>
-<div onclick="document.getElementById('editImgInput').click()" style="width:100%;height:90px;border:2.5px dashed #ddd;border-radius:15px;display:flex;align-items:center;justify-content:center;margin:8px 0;background:#fafafa;overflow:hidden;">
-<img id="editPreviewImg" style="width:100%;height:100%;object-fit:cover;">
-</div>
-<input type="file" id="editImgInput" accept="image/*" style="display:none" onchange="handleImg(this,'editPreviewImg')">
-<button class="btn-main" onclick="updateItem()">儲存修改</button>
-<button onclick="closeModal('editModal')" style="width:100%;background:none;border:none;margin-top:10px;color:#aaa;cursor:pointer;">取消</button>
+<div style="display:flex;gap:8px;margin-top:10px;">
+<button class="btn-main" onclick="saveEditItem()" style="flex:1;margin:0;">儲存</button>
+<button class="btn-outline" onclick="closeModal('editModal')" style="flex:1;margin:0;background:#f5f5f5;">取消</button>
 </div>
 </div>
-<div id="imgModal" class="modal" onclick="this.style.display='none'"><img id="zoomedImg" style="max-width:95%;max-height:85%;border-radius:15px;border:3px solid white;"></div>
+</div>
+
+<!-- Modal: 買家小費與訂金/抵扣 -->
+<div id="buyerModal" class="modal">
+<div class="modal-content">
+<h3 style="margin-top:0;color:var(--btn-active)" id="modalBuyerTitle">買家結算設定</h3>
+<input type="hidden" id="modalBuyerName">
+<div style="margin:10px 0;">
+<label style="font-size:0.85rem;color:#666;">已付訂金 / 折抵金額 (NT$):</label>
+<input type="number" id="modalBuyerDeposit" placeholder="例如 500">
+</div>
+<div style="margin:10px 0;">
+<label style="font-size:0.85rem;color:#666;">運費 / 額外費用 (NT$):</label>
+<input type="number" id="modalBuyerShipping" placeholder="例如 60">
+</div>
+<div style="margin:10px 0;">
+<label style="font-size:0.85rem;color:#666;">備註說明:</label>
+<input type="text" id="modalBuyerNote" placeholder="例如 7-11店到店">
+</div>
+<button class="btn-main" onclick="saveBuyerMeta()">儲存設定 ✨</button>
+<button class="btn-outline" onclick="closeModal('buyerModal')" style="margin-top:8px;">取消</button>
+</div>
+</div>
+
 <script>
-function safeJSONParse(str,fallback){
-try{
-let val=JSON.parse(str);
-return val!==null?val:fallback;
-}catch(e){
-return fallback;
-}
-}
-function loadStorage(key,defaultVal){
-let val=localStorage.getItem(key);
-if(val!==null){
-let parsed=safeJSONParse(val,null);
-if(parsed!==null)return parsed;
-}
-return defaultVal;
-}
-let camps=loadStorage('pika_v17_camps',["預設代購團"]);
-if(!Array.isArray(camps)||camps.length===0)camps=["預設代購團"];
-let currentCamp=localStorage.getItem('pika_v17_currentCamp')||camps[0];
-if(!camps.includes(currentCamp))currentCamp=camps[0];
-function getCampDataKey(camp,type){return `pika_v17_${camp}_${type}`;}
-
-let buyData=[],friends=[],openGroups={},paidData={},statState={},rate=0.21,costRate=0;
-let lastBuyerName="";
-
-function showToast(msg="登記成功"){
-const t=document.getElementById('toastMessage');
-if(!t)return;
-t.innerText=msg;
-t.style.display='block';
-setTimeout(()=>{t.style.display='none';},1400);
-}
-
-function loadCampData(){
-buyData=loadStorage(getCampDataKey(currentCamp,'data'),[]);
-if(!Array.isArray(buyData))buyData=[];
-friends=loadStorage(getCampDataKey(currentCamp,'friends'),[]);
-if(!Array.isArray(friends))friends=[];
-// 確保現有訂單中的買家名字也都同步在建議清單內
-buyData.forEach(item=>{
-if(item.friend&&!friends.includes(item.friend)){
-friends.push(item.friend);
-}
-});
-openGroups=loadStorage(getCampDataKey(currentCamp,'open'),{});
-if(typeof openGroups!=='object'||openGroups===null)openGroups={};
-paidData=loadStorage(getCampDataKey(currentCamp,'paid'),{});
-if(typeof paidData!=='object'||paidData===null)paidData={};
-statState=loadStorage(getCampDataKey(currentCamp,'statState'),{});
-if(typeof statState!=='object'||statState===null)statState={};
-
-rate=loadStorage(getCampDataKey(currentCamp,'rate'),0.21);
-costRate=loadStorage(getCampDataKey(currentCamp,'costRate'),0);
-}
-let roundMode=localStorage.getItem('pika_v17_roundMode')||'floor';
-let showProfitDash=localStorage.getItem('pika_v17_showProfitDash')||'yes';
-let currentImg="";
-let editCurrentImg="";
-let targetCopyFriend="";
-window.onload=()=>{
-loadCampData();
-updateCampSelect();
-document.getElementById('exRate').value=rate;
-document.getElementById('costRate').value=costRate;
-document.getElementById('roundMode').value=roundMode;
-document.getElementById('showProfitDash').value=showProfitDash;
-document.getElementById('friendListInput').value=friends.join('\n');
-updateFriendSelect();
-updatePricePlaceholder('itemCurrency','itemPrice');
-renderList();
-renderStats();
+let db = JSON.parse(localStorage.getItem('pika_buy_db_v4')) || {
+  activeCamp: '預設代購團',
+  camps: {
+    '預設代購團': { rate: 0.22, costRate: 0.21, showItemPrice: true, items: [], buyerMeta: {} }
+  }
 };
-function updatePricePlaceholder(currencyId, priceId){
-const cur = document.getElementById(currencyId).value;
-const priceInput = document.getElementById(priceId);
-if(cur === 'twd'){
-priceInput.placeholder = "請輸入台幣金額 (NT$)";
-} else {
-priceInput.placeholder = "請輸入日幣價格 (円)";
-}
-}
-function updateCampSelect(){
-const select=document.getElementById('activeCampSelect');
-if(select){
-select.innerHTML=camps.map(c=>`<option value="${c}" ${c===currentCamp?'selected':''}>${c}</option>`).join('');
-}
-}
-function openCampModal(){
-renderCampManageList();
-openModal('campModal');
-}
-function renderCampManageList(){
-const listDiv=document.getElementById('campManageList');
-if(!listDiv)return;
-listDiv.innerHTML=camps.map(c=>`
-<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:#f9f9f9;border-radius:12px;border:1px solid #eee;">
-<span style="font-size:0.9rem;font-weight:700;">${c} ${c===currentCamp?'(目前使用中)':''}</span>
-${camps.length>1?`<button onclick="deleteCamp('${c}')" style="width:auto;padding:4px 10px;margin:0;background:#ffadad;color:white;border:none;border-radius:8px;font-size:0.75rem;cursor:pointer;">刪除</button>`:''}
-</div>
-`).join('');
-}
-function addNewCamp(){
-const inputEl=document.getElementById('newCampInput');
-if(!inputEl)return;
-const name=inputEl.value.trim();
-if(!name)return alert("請輸入代購團名稱！");
-if(camps.includes(name))return alert("這個團名已經存在囉！");
-camps.push(name);
-localStorage.setItem('pika_v17_camps',JSON.stringify(camps));
-inputEl.value="";
-switchCamp(name);
-renderCampManageList();
-showToast(`已切換至「${name}」`);
-}
-function deleteCamp(campName){
-if(camps.length<=1)return alert("至少需要保留一個代購團！");
-if(confirm(`確定要刪除「${campName}」及其所有相關資料與匯率設定嗎？`)){
-localStorage.removeItem(getCampDataKey(campName,'data'));
-localStorage.removeItem(getCampDataKey(campName,'friends'));
-localStorage.removeItem(getCampDataKey(campName,'open'));
-localStorage.removeItem(getCampDataKey(campName,'paid'));
-localStorage.removeItem(getCampDataKey(campName,'statState'));
-localStorage.removeItem(getCampDataKey(campName,'rate'));
-localStorage.removeItem(getCampDataKey(campName,'costRate'));
-camps=camps.filter(c=>c!==campName);
-localStorage.setItem('pika_v17_camps',JSON.stringify(camps));
-if(currentCamp===campName){
-currentCamp=camps[0];
-localStorage.setItem('pika_v17_currentCamp',currentCamp);
-loadCampData();
-}
-updateCampSelect();
-renderCampManageList();
-updateFriendSelect();
-renderList();
-renderStats();
-showToast("代購團已刪除");
-}
-}
-function switchCamp(campName){
-currentCamp=campName;
-localStorage.setItem('pika_v17_currentCamp',currentCamp);
-loadCampData();
-const friendInput=document.getElementById('friendListInput');
-if(friendInput)friendInput.value=friends.join('\n');
-document.getElementById('exRate').value=rate;
-document.getElementById('costRate').value=costRate;
-updateCampSelect();
-updateFriendSelect();
-renderList();
-renderStats();
-}
-function saveSettings(){
-const input=document.getElementById('friendListInput').value;
-friends=input.split('\n').map(s=>s.trim()).filter(s=>s!=="");
-rate=parseFloat(document.getElementById('exRate').value)||0.21;
-costRate=parseFloat(document.getElementById('costRate').value)||0;
-roundMode=document.getElementById('roundMode').value;
-showProfitDash=document.getElementById('showProfitDash').value;
-localStorage.setItem(getCampDataKey(currentCamp,'friends'),JSON.stringify(friends));
-localStorage.setItem(getCampDataKey(currentCamp,'rate'),rate);
-localStorage.setItem(getCampDataKey(currentCamp,'costRate'),costRate);
-localStorage.setItem('pika_v17_roundMode',roundMode);
-localStorage.setItem('pika_v17_showProfitDash',showProfitDash);
-updateFriendSelect();
-renderList();
-renderStats();
-closeModal('settingModal');
-showToast("設定與此團匯率已儲存");
-}
-function resetCampProgress(){
-if(confirm("確定要將採購進度歸零嗎？（此動作只會將「已買數量」設為 0，商品的價格與資料皆會完整保留！）")){
-buyData.forEach(i=>{
-i.boughtQty=0;
-i.status='normal';
-});
-saveLocal();
-renderList();
-renderStats();
-closeModal('settingModal');
-showToast("採購進度已歸零");
-}
-}
-function updateFriendSelect(){
-const datalist=document.getElementById('buyerSuggestions');
-if(datalist)datalist.innerHTML=friends.map(f=>`<option value="${f}">`).join('');
-const friendInput=document.getElementById('friendListInput');
-if(friendInput)friendInput.value=friends.join('\n');
-}
-function quickFillBuyer(){
-if(lastBuyerName){
-const fEl=document.getElementById('friendInput');
-const nEl=document.getElementById('itemName');
-if(fEl)fEl.value=lastBuyerName;
-if(nEl)nEl.focus();
-showToast(`已帶入：${lastBuyerName}`);
-}else{
-alert("目前還沒有上一位買家紀錄");
-}
-}
-function handleImg(input,targetImgId){
-const file=input.files[0];
-if(!file)return;
-const reader=new FileReader();
-reader.onload=(e)=>{
-const img=new Image();
-img.onload=()=>{
-const canvas=document.createElement('canvas');
-let w=img.width,h=img.height,max=400;
-if(w>h){if(w>max){h*=max/w;w=max;}}
-else{if(h>max){w*=max/h;h=max;}}
-canvas.width=w;canvas.height=h;
-canvas.getContext('2d').drawImage(img,0,0,w,h);
-const base64=canvas.toDataURL('image/jpeg',0.6);
-const targetEl=document.getElementById(targetImgId);
-if(targetEl){
-targetEl.src=base64;
-targetEl.style.display='block';
-}
-if(targetImgId==='previewImg'){
-currentImg=base64;
-const tip=document.getElementById('imgTip');
-if(tip)tip.style.display='none';
-}else{
-editCurrentImg=base64;
-}
-};
-img.src=e.target.result;
-};
-reader.readAsDataURL(file);
-}
-function saveItem(){
-const friendEl=document.getElementById('friendInput');
-const nameEl=document.getElementById('itemName');
-const priceEl=document.getElementById('itemPrice');
-const qtyEl=document.getElementById('itemQty');
-const currencyEl=document.getElementById('itemCurrency');
-const customRateEl=document.getElementById('itemCustomRate');
-const noteEl=document.getElementById('itemNote');
 
-const friend=friendEl?friendEl.value.trim():"";
-if(!friend)return alert("請輸入買家名字！");
-if(!nameEl||!nameEl.value.trim())return alert("要寫商品名稱唷！");
+let lastAddedBuyer = '';
 
-const name=nameEl.value.trim();
-const currency=currencyEl?currencyEl.value:'jpy';
-const price=priceEl?(parseFloat(priceEl.value)||0):0;
-const qtyVal=qtyEl?qtyEl.value:"1";
-const qty=(qtyVal===""||isNaN(parseInt(qtyVal)))?1:parseInt(qtyVal);
-const customRate=customRateEl&&customRateEl.value?parseFloat(customRateEl.value):"";
-const note=noteEl?noteEl.value:"";
-
-lastBuyerName=friend;
-if(!friends.includes(friend)){
-friends.push(friend);
-localStorage.setItem(getCampDataKey(currentCamp,'friends'),JSON.stringify(friends));
-updateFriendSelect();
+function saveDb() {
+  localStorage.setItem('pika_buy_db_v4', JSON.stringify(db));
 }
 
-buyData.push({
-id:Date.now()+Math.random(),
-friend:friend,
-name:name,
-currency:currency,
-price:price,
-qty:qty,
-boughtQty:qty,
-customRate:customRate,
-note:note,
-img:currentImg,
-isTaxFree:false,
-status:'normal'
-});
-saveLocal();
-showToast(`已登記：${friend}`);
-resetInput();
-renderList();
-renderStats();
-}
-function resetInput(){
-const nameEl=document.getElementById('itemName');
-const priceEl=document.getElementById('itemPrice');
-const qtyEl=document.getElementById('itemQty');
-const currencyEl=document.getElementById('itemCurrency');
-const rateEl=document.getElementById('itemCustomRate');
-const noteEl=document.getElementById('itemNote');
-const prevEl=document.getElementById('previewImg');
-const tipEl=document.getElementById('imgTip');
-if(nameEl)nameEl.value="";
-if(priceEl)priceEl.value="";
-if(qtyEl)qtyEl.value="1";
-if(currencyEl)currencyEl.value="jpy";
-updatePricePlaceholder('itemCurrency','itemPrice');
-if(rateEl)rateEl.value="";
-if(noteEl)noteEl.value="";
-if(prevEl)prevEl.style.display='none';
-if(tipEl)tipEl.style.display='block';
-currentImg="";
-if(nameEl)nameEl.focus();
-}
-function calcMath(val){
-if(roundMode==='ceil')return Math.ceil(val);
-if(roundMode==='round')return Math.round(val);
-return Math.floor(val);
-}
-function getFriendPayInfo(f){
-if(!paidData[f]){
-paidData[f]={jpy:0,twd:0,mode:'jpy'};
-}
-return paidData[f];
-}
-function toggleDeductBox(f){
-const box=document.getElementById(`deductBox-${f}`);
-if(box)box.classList.toggle('show');
-}
-function setDeductMode(f,mode){
-let info=getFriendPayInfo(f);
-info.mode=mode;
-['both','jpy','twd'].forEach(m=>{
-const btn=document.getElementById(`btnMode-${f}-${m}`);
-if(btn){
-btn.style.background=(m===mode)?'var(--btn-active)':'#eee';
-btn.style.color=(m===mode)?'white':'#666';
-}
-});
-const jpyWrap=document.getElementById(`inputJpyWrap-${f}`);
-const twdWrap=document.getElementById(`inputTwdWrap-${f}`);
-if(jpyWrap)jpyWrap.style.display=(mode==='twd')?'none':'block';
-if(twdWrap)twdWrap.style.display=(mode==='jpy')?'none':'block';
-}
-function applyDeduct(f){
-let info=getFriendPayInfo(f);
-const jpyEl=document.getElementById(`deductJpy-${f}`);
-const twdEl=document.getElementById(`deductTwd-${f}`);
-info.jpy=jpyEl?(parseFloat(jpyEl.value)||0):0;
-info.twd=twdEl?(parseFloat(twdEl.value)||0):0;
-paidData[f]=info;
-localStorage.setItem(getCampDataKey(currentCamp,'paid'),JSON.stringify(paidData));
-renderList();
-}
-function clearDeduct(f){
-paidData[f]={jpy:0,twd:0,mode:'jpy'};
-localStorage.setItem(getCampDataKey(currentCamp,'paid'),JSON.stringify(paidData));
-renderList();
-}
-function renderList(){
-const listDiv=document.getElementById('friendList');
-if(!listDiv)return;
-listDiv.innerHTML="";
-const groups={};
-buyData.forEach(i=>{
-if(!i.currency)i.currency='jpy';
-if(i.status===undefined)i.status='normal';
-if(i.boughtQty===undefined)i.boughtQty=(i.status==='unpacked')?0:(i.qty||1);
-if(!groups[i.friend])groups[i.friend]={items:[],totalTWD:0};
-
-const totalQ=i.qty||1;
-const isUnpacked=(i.status==='unpacked');
-const activeQ=isUnpacked?0:totalQ;
-const itemEffectiveRate=i.customRate?i.customRate:rate;
-
-if(i.currency==='twd'){
-i.buyerTWD=i.price;
-groups[i.friend].totalTWD+=(i.price*activeQ);
-}else{
-const unitP=i.isTaxFree?Math.round(i.price/1.1):i.price;
-i.buyerTWD=calcMath(unitP*itemEffectiveRate);
-groups[i.friend].totalTWD+=calcMath(unitP*activeQ*itemEffectiveRate);
-}
-groups[i.friend].items.push(i);
-});
-
-for(let f in groups){
-const payInfo=getFriendPayInfo(f);
-const itemTotalTWD=groups[f].totalTWD;
-
-let finalTWD=itemTotalTWD-(payInfo.twd||0);
-if(payInfo.jpy>0){
-finalTWD-=calcMath(payInfo.jpy*rate);
+function getCurrentCamp() {
+  if (!db.camps[db.activeCamp]) {
+    db.activeCamp = Object.keys(db.camps)[0] || '預設代購團';
+    if (!db.camps[db.activeCamp]) {
+      db.camps[db.activeCamp] = { rate: 0.22, costRate: 0.21, showItemPrice: true, items: [], buyerMeta: {} };
+    }
+  }
+  return db.camps[db.activeCamp];
 }
 
-const hasDeduct=(payInfo.jpy>0||payInfo.twd>0);
-const div=document.createElement('div');
-div.className='friend-group'+(openGroups[f]?' open':'');
-let allFriendItems=buyData.filter(x=>x.friend===f);
-let itemsHtml=allFriendItems.map(i=>{
-const totalQ=i.qty||1;
-const bQ=i.boughtQty!==undefined?i.boughtQty:totalQ;
-const status=i.status||'normal';
-const isUnpacked=(status==='unpacked');
-const isPacked=(status==='packed');
-const isShipped=(status==='shipped');
-const isPartial=(status==='normal'&&bQ>0&&bQ<totalQ);
-let rowClass='item-row row-normal';
-if(isPacked)rowClass='item-row row-packed';
-if(isShipped)rowClass='item-row row-shipped';
-if(isUnpacked)rowClass='item-row row-unpacked';
-
-const showPriceQty=(bQ>0)?bQ:(bQ===0&&status!=='unpacked'?totalQ:0);
-const itemSubtotalTWD=i.buyerTWD*showPriceQty;
-const priceStr=`NT$ ${itemSubtotalTWD}${totalQ>1?` (單價:${i.buyerTWD})`:''}`;
-
-const taxBtn=(i.currency==='twd')
-?``
-:`<button class="btn-tax ${i.isTaxFree?'tax-active':''}" onclick="toggleTax(${i.id})">${i.isTaxFree?'已退':'退稅'}</button>`;
-
-return `
-<div class="${rowClass}">
-<div style="display:flex;gap:3px;align-items:center;flex-shrink:0;">
-<div class="check-circle ${isPacked?'is-packed':''}" onclick="setStatus(${i.id},'packed')" title="已買到">✓</div>
-<div class="cross-circle ${isUnpacked?'is-unpacked':''}" onclick="setStatus(${i.id},'unpacked')" title="未買到">✕</div>
-<div class="ship-circle ${isShipped?'is-shipped':''}" onclick="setStatus(${i.id},'shipped')" title="已出貨">📦</div>
-<div class="reset-circle" onclick="setStatus(${i.id},'normal')" title="還原白背景">🔄</div>
-</div>
-${i.img?`<img src="${i.img}" class="list-img" onclick="zoom('${i.img}')">`:`<div class="list-img" style="background:#f9f9f9;display:flex;align-items:center;justify-content:center;font-size:0.65rem;color:#ccc;">無圖</div>`}
-<div style="flex:1;min-width:0;">
-<div class="${isUnpacked?'packed-name':''}" style="font-size:0.95rem;word-break:break-all;display:flex;align-items:center;gap:4px;flex-wrap:wrap;">
-<span>${i.name}</span>
-${isUnpacked?'<span style="color:#e74c3c;font-size:0.75rem;white-space:nowrap;">(未買到)</span>':isShipped?'<span style="color:#8e24aa;font-size:0.75rem;white-space:nowrap;">(已出貨)</span>':isPartial?'<span style="color:#e67e22;font-size:0.75rem;white-space:nowrap;">(待補貨)</span>':''}
-</div>
-${totalQ>1?`
-<div style="display:flex;align-items:center;gap:3px;margin:3px 0;font-size:0.75rem;color:#b87c53;white-space:nowrap;">
-<span>需${totalQ}/已買</span>
-<input type="number" value="${bQ}" min="0" max="${totalQ}" onchange="updateBoughtQty(${i.id},this.value)" style="width:38px;padding:1px 2px;text-align:center;font-size:0.75rem;border-radius:5px;border:1px solid #ddd;display:inline-block;margin:0;">
-<span>個</span>
-</div>`:``}
-<div style="font-size:0.75rem;color:#888;">${i.note?'備註: '+i.note:''}</div>
-<div style="display:flex;align-items:center;gap:5px;margin-top:3px;flex-wrap:wrap;">
-<span style="color:#b87c53;font-size:0.85rem;">${priceStr}</span>
-${taxBtn}
-<button class="btn-sm-action" onclick="openEditModal(${i.id})">✏️ 編輯</button>
-</div>
-</div>
-<span onclick="delItem(${i.id})" style="color:#ddd;cursor:pointer;padding:5px;font-size:1.1rem;">✕</span>
-</div>
-`;}).join('');
-
-let twdText=finalTWD<0?`-NT$ ${Math.abs(finalTWD)} (需退)`:`NT$ ${finalTWD}`;
-let twdColor=finalTWD<0?'#e74c3c':'var(--btn-active)';
-div.innerHTML=`
-<div class="friend-header" onclick="toggleAccordion('${f}',this)">
-<div style="flex:1;font-size:0.95rem;">${f}：<span style="color:${twdColor};margin-left:3px;">${twdText} ▾</span></div>
-<div style="display:flex;gap:6px;">
-<button class="btn-sm-action" onclick="event.stopPropagation();toggleDeductBox('${f}')">💳 抵扣/訂金</button>
-<button class="btn-copy" onclick="event.stopPropagation();openCopyModal('${f}')">📋 複製</button>
-</div>
-</div>
-<div class="friend-content">
-<div id="deductBox-${f}" class="deduct-box ${hasDeduct?'has-deduct':''}">
-<div style="display:flex;gap:4px;font-size:0.8rem;">
-<button id="btnMode-${f}-both" onclick="setDeductMode('${f}','both')" style="flex:1;padding:4px;border-radius:8px;border:none;background:${payInfo.mode==='both'?'var(--btn-active)':'#eee'};color:${payInfo.mode==='both'?'white':'#666'};">全抵扣</button>
-<button id="btnMode-${f}-jpy" onclick="setDeductMode('${f}','jpy')" style="flex:1;padding:4px;border-radius:8px;border:none;background:${payInfo.mode==='jpy'?'var(--btn-active)':'#eee'};color:${payInfo.mode==='jpy'?'white':'#666'};">僅日幣抵扣</button>
-<button id="btnMode-${f}-twd" onclick="setDeductMode('${f}','twd')" style="flex:1;padding:4px;border-radius:8px;border:none;background:${payInfo.mode==='twd'?'var(--btn-active)':'#eee'};color:${payInfo.mode==='twd'?'white':'#666'};">僅台幣訂金</button>
-</div>
-<div id="inputJpyWrap-${f}" style="display:${payInfo.mode==='twd'?'none':'block'};">
-<span style="font-size:0.75rem;color:#666;">已付/抵扣日幣：</span>
-<input type="number" id="deductJpy-${f}" class="deduct-input" value="${payInfo.jpy||0}" placeholder="0" style="padding:6px;width:100%;border-radius:8px;border:1px solid #ddd;">
-</div>
-<div id="inputTwdWrap-${f}" style="display:${payInfo.mode==='jpy'?'none':'block'};">
-<span style="font-size:0.75rem;color:#666;">已付/訂金台幣：</span>
-<input type="number" id="deductTwd-${f}" class="deduct-input" value="${payInfo.twd||0}" placeholder="0" style="padding:6px;width:100%;border-radius:8px;border:1px solid #ddd;">
-</div>
-<div style="display:flex;gap:6px;">
-<button class="btn-main" style="margin:0;padding:6px;font-size:0.9rem;" onclick="applyDeduct('${f}')">套用抵扣</button>
-<button class="btn-main" style="margin:0;padding:6px;font-size:0.9rem;background:#bbb;box-shadow:0 3px 0 #999;" onclick="clearDeduct('${f}')">清除</button>
-</div>
-</div>
-${itemsHtml}
-</div>
-`;
-listDiv.appendChild(div);
-}
-}
-function toggleAccordion(friend,el){
-const group=el.parentElement;
-group.classList.toggle('open');
-openGroups[friend]=group.classList.contains('open');
-localStorage.setItem(getCampDataKey(currentCamp,'open'),JSON.stringify(openGroups));
-}
-function setStatus(id,st){
-const i=buyData.find(x=>x.id===id);
-if(i){
-i.status=st;
-if(st==='packed'||st==='shipped')i.boughtQty=i.qty||1;
-if(st==='unpacked')i.boughtQty=0;
-if(st==='normal')i.boughtQty=i.qty||1;
-saveLocal();
-renderList();
-renderStats();
-}
-}
-function updateBoughtQty(id,val){
-const i=buyData.find(x=>x.id===id);
-if(i){
-let q=parseInt(val);
-if(isNaN(q))q=0;
-if(q<0)q=0;
-if(q>(i.qty||1))q=(i.qty||1);
-i.boughtQty=q;
-i.status=(q>0&&q===(i.qty||1))?'packed':'normal';
-saveLocal();
-renderList();
-renderStats();
-}
-}
-function toggleTax(id){
-const i=buyData.find(x=>x.id===id);
-if(i){
-i.isTaxFree=!i.isTaxFree;
-saveLocal();
-renderList();
-renderStats();
-}
-}
-function openCopyModal(friendName){
-targetCopyFriend=friendName;
-openModal('copyModal');
-}
-function executeCopy(){
-const friendName=targetCopyFriend;
-closeModal('copyModal');
-const group=buyData.filter(i=>i.friend===friendName);
-const payInfo=getFriendPayInfo(friendName);
-let totalItemTWD=0;
-let text=`${friendName} 代購明細 (${currentCamp})：\n`;
-const showNote=document.getElementById('cpNote').checked;
-const showTax=document.getElementById('cpTax').checked;
-const showPrice=document.getElementById('cpPrice').checked;
-const showDeduct=document.getElementById('cpDeduct').checked;
-const showRate=document.getElementById('cpRate').checked;
-
-group.forEach(i=>{
-if(!i.currency)i.currency='jpy';
-const status=i.status||'normal';
-const totalQ=i.qty||1;
-const itemEffectiveRate=i.customRate?i.customRate:rate;
-
-if(i.currency==='twd'){
-const p=i.price;
-const noteStr=(showNote&&i.note)?` [${i.note}]`:"";
-if(status==='unpacked'){
-text+=`- ${i.name}${totalQ>1?` x ${totalQ}`:''}${noteStr} (未買到)\n`;
-}else{
-const shipLabel=(status==='shipped')?" (已出貨)":"";
-const qtyStr=totalQ>1?` x ${totalQ}`:"";
-text+=`- ${i.name}${qtyStr}${shipLabel}${noteStr}`;
-text+=showPrice?`：NT$ ${p*totalQ}\n`:`\n`;
-totalItemTWD+=(p*totalQ);
-}
-}else{
-const p=i.isTaxFree?Math.round(i.price/1.1):i.price;
-const taxLabel=(showTax&&i.isTaxFree)?" (已退稅)":"";
-const noteStr=(showNote&&i.note)?` [${i.note}]`:"";
-const itemTwdVal=calcMath(p*totalQ*itemEffectiveRate);
-if(status==='unpacked'){
-text+=`- ${i.name}${totalQ>1?` x ${totalQ}`:''}${taxLabel}${noteStr} (未買到)\n`;
-}else{
-const shipLabel=(status==='shipped')?" (已出貨)":"";
-const qtyStr=totalQ>1?` x ${totalQ}`:"";
-text+=`- ${i.name}${qtyStr}${taxLabel}${shipLabel}${noteStr}`;
-text+=showPrice?`：NT$ ${itemTwdVal}\n`:`\n`;
-totalItemTWD+=itemTwdVal;
-}
-}
-});
-
-let finalTWD=totalItemTWD-(payInfo.twd||0);
-if(payInfo.jpy>0){
-finalTWD-=calcMath(payInfo.jpy*rate);
+function showToast(msg) {
+  const t = document.getElementById('toastMessage');
+  t.innerText = msg;
+  t.style.display = 'block';
+  setTimeout(() => t.style.display = 'none', 1800);
 }
 
-text+=`------------------\n`;
-text+=`商品總計金額：NT$ ${totalItemTWD}\n`;
-
-if(showDeduct&&(payInfo.jpy>0||payInfo.twd>0)){
-if(payInfo.jpy>0)text+=`已付日幣抵扣：-${payInfo.jpy}円 (折NT$ ${calcMath(payInfo.jpy*rate)})\n`;
-if(payInfo.twd>0)text+=`已付台幣訂金：-NT$ ${payInfo.twd}\n`;
-}
-if(showRate)text+=`適用匯率：${rate}\n`;
-text+=finalTWD<0?`👉 需退款：-NT$ ${Math.abs(finalTWD)}`:`👉 尾款：NT$ ${finalTWD}`;
-
-if(navigator.clipboard&&navigator.clipboard.writeText){
-navigator.clipboard.writeText(text).then(()=>showToast("帳單文字已複製")).catch(()=>fallbackCopyText(text));
-}else{
-fallbackCopyText(text);
-}
-}
-function fallbackCopyText(text){
-const textArea=document.createElement("textarea");
-textArea.value=text;
-textArea.style.position="fixed";
-document.body.appendChild(textArea);
-textArea.focus();
-textArea.select();
-try{
-if(document.execCommand('copy'))showToast("帳單文字已複製");
-else alert("複製失敗，請手動長按複製。");
-}catch(err){
-alert("複製失敗，請手動長按複製。");
-}
-document.body.removeChild(textArea);
-}
-function renderStats(){
-const searchInput=document.getElementById('statSearch');
-const keyword=searchInput?searchInput.value.toLowerCase():"";
-const statsDiv=document.getElementById('statsList');
-if(!statsDiv)return;
-statsDiv.innerHTML="";
-const map={};
-let totalRevenueTWD=0,totalCostTWD=0;
-
-buyData.forEach(i=>{
-if(!i.currency)i.currency='jpy';
-const status=i.status||'normal';
-const bQ=status==='unpacked'?0:(i.boughtQty!==undefined?i.boughtQty:(i.qty||1));
-const itemEffectiveRate=i.customRate?i.customRate:rate;
-
-if(i.currency==='twd'){
-totalRevenueTWD+=calcMath(i.price*bQ);
-}else{
-const unitP=i.isTaxFree?Math.round(i.price/1.1):i.price;
-totalRevenueTWD+=calcMath(unitP*bQ*itemEffectiveRate);
-totalCostTWD+=costRate>0?calcMath(unitP*bQ*costRate):0;
+function switchView(viewName, el) {
+  document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  if(viewName === 'add') document.getElementById('addView').classList.add('active');
+  if(viewName === 'list') { document.getElementById('listView').classList.add('active'); renderLists(); }
+  if(viewName === 'stats') { document.getElementById('statsView').classList.add('active'); renderStats(); }
+  el.classList.add('active');
 }
 
-if(!map[i.name]){
-map[i.name]={name:i.name, currency:i.currency, price:i.price, img:i.img, totalNeedQty:0, totalBoughtQty:0, notes:new Set(), ids:[]};
-}
-map[i.name].totalNeedQty+=(i.qty||1);
-map[i.name].totalBoughtQty+=bQ;
-if(i.statNote)map[i.name].notes.add(i.statNote);
-map[i.name].ids.push(i.id);
-});
-
-const dash=document.getElementById('profitDashboard');
-if(showProfitDash==='yes'&&costRate>0){
-if(dash)dash.style.display='block';
-const revEl=document.getElementById('statRev');
-const costEl=document.getElementById('statCost');
-const profitEl=document.getElementById('statProfit');
-if(revEl)revEl.innerText=`NT$ ${totalRevenueTWD}`;
-if(costEl)costEl.innerText=`NT$ ${totalCostTWD}`;
-if(profitEl)profitEl.innerText=`NT$ ${totalRevenueTWD-totalCostTWD}`;
-}else{
-if(dash)dash.style.display='none';
+function initApp() {
+  renderCampSelect();
+  updateCampSettingsUI();
+  updateBuyerSuggestions();
 }
 
-for(let key in map){
-let item=map[key];
-if(keyword&&!item.name.toLowerCase().includes(keyword))continue;
-let isAllPacked=item.totalBoughtQty>=item.totalNeedQty;
-statState[key]={packed:isAllPacked,qty:item.totalBoughtQty};
-let notesArr=Array.from(item.notes).join(', ');
-const card=document.createElement('div');
-card.className=`item-row ${isAllPacked?'stat-row-packed':''}`;
-card.style.borderRadius='12px';
-card.style.margin='8px 0';
-card.style.border='1px solid #eee';
-const priceStr=(item.currency==='twd')?`價格: NT$ ${item.price}`:`價格: ${item.price}円`;
-
-card.innerHTML=`
-<div class="check-circle ${isAllPacked?'is-packed':''}" onclick="toggleStatPackByName('${item.name}')">${isAllPacked?'✓':''}</div>
-${item.img?`<img src="${item.img}" class="list-img" onclick="zoom('${item.img}')">`:`<div class="list-img" style="background:#f9f9f9;display:flex;align-items:center;justify-content:center;font-size:0.65rem;color:#ccc;">無圖</div>`}
-<div style="flex:1;min-width:0;">
-<div class="${isAllPacked?'packed-name':''}" style="font-size:0.95rem;word-break:break-all;font-weight:700;">${item.name}</div>
-<div style="font-size:0.8rem;color:#b87c53;">${priceStr} (${item.currency==='twd'?'台幣代購價':'日幣計價'})</div>
-<div style="display:flex;align-items:center;gap:5px;margin-top:4px;flex-wrap:wrap;">
-<span style="font-size:0.75rem;color:#666;">已買/需要:</span>
-<input type="number" value="${item.totalBoughtQty}" min="0" max="${item.totalNeedQty}" oninput="updateStatQty('${item.name}',this.value)" onchange="updateStatQty('${item.name}',this.value)" style="width:48px;padding:3px;text-align:center;font-size:0.85rem;border-radius:6px;border:1px solid #ddd;margin:0;">
-<span style="font-size:0.8rem;color:#888;">/ ${item.totalNeedQty}</span>
-<button onclick="addOneStatQty('${item.name}')" style="width:auto;padding:2px 8px;margin:0;background:var(--btn-active);color:#fff;border:none;border-radius:6px;font-size:0.75rem;cursor:pointer;">+1</button>
-</div>
-<input type="text" value="${notesArr}" placeholder="採購備註..." onchange="updateStatNote('${item.name}',this.value)" style="margin:4px 0 0 0;padding:4px 8px;font-size:0.8rem;border-radius:8px;border:1px solid #ddd;">
-</div>
-`;
-statsDiv.appendChild(card);
-}
-}
-function updateStatQty(itemName,val){
-let remaining=parseInt(val)||0;
-if(remaining<0)remaining=0;
-let totalNeed=0;
-buyData.forEach(x=>{if(x.name===itemName)totalNeed+=(x.qty||1);});
-if(remaining>totalNeed)remaining=totalNeed;
-buyData.forEach(item=>{
-if(item.name===itemName){
-let need=item.qty||1;
-if(remaining>=need){
-item.boughtQty=need;
-item.status='packed';
-remaining-=need;
-}else if(remaining>0){
-item.boughtQty=remaining;
-item.status='normal';
-remaining=0;
-}else{
-item.boughtQty=0;
-item.status='normal';
-}
-}
-});
-saveLocal();
-renderList();
-renderStats();
-}
-function addOneStatQty(itemName){
-let totalNeed=0,totalBought=0;
-buyData.forEach(x=>{
-if(x.name===itemName){
-totalNeed+=(x.qty||1);
-totalBought+=(x.status==='unpacked'?0:(x.boughtQty!==undefined?x.boughtQty:(x.qty||1)));
-}
-});
-if(totalBought<totalNeed){
-updateStatQty(itemName,totalBought+1);
-}
-}
-function updateStatNote(itemName,val){
-buyData.forEach(x=>{if(x.name===itemName)x.statNote=val;});
-saveLocal();
-}
-function toggleStatPackByName(itemName){
-let totalNeed=0,totalBought=0;
-buyData.forEach(x=>{
-if(x.name===itemName){
-totalNeed+=(x.qty||1);
-totalBought+=(x.status==='unpacked'?0:(x.boughtQty!==undefined?x.boughtQty:(x.qty||1)));
-}
-});
-if(totalBought>=totalNeed){
-updateStatQty(itemName,0);
-}else{
-updateStatQty(itemName,totalNeed);
-}
-}
-function openEditModal(id){
-const i=buyData.find(x=>x.id===id);
-if(!i)return;
-document.getElementById('editId').value=i.id;
-document.getElementById('editFriend').value=i.friend;
-document.getElementById('editName').value=i.name;
-document.getElementById('editCurrency').value=i.currency||'jpy';
-document.getElementById('editPrice').value=i.price;
-document.getElementById('editQty').value=i.qty||1;
-document.getElementById('editCustomRate').value=i.customRate||"";
-document.getElementById('editNote').value=i.note||"";
-updatePricePlaceholder('editCurrency','editPrice');
-editCurrentImg=i.img||"";
-const editPrev=document.getElementById('editPreviewImg');
-if(editCurrentImg&&editPrev){
-editPrev.src=editCurrentImg;
-editPrev.style.display='block';
-}else if(editPrev){
-editPrev.style.display='none';
-}
-openModal('editModal');
-}
-function updateItem(){
-const id=parseFloat(document.getElementById('editId').value);
-const i=buyData.find(x=>x.id===id);
-if(!i)return;
-const friendEl=document.getElementById('editFriend');
-const nameEl=document.getElementById('editName');
-const currencyEl=document.getElementById('editCurrency');
-const priceEl=document.getElementById('editPrice');
-const qtyEl=document.getElementById('editQty');
-const rateEl=document.getElementById('editCustomRate');
-const noteEl=document.getElementById('editNote');
-
-const newFriend=friendEl?friendEl.value.trim():"";
-if(!newFriend)return alert("買家名字不能為空！");
-i.friend=newFriend;
-if(!friends.includes(newFriend)){
-friends.push(newFriend);
-localStorage.setItem(getCampDataKey(currentCamp,'friends'),JSON.stringify(friends));
-updateFriendSelect();
+function renderCampSelect() {
+  const sel = document.getElementById('activeCampSelect');
+  sel.innerHTML = '';
+  Object.keys(db.camps).forEach(campName => {
+    const opt = document.createElement('option');
+    opt.value = campName;
+    opt.innerText = campName;
+    if(campName === db.activeCamp) opt.selected = true;
+    sel.appendChild(opt);
+  });
 }
 
-if(nameEl)i.name=nameEl.value.trim();
-if(currencyEl)i.currency=currencyEl.value;
-if(priceEl)i.price=parseFloat(priceEl.value)||0;
-const newQInput=qtyEl?qtyEl.value:"1";
-const newQ=(newQInput===""||isNaN(parseInt(newQInput)))?1:parseInt(newQInput);
-if(newQ<i.boughtQty)i.boughtQty=newQ;
-i.qty=newQ;
-if(rateEl)i.customRate=rateEl.value?parseFloat(rateEl.value):"";
-if(noteEl)i.note=noteEl.value;
-i.img=editCurrentImg;
-saveLocal();
-closeModal('editModal');
-renderList();
-renderStats();
-showToast("修改成功");
+function switchCamp(campName) {
+  db.activeCamp = campName;
+  saveDb();
+  updateCampSettingsUI();
+  renderLists();
+  updateBuyerSuggestions();
+  showToast(`已切換至: ${campName}`);
 }
-function delItem(id){
-if(confirm("確定要刪除這件商品嗎？")){
-buyData=buyData.filter(x=>x.id!==id);
-saveLocal();
-renderList();
-renderStats();
+
+function updateCampSettingsUI() {
+  const camp = getCurrentCamp();
+  if(camp.rate === undefined) camp.rate = 0.22;
+  if(camp.costRate === undefined) camp.costRate = 0.21;
+  if(camp.showItemPrice === undefined) camp.showItemPrice = true;
+  document.getElementById('campRateInput').value = camp.rate;
+  document.getElementById('campCostRateInput').value = camp.costRate;
+  document.getElementById('settingShowItemPrice').checked = camp.showItemPrice;
 }
+
+function updateCampSetting(field, val) {
+  const camp = getCurrentCamp();
+  camp[field] = parseFloat(val) || 0;
+  saveDb();
+  renderLists();
 }
-function exportData(){
-const backupObj={camps,currentCamp,buyData,friends,rate,costRate,roundMode,showProfitDash,paidData,statState};
-const b=new Blob([JSON.stringify(backupObj)],{type:"application/json"});
-const a=document.createElement('a');
-a.href=URL.createObjectURL(b);
-a.download=`PikaBackup_${currentCamp}.json`;
-a.click();
+
+function toggleSettingShowItemPrice(isChecked) {
+  const camp = getCurrentCamp();
+  camp.showItemPrice = isChecked;
+  saveDb();
+  renderLists();
 }
-function importData(input){
-const f=input.files[0];
-if(!f)return;
-const r=new FileReader();
-r.onload=(e)=>{
-try{
-const d=JSON.parse(e.target.result);
-if(d.camps)localStorage.setItem('pika_v17_camps',JSON.stringify(d.camps));
-if(d.currentCamp)localStorage.setItem('pika_v17_currentCamp',d.currentCamp);
-if(d.buyData)localStorage.setItem(getCampDataKey(d.currentCamp||currentCamp,'data'),JSON.stringify(d.buyData));
-if(d.friends)localStorage.setItem(getCampDataKey(d.currentCamp||currentCamp,'friends'),JSON.stringify(d.friends));
-if(d.paidData)localStorage.setItem(getCampDataKey(d.currentCamp||currentCamp,'paid'),JSON.stringify(d.paidData));
-if(d.statState)localStorage.setItem(getCampDataKey(d.currentCamp||currentCamp,'statState'),JSON.stringify(d.statState));
-alert("資料還原成功！");
-location.reload();
-}catch(err){
-alert("檔案格式錯誤，還原失敗！");
+
+function handleImageUpload(e) {
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(event) {
+    const base64 = event.target.result;
+    document.getElementById('itemImageBase64').value = base64;
+    const prev = document.getElementById('imagePreview');
+    prev.src = base64;
+    document.getElementById('imagePreviewContainer').style.display = 'block';
+  };
+  reader.readAsDataURL(file);
 }
-};
-r.readAsText(f);
+
+function fillLastBuyer() {
+  if(lastAddedBuyer) {
+    document.getElementById('friendInput').value = lastAddedBuyer;
+    showToast(`已帶入: ${lastAddedBuyer}`);
+  } else {
+    showToast('尚無上一位買家記錄');
+  }
 }
-function saveLocal(){
-localStorage.setItem(getCampDataKey(currentCamp,'data'),JSON.stringify(buyData));
+
+function updateBuyerSuggestions() {
+  const camp = getCurrentCamp();
+  const list = document.getElementById('buyerSuggestions');
+  list.innerHTML = '';
+  const buyers = [...new Set(camp.items.map(i => i.friend))];
+  buyers.forEach(b => {
+    const opt = document.createElement('option');
+    opt.value = b;
+    list.appendChild(opt);
+  });
 }
-function openModal(id){
-const m=document.getElementById(id);
-if(m)m.style.display='flex';
+
+function addItem() {
+  const friend = document.getElementById('friendInput').value.trim();
+  const name = document.getElementById('itemName').value.trim();
+  const priceType = document.getElementById('itemPriceType').value;
+  const price = parseFloat(document.getElementById('itemPrice').value);
+  const qty = parseInt(document.getElementById('itemQty').value) || 1;
+  const note = document.getElementById('itemNote').value.trim();
+  const image = document.getElementById('itemImageBase64').value;
+
+  if(!friend || !name || isNaN(price)) {
+    alert('請完整填寫買家名字、商品名稱與價格！');
+    return;
+  }
+
+  const camp = getCurrentCamp();
+  const newItem = {
+    id: 'item_' + Date.now() + Math.random().toString(36).substr(2, 5),
+    friend,
+    name,
+    priceType, // 'jpy' or 'ntd'
+    price,
+    qty,
+    boughtQty: 0,
+    status: 'unpacked', // 'unpacked', 'packed', 'shipped'
+    note,
+    image
+  };
+
+  camp.items.push(newItem);
+  lastAddedBuyer = friend;
+  saveDb();
+
+  // Reset form inputs except buyer
+  document.getElementById('itemName').value = '';
+  document.getElementById('itemPrice').value = '';
+  document.getElementById('itemQty').value = '1';
+  document.getElementById('itemNote').value = '';
+  document.getElementById('itemImageBase64').value = '';
+  document.getElementById('imagePreviewContainer').style.display = 'none';
+  document.getElementById('itemImageFile').value = '';
+
+  updateBuyerSuggestions();
+  showToast(`成功登記: ${name}`);
 }
-function closeModal(id){
-const m=document.getElementById(id);
-if(m)m.style.display='none';
+
+function renderLists() {
+  const camp = getCurrentCamp();
+  const container = document.getElementById('buyerListContainer');
+  const keyword = document.getElementById('searchKeyword').value.trim().toLowerCase();
+  container.innerHTML = '';
+
+  const groups = {};
+  camp.items.forEach(item => {
+    if(keyword && !item.friend.toLowerCase().includes(keyword) && !item.name.toLowerCase().includes(keyword)) return;
+    if(!groups[item.friend]) groups[item.friend] = [];
+    groups[item.friend].push(item);
+  });
+
+  const buyerNames = Object.keys(groups);
+  if(buyerNames.length === 0) {
+    container.innerHTML = '<div style="text-align:center;padding:30px;color:#aaa;">目前沒有登記商品</div>';
+    return;
+  }
+
+  buyerNames.forEach(buyer => {
+    const items = groups[buyer];
+    if(!camp.buyerMeta) camp.buyerMeta = {};
+    const meta = camp.buyerMeta[buyer] || { deposit: 0, shipping: 0, note: '' };
+
+    // Calculate totals based on qty (ordered quantity)
+    let totalNTD = 0;
+    items.forEach(item => {
+      const q = item.qty || 1;
+      if(item.priceType === 'ntd') {
+        totalNTD += (item.price || 0) * q;
+      } else {
+        totalNTD += Math.round((item.price || 0) * camp.rate * q);
+      }
+    });
+
+    const finalAmount = totalNTD - (meta.deposit || 0) + (meta.shipping || 0);
+    const hasDeduct = (meta.deposit > 0 || meta.shipping > 0 || meta.note);
+
+    const groupDiv = document.createElement('div');
+    groupDiv.className = 'friend-group open';
+    groupDiv.id = 'group_' + buyer;
+
+    let itemsHtml = '';
+    items.forEach(item => {
+      let rowClass = 'row-normal';
+      let checkClass = 'check-circle';
+      let crossClass = 'cross-circle';
+      let shipClass = 'ship-circle';
+
+      if(item.status === 'packed') {
+        rowClass = 'row-packed';
+        checkClass += ' is-packed';
+      } else if(item.status === 'shipped') {
+        rowClass = 'row-shipped';
+        shipClass += ' is-shipped';
+      } else {
+        rowClass = 'row-unpacked';
+        crossClass += ' is-unpacked';
+      }
+
+      let priceTag = '';
+      if(camp.showItemPrice) {
+        if(item.priceType === 'ntd') {
+          priceTag = `<span style="font-size:0.8rem;color:#888;background:#f5f5f5;padding:2px 6px;border-radius:6px;">NT$ ${item.price}</span>`;
+        } else {
+          priceTag = `<span style="font-size:0.8rem;color:#888;background:#f5f5f5;padding:2px 6px;border-radius:6px;">${item.price} 円</span>`;
+        }
+      }
+
+      let imgHtml = item.image ? `<img src="${item.image}" class="list-img" onclick="showBigImg('${item.image}')">` : '';
+
+      itemsHtml += `
+        <div class="item-row ${rowClass}">
+          ${imgHtml}
+          <div style="flex:1;">
+            <div style="display:flex;align-items:center;gap:6px;">
+              <span style="font-size:0.95rem;font-weight:700;">${item.name}</span>
+              ${priceTag}
+            </div>
+            <div style="font-size:0.8rem;color:#666;margin-top:2px;">
+              數量: ${item.qty} ${item.note ? ' | ' + item.note : ''}
+            </div>
+          </div>
+          <div style="display:flex;gap:4px;align-items:center;">
+            <div class="${checkClass}" onclick="toggleStatus('${item.id}','packed')" title="已買到">✓</div>
+            <div class="${crossClass}" onclick="toggleStatus('${item.id}','unpacked')" title="未買到">✕</div>
+            <div class="${shipClass}" onclick="toggleStatus('${item.id}','shipped')" title="已寄出">📦</div>
+            <div class="reset-circle" onclick="openEditModal('${item.id}')" title="編輯">✏️</div>
+            <div class="reset-circle" onclick="deleteItem('${item.id}')" title="刪除">🗑️</div>
+          </div>
+        </div>
+      `;
+    });
+
+    groupDiv.innerHTML = `
+      <div class="friend-header" onclick="toggleGroup(this)">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span>👤 ${buyer}</span>
+          <span style="font-size:0.8rem;background:#fff;padding:2px 8px;border-radius:10px;color:var(--btn-active);">總計: NT$ ${finalAmount}</span>
+        </div>
+        <div style="display:flex;gap:6px;align-items:center;">
+          <span onclick="event.stopPropagation();openBuyerModal('${buyer}')" style="font-size:1rem;cursor:pointer;" title="訂金/運費設定">💰</span>
+          <span style="font-size:0.8rem;color:#888;">▼</span>
+        </div>
+      </div>
+      <div class="friend-content">
+        <div class="deduct-box ${hasDeduct ? 'show has-deduct' : ''}" id="deduct_box_${buyer}">
+          <div style="font-size:0.8rem;color:#555;display:flex;justify-content:space-between;">
+            <span>訂金折抵: NT$ ${meta.deposit || 0} | 運費: NT$ ${meta.shipping || 0}</span>
+            ${meta.note ? '<span>備註: ' + meta.note + '</span>' : ''}
+          </div>
+        </div>
+        ${itemsHtml}
+        <div style="display:flex;justify-content:flex-end;margin-top:10px;">
+          <button class="btn-copy" onclick="copyBuyerOrder('${buyer}')">📋 複製買家對帳單</button>
+        </div>
+      </div>
+    `;
+    container.appendChild(groupDiv);
+  });
 }
-function switchTab(t,el){
-document.querySelectorAll('.view-section').forEach(v=>v.classList.remove('active'));
-const targetView=document.getElementById(t+'View');
-if(targetView)targetView.classList.add('active');
-document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
-if(el)el.classList.add('active');
-if(t==='list')renderList();
-if(t==='stats')renderStats();
+
+function toggleGroup(headerEl) {
+  const group = headerEl.parentElement;
+  group.classList.toggle('open');
 }
-function zoom(s){
-const zoomedImg=document.getElementById('zoomedImg');
-const imgModal=document.getElementById('imgModal');
-if(zoomedImg)zoomedImg.src=s;
-if(imgModal)imgModal.style.display='flex';
+
+function expandAll(isOpen) {
+  document.querySelectorAll('.friend-group').forEach(g => {
+    if(isOpen) g.classList.add('open');
+    else g.classList.remove('open');
+  });
 }
+
+function toggleStatus(id, targetStatus) {
+  const camp = getCurrentCamp();
+  const item = camp.items.find(i => i.id === id);
+  if(!item) return;
+
+  if(item.status === targetStatus) {
+    item.status = 'unpacked';
+    item.boughtQty = 0;
+  } else {
+    item.status = targetStatus;
+    item.boughtQty = (targetStatus === 'unpacked') ? 0 : item.qty;
+  }
+  saveDb();
+  renderLists();
+}
+
+function deleteItem(id) {
+  if(!confirm('確定要刪除這個商品嗎？')) return;
+  const camp = getCurrentCamp();
+  camp.items = camp.items.filter(i => i.id !== id);
+  saveDb();
+  renderLists();
+  updateBuyerSuggestions();
+  showToast('已刪除商品');
+}
+
+function openEditModal(id) {
+  const camp = getCurrentCamp();
+  const item = camp.items.find(i => i.id === id);
+  if(!item) return;
+
+  document.getElementById('editItemId').value = item.id;
+  document.getElementById('editFriendInput').value = item.friend;
+  document.getElementById('editItemName').value = item.name;
+  document.getElementById('editItemPriceType').value = item.priceType || 'jpy';
+  document.getElementById('editItemPrice').value = item.price;
+  document.getElementById('editItemQty').value = item.qty;
+  document.getElementById('editItemNote').value = item.note || '';
+
+  openModal('editModal');
+}
+
+function saveEditItem() {
+  const id = document.getElementById('editItemId').value;
+  const camp = getCurrentCamp();
+  const item = camp.items.find(i => i.id === id);
+  if(!item) return;
+
+  item.friend = document.getElementById('editFriendInput').value.trim();
+  item.name = document.getElementById('editItemName').value.trim();
+  item.priceType = document.getElementById('editItemPriceType').value;
+  item.price = parseFloat(document.getElementById('editItemPrice').value) || 0;
+  item.qty = parseInt(document.getElementById('editItemQty').value) || 1;
+  item.note = document.getElementById('editItemNote').value.trim();
+
+  saveDb();
+  closeModal('editModal');
+  renderLists();
+  updateBuyerSuggestions();
+  showToast('修改成功！');
+}
+
+function openBuyerModal(buyer) {
+  const camp = getCurrentCamp();
+  if(!camp.buyerMeta) camp.buyerMeta = {};
+  const meta = camp.buyerMeta[buyer] || { deposit: 0, shipping: 0, note: '' };
+
+  document.getElementById('modalBuyerTitle').innerText = `${buyer} - 結算設定`;
+  document.getElementById('modalBuyerName').value = buyer;
+  document.getElementById('modalBuyerDeposit').value = meta.deposit || '';
+  document.getElementById('modalBuyerShipping').value = meta.shipping || '';
+  document.getElementById('modalBuyerNote').value = meta.note || '';
+
+  openModal('buyerModal');
+}
+
+function saveBuyerMeta() {
+  const buyer = document.getElementById('modalBuyerName').value;
+  const deposit = parseFloat(document.getElementById('modalBuyerDeposit').value) || 0;
+  const shipping = parseFloat(document.getElementById('modalBuyerShipping').value) || 0;
+  const note = document.getElementById('modalBuyerNote').value.trim();
+
+  const camp = getCurrentCamp();
+  if(!camp.buyerMeta) camp.buyerMeta = {};
+  camp.buyerMeta[buyer] = { deposit, shipping, note };
+
+  saveDb();
+  closeModal('buyerModal');
+  renderLists();
+  showToast('結算設定已儲存');
+}
+
+function copyBuyerOrder(buyer) {
+  const camp = getCurrentCamp();
+  const items = camp.items.filter(i => i.friend === buyer);
+  if(!camp.buyerMeta) camp.buyerMeta = {};
+  const meta = camp.buyerMeta[buyer] || { deposit: 0, shipping: 0, note: '' };
+
+  let text = `【Pika 買買助手】代購對帳單\n買家：${buyer}\n--------------------\n`;
+  let totalNTD = 0;
+
+  items.forEach((item, idx) => {
+    const q = item.qty || 1;
+    let lineNTD = 0;
+    if(item.priceType === 'ntd') {
+      lineNTD = (item.price || 0) * q;
+      text += `${idx+1}. ${item.name} x${q} (NT$ ${item.price}) = NT$ ${lineNTD}\n`;
+    } else {
+      lineNTD = Math.round((item.price || 0) * camp.rate * q);
+      text += `${idx+1}. ${item.name} x${q} (${item.price}円) = NT$ ${lineNTD}\n`;
+    }
+    if(item.note) text += `   備註：${item.note}\n`;
+    totalNTD += lineNTD;
+  });
+
+  text += `--------------------\n`;
+  text += `商品總計：NT$ ${totalNTD}\n`;
+  if(meta.deposit > 0) text += `已付訂金：- NT$ ${meta.deposit}\n`;
+  if(meta.shipping > 0) text += `運費/其他：+ NT$ ${meta.shipping}\n`;
+  if(meta.note) text += `備註說明：${meta.note}\n`;
+  const final = totalNTD - (meta.deposit || 0) + (meta.shipping || 0);
+  text += `--------------------\n`;
+  text += `💡 最終結算尾款：NT$ ${final}\n感謝您的購買！✨`;
+
+  navigator.clipboard.writeText(text).then(() => {
+    showToast(`已複製 ${buyer} 的對帳單！`);
+  });
+}
+
+function renderStats() {
+  const camp = getCurrentCamp();
+  let totalItems = camp.items.reduce((sum, i) => sum + i.qty, 0);
+  let boughtItems = camp.items.reduce((sum, i) => sum + (i.status !== 'unpacked' ? i.qty : 0), 0);
+  let totalJpy = 0;
+  let totalNtd = 0;
+
+  camp.items.forEach(i => {
+    const q = i.qty || 1;
+    if(i.priceType === 'ntd') {
+      totalNtd += (i.price || 0) * q;
+    } else {
+      totalJpy += (i.price || 0) * q;
+      totalNtd += Math.round((i.price || 0) * camp.rate * q);
+    }
+  });
+
+  document.getElementById('statTotalItems').innerText = totalItems;
+  document.getElementById('statBoughtItems').innerText = boughtItems;
+  document.getElementById('statTotalJpy').innerText = totalJpy.toLocaleString();
+  document.getElementById('statTotalNtd').innerText = totalNtd.toLocaleString();
+
+  const container = document.getElementById('statListContainer');
+  container.innerHTML = '';
+
+  const summaryMap = {};
+  camp.items.forEach(i => {
+    const key = i.name + '_' + (i.priceType || 'jpy') + '_' + i.price;
+    if(!summaryMap[key]) {
+      summaryMap[key] = { name: i.name, priceType: i.priceType || 'jpy', price: i.price, qty: 0, bought: 0 };
+    }
+    summaryMap[key].qty += i.qty;
+    if(i.status !== 'unpacked') summaryMap[key].bought += i.qty;
+  });
+
+  Object.values(summaryMap).forEach(s => {
+    const div = document.createElement('div');
+    div.className = 'panel';
+    div.style.margin = '8px 0';
+    div.style.padding = '10px 15px';
+    if(s.bought >= s.qty) div.classList.add('stat-row-packed');
+
+    let pStr = s.priceType === 'ntd' ? `NT$ ${s.price}` : `${s.price} 円`;
+    div.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div>
+          <div style="font-size:0.95rem;">${s.name}</div>
+          <div style="font-size:0.8rem;color:#666;margin-top:2px;">單價: ${pStr}</div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:0.9rem;font-weight:700;color:var(--btn-active);">已買 ${s.bought} / 共 ${s.qty}</div>
+        </div>
+      </div>
+    `;
+    container.appendChild(div);
+  });
+}
+
+function resetProgress() {
+  if(!confirm('確定要重置所有商品的採購進度嗎？\n(商品名稱、價格、買家資料與設定皆會完整保留)')) return;
+  const camp = getCurrentCamp();
+  camp.items.forEach(i => {
+    i.status = 'unpacked';
+    i.boughtQty = 0;
+  });
+  saveDb();
+  renderLists();
+  renderStats();
+  showToast('已重置採購進度');
+}
+
+function exportData() {
+  const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(db));
+  const dlAnchor = document.createElement('a');
+  dlAnchor.setAttribute("href", dataStr);
+  dlAnchor.setAttribute("download", `pika_buy_backup_${Date.now()}.json`);
+  document.body.appendChild(dlAnchor);
+  dlAnchor.click();
+  dlAnchor.remove();
+  showToast('已匯出備份檔案');
+}
+
+function importData(event) {
+  const file = event.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const parsed = JSON.parse(e.target.result);
+      if(parsed && parsed.camps) {
+        db = parsed;
+        saveDb();
+        renderCampSelect();
+        updateCampSettingsUI();
+        renderLists();
+        updateBuyerSuggestions();
+        showToast('資料還原成功！');
+      } else {
+        alert('檔案格式錯誤！');
+      }
+    } catch(err) {
+      alert('解析備份檔案失敗');
+    }
+  };
+  reader.readAsText(file);
+}
+
+function openCampModal() {
+  renderCampList();
+  openModal('campModal');
+}
+
+function renderCampList() {
+  const container = document.getElementById('campListContainer');
+  container.innerHTML = '';
+  Object.keys(db.camps).forEach(campName => {
+    const div = document.createElement('div');
+    div.style.cssText = 'display:flex;justify-content:space-between;align-items:center;padding:8px;border-bottom:1px solid #eee;font-size:0.9rem;';
+    div.innerHTML = `
+      <span>📦 ${campName} ${campName === db.activeCamp ? '(目前)' : ''}</span>
+      ${Object.keys(db.camps).length > 1 ? `<button class="btn-sm-action" onclick="deleteCamp('${campName}')" style="color:var(--tax-red);border-color:var(--tax-red);">刪除</button>` : ''}
+    `;
+    container.appendChild(div);
+  });
+}
+
+function createNewCamp() {
+  const name = document.getElementById('newCampName').value.trim();
+  if(!name) {
+    alert('請輸入代購團名稱');
+    return;
+  }
+  if(db.camps[name]) {
+    alert('此代購團名稱已存在！');
+    return;
+  }
+  db.camps[name] = { rate: 0.22, costRate: 0.21, showItemPrice: true, items: [], buyerMeta: {} };
+  db.activeCamp = name;
+  saveDb();
+  document.getElementById('newCampName').value = '';
+  closeModal('campModal');
+  renderCampSelect();
+  updateCampSettingsUI();
+  renderLists();
+  updateBuyerSuggestions();
+  showToast(`已建立並切換至: ${name}`);
+}
+
+function deleteCamp(campName) {
+  if(Object.keys(db.camps).length <= 1) {
+    alert('至少需要保留一個代購團！');
+    return;
+  }
+  if(!confirm(`確定要刪除代購團「${campName}」及其所有商品資料嗎？`)) return;
+  delete db.camps[campName];
+  if(db.activeCamp === campName) {
+    db.activeCamp = Object.keys(db.camps)[0];
+  }
+  saveDb();
+  renderCampList();
+  renderCampSelect();
+  updateCampSettingsUI();
+  renderLists();
+  updateBuyerSuggestions();
+  showToast('已刪除代購團');
+}
+
+function openModal(id) { document.getElementById(id).style.display = 'flex'; }
+function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+function showBigImg(src) {
+  const win = window.open("");
+  win.document.write(`<img src="${src}" style="width:100%;object-fit:contain;">`);
+}
+
+window.onload = initApp;
 </script>
 </body>
 </html>
