@@ -67,14 +67,14 @@ input:focus,textarea:focus,select:focus{border-color:var(--btn-active);}
 <span onclick="openCampModal()" style="cursor:pointer;font-size:1.2rem" title="管理代購團">🏷️</span>
 <div style="display:flex;align-items:center;gap:2px;">
 <span onclick="openModal('settingModal')" style="cursor:pointer;font-size:1.5rem">⚙️</span>
-<span style="font-size:0.65rem;color:#aaa;font-weight:normal;">v3.6</span>
+<span style="font-size:0.65rem;color:#aaa;font-weight:normal;">v3.7</span>
 </div>
 </div>
 </div>
 <div id="addView" class="view-section active">
 <h2 class="pika-header">代購商品</h2>
 <div class="panel">
-<input type="text" id="friendInput" list="buyerSuggestions" placeholder="買家名字">
+<input type="text" id="friendInput" list="buyerSuggestions" placeholder="請直接輸入買家名字">
 <input type="text" id="itemName" placeholder="商品名稱">
 <div style="display:flex;gap:8px;align-items:center;">
 <input type="number" id="itemPrice" placeholder="請輸入商品價格" style="flex:2;margin:8px 0;">
@@ -146,7 +146,7 @@ input:focus,textarea:focus,select:focus{border-color:var(--btn-active);}
 <option value="round">四捨五入</option>
 <option value="ceil">無條件進位</option>
 </select>
-<label style="font-size:0.85rem;margin-top:10px;display:block;">👥 常用買家名單 (輸入新買家也會自動加入)</label>
+<label style="font-size:0.85rem;margin-top:10px;display:block;">👥 常用買家清單 (輸入新買家也會自動加入)</label>
 <textarea id="friendListInput" rows="3"></textarea>
 <button class="btn-main" onclick="saveSettings()">儲存設定</button>
 <hr style="margin:15px 0;border:none;border-top:1px solid #eee;">
@@ -502,7 +502,8 @@ if(noteEl)noteEl.value="";
 if(prevEl)prevEl.style.display='none';
 if(tipEl)tipEl.style.display='block';
 currentImg="";
-if(nameEl)nameEl.focus();
+const nameInputEl=document.getElementById('itemName');
+if(nameInputEl)nameInputEl.focus();
 }
 function calcMath(val){
 if(roundMode==='ceil')return Math.ceil(val);
